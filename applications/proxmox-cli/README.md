@@ -2,6 +2,13 @@
 
 Agent-facing CLI for Proxmox-related operations.
 
+## Code Layout
+
+- Go source root: `applications/proxmox-cli/src`
+- Entrypoint: `applications/proxmox-cli/src/cmd/proxmox-cli`
+- Internal packages: `applications/proxmox-cli/src/internal`
+- Prompt tests: `applications/proxmox-cli/src/test/prompts`
+
 ## Versioning
 
 Version is managed via `forgekit` in module mode.

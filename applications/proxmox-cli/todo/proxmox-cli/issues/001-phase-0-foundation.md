@@ -1,6 +1,6 @@
 # ISSUE-001 Phase 0 Foundation
 
-- status: open
+- status: completed
 - priority: high
 - phase: 0
 
@@ -18,17 +18,17 @@
 
 ## Tasks
 
-- [ ] 初始化 Go module 与标准目录布局。
-- [ ] 实现顶层命令和 help 文本。
-- [ ] 实现全局参数定义与默认值。
-- [ ] 实现 Credential Loader 与 auth-scope 校验。
-- [ ] 实现基础 HTTP client（timeout/tls/header）。
-- [ ] 实现统一输出和统一错误码。
-- [ ] 实现 secret redaction（password/token/cookie/ticket）。
-- [ ] 建立 `applications/proxmox-cli/test/prompts/` 目录结构。
+- [x] 初始化 Go module 与标准目录布局。
+- [x] 实现顶层命令和 help 文本。
+- [x] 实现全局参数定义与默认值。
+- [x] 实现 Credential Loader 与 auth-scope 校验。
+- [x] 实现基础 HTTP client（timeout/tls/header）。
+- [x] 实现统一输出和统一错误码。
+- [x] 实现 secret redaction（password/token/cookie/ticket）。
+- [x] 建立 `applications/proxmox-cli/src/test/prompts/` 目录结构。
 
 ## Acceptance
 
-- [ ] `proxmox-cli --help` 可正常运行。
-- [ ] 配置优先级行为符合约定。
-- [ ] debug 输出不包含明文 secret。
+- [x] `proxmox-cli --help` 可正常运行。
+- [x] 配置优先级行为符合约定。
+- [x] debug 输出不包含明文 secret。

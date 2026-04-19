@@ -1,20 +1,42 @@
 # ISSUE-000 Tracking Board
 
-- status: open
+- status: in_progress
 - priority: high
-- owner: TBD
+- owner: ben.wangz
 
 ## Objective
 
 维护 Phase 0-6 的全局进度、依赖关系和里程碑状态。
 
+## Current Snapshot
+
+- last_updated: 2026-04-19
+- overall_progress: 1/8 issues completed
+- action_coverage: 0/43
+- prompt_coverage: 0/43
+
+## Issue Status
+
+| Issue | Phase | Status | Action/Prompt Target | Depends On |
+| --- | --- | --- | --- | --- |
+| ISSUE-001 | 0 | completed | foundation baseline | - |
+| ISSUE-002 | 1 | open | 9 actions / 9 prompts | ISSUE-001 |
+| ISSUE-003 | 2 | open | 13 actions / 13 prompts | ISSUE-002 |
+| ISSUE-004 | 3 | open | 6 actions / 6 prompts | ISSUE-003 |
+| ISSUE-005 | 4 | open | 6 actions / 6 prompts | ISSUE-004 |
+| ISSUE-006 | 5 | open | 6 actions / 6 prompts | ISSUE-005 |
+| ISSUE-007 | 6 | open | 3 actions / 3 prompts | ISSUE-006 |
+| ISSUE-008 | cross | open | E2E + full prompt sweep | ISSUE-001..007 |
+
+> 注：A17 包含 `agent_exec` 与 `agent_exec_status` 两个可执行动作，计入 2 条 prompt，总计保持 43。
+
 ## Milestones
 
-- [ ] M1: Phase 0 + Phase 1
-- [ ] M2: Phase 2 + Phase 3
-- [ ] M3: Phase 4
-- [ ] M4: Phase 5 + Phase 6
-- [ ] M5: E2E 联调与回归
+- [ ] M1: ISSUE-001 + ISSUE-002 完成
+- [ ] M2: ISSUE-003 + ISSUE-004 完成
+- [ ] M3: ISSUE-005 完成
+- [ ] M4: ISSUE-006 + ISSUE-007 完成
+- [ ] M5: ISSUE-008 完成（E2E 联调与回归）
 
 ## Dependencies
 
@@ -26,6 +48,13 @@
 6. `006-phase-5-privilege-root-ops.md`
 7. `007-phase-6-policy-cleanup.md`
 8. `008-e2e-workflow-and-prompt-coverage.md`
+
+## Working Rules
+
+- 每完成一个 issue，立即回写本看板的 `Current Snapshot` 与 `Issue Status`。
+- 每完成一个 action，同时更新 action/prompt 覆盖计数。
+- 若依赖阻塞超过 1 天，在对应 issue 增加 blocker 说明并同步到此看板。
+- 任何资源策略变更（VM 数量、规格、清理规则）必须先更新 ISSUE-008，再更新本看板。
 
 ## Exit Criteria
 
