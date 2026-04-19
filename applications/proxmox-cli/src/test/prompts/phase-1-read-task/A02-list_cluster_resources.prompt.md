@@ -8,22 +8,22 @@
 ## Prompt
 
 ```text
-你是测试执行代理。请在 bot-cli 仓库执行 A02 `list_cluster_resources` 正向测试。
+You are a test execution agent. Run the A02 `list_cluster_resources` positive-path test in the bot-cli repository.
 
-执行前置:
-1) source build/pve-user.env
-2) 进入 applications/proxmox-cli/src
+Setup:
+1) Load env vars: `source build/pve-user.env`
+2) Change directory to `applications/proxmox-cli/src`
 
-执行命令:
+Command:
 go run ./cmd/proxmox-cli --output json action list_cluster_resources --type vm
 
-成功判定:
+Success criteria:
 - exit code = 0
-- JSON 中 `action == "list_cluster_resources"`
-- JSON 中 `ok == true`
-- `result` 为数组
+- JSON field `action == "list_cluster_resources"`
+- JSON field `ok == true`
+- `result` is an array
 
-仅输出以下结构:
+Return only this structure:
 - action
 - command
 - success

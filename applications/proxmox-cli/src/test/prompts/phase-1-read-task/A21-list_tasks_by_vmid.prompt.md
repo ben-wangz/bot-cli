@@ -3,28 +3,34 @@
 ## Preconditions
 
 - `build/pve-user.env` is loaded.
-- `<NODE>` and `<VMID>` are valid.
+- At least one online node has at least one VM.
 
 ## Prompt
 
 ```text
-你是测试执行代理。请在 bot-cli 仓库执行 A21 `list_tasks_by_vmid` 正向测试。
+You are a test execution agent. Run the A21 `list_tasks_by_vmid` positive-path test in the bot-cli repository.
 
-执行前置:
-1) source build/pve-user.env
-2) 进入 applications/proxmox-cli/src
-3) 设置 NODE 与 VMID
+Setup:
+1) Load env vars: `source build/pve-user.env`
+2) Change directory to `applications/proxmox-cli/src`
+3) Discover `NODE` from online nodes.
+4) Discover `VMID` by calling `list_vms_by_node --node "$NODE"` and selecting the first VM.
+5) Fail if no VM is found.
 
-执行命令:
-go run ./cmd/proxmox-cli --output json action list_tasks_by_vmid --node <NODE> --vmid <VMID>
+Command:
+go run ./cmd/proxmox-cli --output json action list_tasks_by_vmid --node "$NODE" --vmid "$VMID"
 
-成功判定:
+Success criteria:
 - exit code = 0
-- JSON 中 `action == "list_tasks_by_vmid"`
-- JSON 中 `ok == true`
-- `result` 为数组
+- JSON field `action == "list_tasks_by_vmid"`
+- JSON field `ok == true`
+- `result` is an array
 
-仅输出以下结构:
+Independence rule:
+- This test must be self-contained and must not depend on outputs from other prompt files.
+- Resolve `NODE` and `VMID` locally inside this prompt execution.
+
+Return only this structure:
 - action
 - command
 - success

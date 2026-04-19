@@ -284,6 +284,7 @@ applications/proxmox-cli/
 4. 每条 prompt 固定包含：前置条件、命令、成功判定、输出模板。
 5. 若 action 有前置依赖，可在前置条件中声明“依赖 action 已通过”，无需在同一 prompt 内重复编排全链路。
 6. workflow 另有独立 e2e prompt，不替代 action 级测试。
+7. 为支持 sub-agent 并发执行，action prompt 必须严格独立，不得依赖执行顺序或其他 prompt 的输出/副作用；每条 prompt 需在本次执行内自行解析所需输入（如 node/vmid/upid）。
 
 ## 9. 里程碑计划（建议）
 
@@ -329,6 +330,7 @@ applications/proxmox-cli/
 4. 测试：A01-A43 每个 action 1 条独立正向 prompt；可声明依赖前置 action 已通过。
 5. Live PVE：可任意时段使用，但仅操作自建 VM；节点资源占用不超过 70%。
 6. 回归约束：每次最多 1 台 VM，规格 2C/4G/32G，结束自动清理 VM 与临时镜像/seed。
+7. 并发测试原则：若采用 sub-agent 并发，单条 action prompt 必须满足顺序无关和数据自洽。
 
 ---
 

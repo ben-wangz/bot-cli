@@ -3,28 +3,34 @@
 ## Preconditions
 
 - `build/pve-user.env` is loaded.
-- `<NODE>` and `<VMID>` point to an existing VM.
+- At least one online node has at least one VM.
 
 ## Prompt
 
 ```text
-你是测试执行代理。请在 bot-cli 仓库执行 A04 `get_vm_config` 正向测试。
+You are a test execution agent. Run the A04 `get_vm_config` positive-path test in the bot-cli repository.
 
-执行前置:
-1) source build/pve-user.env
-2) 进入 applications/proxmox-cli/src
-3) 设置 NODE 与 VMID
+Setup:
+1) Load env vars: `source build/pve-user.env`
+2) Change directory to `applications/proxmox-cli/src`
+3) Discover `NODE` from online nodes.
+4) Discover `VMID` by calling `list_vms_by_node --node "$NODE"` and selecting the first VM.
+5) Fail if no VM is found.
 
-执行命令:
-go run ./cmd/proxmox-cli --output json action get_vm_config --node <NODE> --vmid <VMID>
+Command:
+go run ./cmd/proxmox-cli --output json action get_vm_config --node "$NODE" --vmid "$VMID"
 
-成功判定:
+Success criteria:
 - exit code = 0
-- JSON 中 `action == "get_vm_config"`
-- JSON 中 `ok == true`
-- `request.node` 与 `request.vmid` 与输入一致
+- JSON field `action == "get_vm_config"`
+- JSON field `ok == true`
+- `request.node == NODE` and `request.vmid == VMID`
 
-仅输出以下结构:
+Independence rule:
+- This test must be self-contained and must not depend on outputs from other prompt files.
+- Resolve `NODE` and `VMID` locally inside this prompt execution.
+
+Return only this structure:
 - action
 - command
 - success

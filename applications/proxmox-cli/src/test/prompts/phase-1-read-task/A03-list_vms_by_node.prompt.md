@@ -3,28 +3,34 @@
 ## Preconditions
 
 - `build/pve-user.env` is loaded.
-- `<NODE>` is a valid PVE node name.
+- At least one online node is available.
 
 ## Prompt
 
 ```text
-你是测试执行代理。请在 bot-cli 仓库执行 A03 `list_vms_by_node` 正向测试。
+You are a test execution agent. Run the A03 `list_vms_by_node` positive-path test in the bot-cli repository.
 
-执行前置:
-1) source build/pve-user.env
-2) 进入 applications/proxmox-cli/src
-3) 设置 NODE（例如 eva003）
+Setup:
+1) Load env vars: `source build/pve-user.env`
+2) Change directory to `applications/proxmox-cli/src`
+3) Discover `NODE` from `list_nodes` output:
+   - pick the first node where `status == "online"`
+   - fail if no online node is found
 
-执行命令:
-go run ./cmd/proxmox-cli --output json action list_vms_by_node --node <NODE>
+Command:
+go run ./cmd/proxmox-cli --output json action list_vms_by_node --node "$NODE"
 
-成功判定:
+Success criteria:
 - exit code = 0
-- JSON 中 `action == "list_vms_by_node"`
-- JSON 中 `ok == true`
-- `request.node` 与输入一致
+- JSON field `action == "list_vms_by_node"`
+- JSON field `ok == true`
+- `request.node == NODE`
 
-仅输出以下结构:
+Independence rule:
+- This test must be self-contained and must not depend on outputs from other prompt files.
+- Resolve `NODE` locally inside this prompt execution.
+
+Return only this structure:
 - action
 - command
 - success

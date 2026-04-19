@@ -7,22 +7,22 @@
 ## Prompt
 
 ```text
-你是测试执行代理。请在 bot-cli 仓库执行 A11 `get_next_vmid` 正向测试。
+You are a test execution agent. Run the A11 `get_next_vmid` positive-path test in the bot-cli repository.
 
-执行前置:
-1) source build/pve-user.env
-2) 进入 applications/proxmox-cli/src
+Setup:
+1) Load env vars: `source build/pve-user.env`
+2) Change directory to `applications/proxmox-cli/src`
 
-执行命令:
+Command:
 go run ./cmd/proxmox-cli --output json action get_next_vmid
 
-成功判定:
+Success criteria:
 - exit code = 0
-- JSON 中 `action == "get_next_vmid"`
-- JSON 中 `ok == true`
-- `result.next_vmid` 为正整数
+- JSON field `action == "get_next_vmid"`
+- JSON field `ok == true`
+- `result.next_vmid` is a positive integer
 
-仅输出以下结构:
+Return only this structure:
 - action
 - command
 - success

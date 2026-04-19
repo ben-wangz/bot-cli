@@ -8,22 +8,22 @@
 ## Prompt
 
 ```text
-你是测试执行代理。请在 bot-cli 仓库执行 A05 `get_effective_permissions` 正向测试。
+You are a test execution agent. Run the A05 `get_effective_permissions` positive-path test in the bot-cli repository.
 
-执行前置:
-1) source build/pve-user.env
-2) 进入 applications/proxmox-cli/src
+Setup:
+1) Load env vars: `source build/pve-user.env`
+2) Change directory to `applications/proxmox-cli/src`
 
-执行命令:
+Command:
 go run ./cmd/proxmox-cli --output json action get_effective_permissions --path <PATH>
 
-成功判定:
+Success criteria:
 - exit code = 0
-- JSON 中 `action == "get_effective_permissions"`
-- JSON 中 `ok == true`
-- `request.path` 存在
+- JSON field `action == "get_effective_permissions"`
+- JSON field `ok == true`
+- `request.path` exists
 
-仅输出以下结构:
+Return only this structure:
 - action
 - command
 - success
