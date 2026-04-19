@@ -1,6 +1,6 @@
 # ISSUE-002 Phase 1 Read and Task Actions
 
-- status: open
+- status: completed
 - priority: high
 - phase: 1
 - depends_on: ISSUE-001
@@ -23,13 +23,13 @@
 
 ## Tasks
 
-- [ ] 完成 9 个 action 的参数与执行实现。
-- [ ] 统一 node/vmid/upid 参数校验。
-- [ ] 补齐 action help 参数说明与示例。
-- [ ] 为 9 个 action 各新增 1 条独立正向 prompt。
+- [x] 完成 9 个 action 的参数与执行实现。
+- [x] 统一 node/vmid/upid 参数校验。
+- [x] 补齐 action help 参数说明与示例。
+- [x] 为 9 个 action 各新增 1 条独立正向 prompt。
 
 ## Acceptance
 
-- [ ] 9 个 action 命令均可执行并返回规范结果。
-- [ ] task 类 action 可输出关键诊断字段。
-- [ ] 9 条 prompt 通过。
+- [x] 9 个 action 命令均可执行并返回规范结果。
+- [x] task 类 action 可输出关键诊断字段。
+- [x] 9 条 prompt 通过。

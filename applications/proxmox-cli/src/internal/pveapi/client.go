@@ -3,10 +3,12 @@ package pveapi
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -92,6 +94,39 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		return resp, apperr.New(apperr.CodeNetwork, fmt.Sprintf("remote returned status %d", resp.StatusCode))
 	}
 	return resp, nil
+}
+
+func (c *Client) GetData(ctx context.Context, path string, query url.Values) (any, error) {
+	requestPath := withQuery(path, query)
+	req, err := c.NewRequest(ctx, http.MethodGet, requestPath, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.Do(req)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+	if err != nil {
+		return nil, err
+	}
+	var envelope struct {
+		Data any `json:"data"`
+	}
+	if decodeErr := json.NewDecoder(resp.Body).Decode(&envelope); decodeErr != nil {
+		return nil, apperr.Wrap(apperr.CodeNetwork, "failed to decode api response", decodeErr)
+	}
+	return envelope.Data, nil
+}
+
+func withQuery(path string, query url.Values) string {
+	if len(query) == 0 {
+		return path
+	}
+	separator := "?"
+	if strings.Contains(path, "?") {
+		separator = "&"
+	}
+	return path + separator + query.Encode()
 }
 
 func headersToMap(header http.Header) map[string]string {

@@ -44,7 +44,19 @@ Usage:
 
 Examples:
   proxmox-cli action list_nodes
-  proxmox-cli --wait action create_vm --node pve1 --vmid 120
+  proxmox-cli action list_vms_by_node --node pve1
+  proxmox-cli action get_vm_status --node pve1 --vmid 120
+
+Phase 1 implemented actions:
+  list_nodes
+  list_cluster_resources [--type vm|storage|node]
+  list_vms_by_node --node <node>
+  get_vm_config --node <node> --vmid <vmid>
+  get_effective_permissions [--path /vms]
+  get_task_status --node <node> --upid <UPID>
+  get_next_vmid
+  get_vm_status --node <node> --vmid <vmid>
+  list_tasks_by_vmid --node <node> --vmid <vmid> [--source active]
 
 Phase roadmap:
   Phase 1: read/task actions

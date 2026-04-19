@@ -1,15 +1,21 @@
 package cli
 
 import (
+	"context"
+	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/action"
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/apperr"
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/auth"
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/output"
@@ -54,6 +60,9 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		_, _ = io.WriteString(stdout, rootHelp())
 		return 0
 	}
+	if tryPrintCommandHelp(tail, stdout) {
+		return 0
+	}
 
 	if err := output.ValidateFormat(opts.Output); err != nil {
 		return printError(err, stderr)
@@ -71,6 +80,14 @@ func Run(args []string, stdout, stderr io.Writer) int {
 	}
 	if err := auth.ValidateScope(opts.AuthScope, creds); err != nil {
 		return printError(err, stderr)
+	}
+	if creds.Token == "" && creds.Ticket == "" && creds.User != "" && creds.Password != "" {
+		ticket, csrf, loginErr := loginWithPassword(opts.APIBase, opts.InsecureTLS, opts.Timeout, creds.User, creds.Password)
+		if loginErr != nil {
+			return printError(loginErr, stderr)
+		}
+		creds.Ticket = ticket
+		creds.CSRFToken = csrf
 	}
 
 	headers := map[string]string{"Accept": "application/json"}
@@ -116,6 +133,52 @@ func Run(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
+func loginWithPassword(apiBase string, insecureTLS bool, timeout time.Duration, user string, password string) (string, string, error) {
+	base := strings.TrimRight(strings.TrimSpace(apiBase), "/")
+	if base == "" {
+		return "", "", apperr.New(apperr.CodeConfig, "api-base is required")
+	}
+	if timeout <= 0 {
+		timeout = 30 * time.Second
+	}
+	httpClient := &http.Client{
+		Timeout: timeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureTLS}, //nolint:gosec
+		},
+	}
+	form := url.Values{}
+	form.Set("username", user)
+	form.Set("password", password)
+	req, err := http.NewRequest(http.MethodPost, base+"/access/ticket", strings.NewReader(form.Encode()))
+	if err != nil {
+		return "", "", apperr.Wrap(apperr.CodeNetwork, "failed to build auth request", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", "", apperr.Wrap(apperr.CodeNetwork, "failed to request access ticket", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= http.StatusBadRequest {
+		return "", "", apperr.New(apperr.CodeAuth, fmt.Sprintf("failed to login with password, status=%d", resp.StatusCode))
+	}
+	var envelope struct {
+		Data struct {
+			Ticket string `json:"ticket"`
+			CSRF   string `json:"CSRFPreventionToken"`
+		} `json:"data"`
+	}
+	if decodeErr := json.NewDecoder(resp.Body).Decode(&envelope); decodeErr != nil {
+		return "", "", apperr.Wrap(apperr.CodeNetwork, "failed to decode access ticket response", decodeErr)
+	}
+	if envelope.Data.Ticket == "" {
+		return "", "", apperr.New(apperr.CodeAuth, "access ticket is empty")
+	}
+	return envelope.Data.Ticket, envelope.Data.CSRF, nil
+}
+
 type commandRuntime struct {
 	Opts    GlobalOptions
 	Creds   auth.Credentials
@@ -151,6 +214,9 @@ func dispatchCommand(rt commandRuntime, args []string) error {
 	}
 	if err != nil {
 		return err
+	}
+	if payload == nil {
+		return nil
 	}
 	return output.Render(rt.Stdout, rt.Opts.Output, payload)
 }
@@ -311,16 +377,28 @@ func runActionCommand(rt commandRuntime, args []string) (map[string]any, error) 
 	if len(args) == 0 {
 		return nil, apperr.New(apperr.CodeInvalidArgs, "action name is required")
 	}
-	return map[string]any{
-		"command":     "action",
-		"action":      args[0],
-		"args":        args[1:],
-		"scope":       rt.Opts.AuthScope,
-		"dry_run":     rt.Opts.DryRun,
-		"wait":        rt.Opts.Wait,
-		"status":      "skeleton-ready",
-		"next_action": "implement action registry in phase 1+",
-	}, nil
+	name := args[0]
+	parsedArgs, err := action.ParseArgs(args[1:])
+	if err != nil {
+		return nil, err
+	}
+	if rt.Opts.DryRun {
+		return map[string]any{
+			"action":  name,
+			"ok":      true,
+			"scope":   rt.Opts.AuthScope,
+			"dry_run": true,
+			"request": parsedArgs,
+		}, nil
+	}
+	if action.IsPhase1Action(name) {
+		return action.ExecutePhase1(context.Background(), rt.Client, action.Request{
+			Name:  name,
+			Args:  parsedArgs,
+			Scope: rt.Opts.AuthScope,
+		})
+	}
+	return nil, apperr.New(apperr.CodeInvalidArgs, "action not implemented yet: "+name)
 }
 
 func runWorkflowCommand(rt commandRuntime, args []string) (map[string]any, error) {
@@ -395,6 +473,31 @@ func hasHelp(args []string) bool {
 		}
 	}
 	return false
+}
+
+func tryPrintCommandHelp(args []string, stdout io.Writer) bool {
+	if len(args) == 0 {
+		return false
+	}
+	if !hasHelp(args[1:]) {
+		return false
+	}
+	switch args[0] {
+	case "action":
+		_, _ = io.WriteString(stdout, actionHelp())
+		return true
+	case "workflow":
+		_, _ = io.WriteString(stdout, workflowHelp())
+		return true
+	case "console":
+		_, _ = io.WriteString(stdout, consoleHelp())
+		return true
+	case "auth":
+		_, _ = io.WriteString(stdout, authHelp())
+		return true
+	default:
+		return false
+	}
 }
 
 func printError(err error, stderr io.Writer) int {

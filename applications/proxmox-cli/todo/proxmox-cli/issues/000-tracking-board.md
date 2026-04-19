@@ -11,16 +11,16 @@
 ## Current Snapshot
 
 - last_updated: 2026-04-19
-- overall_progress: 1/8 issues completed
-- action_coverage: 0/43
-- prompt_coverage: 0/43
+- overall_progress: 2/8 issues completed
+- action_coverage: 9/43
+- prompt_coverage: 9/43
 
 ## Issue Status
 
 | Issue | Phase | Status | Action/Prompt Target | Depends On |
 | --- | --- | --- | --- | --- |
 | ISSUE-001 | 0 | completed | foundation baseline | - |
-| ISSUE-002 | 1 | open | 9 actions / 9 prompts | ISSUE-001 |
+| ISSUE-002 | 1 | completed | 9 actions / 9 prompts | ISSUE-001 |
 | ISSUE-003 | 2 | open | 13 actions / 13 prompts | ISSUE-002 |
 | ISSUE-004 | 3 | open | 6 actions / 6 prompts | ISSUE-003 |
 | ISSUE-005 | 4 | open | 6 actions / 6 prompts | ISSUE-004 |
@@ -32,7 +32,7 @@
 
 ## Milestones
 
-- [ ] M1: ISSUE-001 + ISSUE-002 完成
+- [x] M1: ISSUE-001 + ISSUE-002 完成
 - [ ] M2: ISSUE-003 + ISSUE-004 完成
 - [ ] M3: ISSUE-005 完成
 - [ ] M4: ISSUE-006 + ISSUE-007 完成
