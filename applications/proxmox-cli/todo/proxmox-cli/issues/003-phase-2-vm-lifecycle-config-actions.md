@@ -1,6 +1,6 @@
 # ISSUE-003 Phase 2 VM Lifecycle and Config Actions
 
-- status: in_progress
+- status: completed
 - priority: high
 - phase: 2
 - depends_on: ISSUE-002
@@ -37,7 +37,7 @@
 - [x] 13 个 action 可稳定执行。
 - [x] 异步写操作 `--wait` 可得最终状态。
 - [x] A31 PUT 语义验证通过。
-- [ ] 13 条 prompt 通过。
+- [x] 13 条 prompt 通过。
 
 ## Regression Note
 
