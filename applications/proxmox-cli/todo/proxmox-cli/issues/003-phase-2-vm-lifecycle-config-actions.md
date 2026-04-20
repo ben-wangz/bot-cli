@@ -1,6 +1,6 @@
 # ISSUE-003 Phase 2 VM Lifecycle and Config Actions
 
-- status: open
+- status: in_progress
 - priority: high
 - phase: 2
 - depends_on: ISSUE-002
@@ -27,14 +27,19 @@
 
 ## Tasks
 
-- [ ] 写操作统一返回 UPID 并支持 `--wait`。
-- [ ] 实现 `sendkey` 强制 PUT。
-- [ ] 实现 `net0`/`boot` URL 编码工具。
-- [ ] 为 13 个 action 各新增 1 条独立正向 prompt。
+- [x] 写操作统一返回 UPID 并支持 `--wait`。
+- [x] 实现 `sendkey` 强制 PUT。
+- [x] 实现 `net0`/`boot` URL 编码工具。
+- [x] 为 13 个 action 各新增 1 条独立正向 prompt。
 
 ## Acceptance
 
 - [ ] 13 个 action 可稳定执行。
 - [ ] 异步写操作 `--wait` 可得最终状态。
-- [ ] A31 PUT 语义验证通过。
+- [x] A31 PUT 语义验证通过。
 - [ ] 13 条 prompt 通过。
+
+## Current Blocker
+
+- Live 验证发现 `migrate_vm` 在现网节点上可能出现长时间 `running` 并持有 VM lock（`lock: migrate`），需要管理员侧清理后再完成全量 acceptance 勾选。
+- 当前残留锁资源：`vmid=106`、`vmid=107`（node: `eva003`）。

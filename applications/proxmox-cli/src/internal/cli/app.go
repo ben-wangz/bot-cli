@@ -398,7 +398,68 @@ func runActionCommand(rt commandRuntime, args []string) (map[string]any, error) 
 			Scope: rt.Opts.AuthScope,
 		})
 	}
+	if action.IsPhase2Action(name) {
+		result, phaseErr := action.ExecutePhase2(context.Background(), rt.Client, action.Request{
+			Name:  name,
+			Args:  parsedArgs,
+			Scope: rt.Opts.AuthScope,
+		})
+		if phaseErr != nil {
+			return nil, phaseErr
+		}
+		if !rt.Opts.Wait {
+			return result, nil
+		}
+		if !action.IsPhase2AsyncAction(name) {
+			diagnostics := map[string]any{"wait_skipped": "action is synchronous"}
+			if current, ok := result["diagnostics"].(map[string]any); ok {
+				for k, v := range current {
+					diagnostics[k] = v
+				}
+			}
+			result["diagnostics"] = diagnostics
+			return result, nil
+		}
+		node, upid := getWaitTarget(result)
+		if node == "" || upid == "" {
+			return nil, apperr.New(apperr.CodeInternal, "wait requested but async action did not provide node/upid")
+		}
+		waitResult, waitErr := action.WaitTask(context.Background(), rt.Client, node, upid, action.WaitOptions{Timeout: waitTimeout(rt.Opts.Timeout), Interval: 2 * time.Second})
+		if waitErr != nil {
+			return nil, waitErr
+		}
+		diagnostics := map[string]any{"wait_status": waitResult}
+		if current, ok := result["diagnostics"].(map[string]any); ok {
+			for k, v := range current {
+				diagnostics[k] = v
+			}
+		}
+		result["diagnostics"] = diagnostics
+		return result, nil
+	}
 	return nil, apperr.New(apperr.CodeInvalidArgs, "action not implemented yet: "+name)
+}
+
+func waitTimeout(timeout time.Duration) time.Duration {
+	if timeout < 5*time.Minute {
+		return 5 * time.Minute
+	}
+	return timeout
+}
+
+func getWaitTarget(result map[string]any) (string, string) {
+	request, _ := result["request"].(map[string]any)
+	node := asStringValue(request["node"])
+	resultData, _ := result["result"].(map[string]any)
+	upid := asStringValue(resultData["upid"])
+	return node, upid
+}
+
+func asStringValue(v any) string {
+	if v == nil {
+		return ""
+	}
+	return strings.TrimSpace(fmt.Sprintf("%v", v))
 }
 
 func runWorkflowCommand(rt commandRuntime, args []string) (map[string]any, error) {

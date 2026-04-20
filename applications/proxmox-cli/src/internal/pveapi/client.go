@@ -102,6 +102,28 @@ func (c *Client) GetData(ctx context.Context, path string, query url.Values) (an
 	if err != nil {
 		return nil, err
 	}
+	return c.doAndDecode(req)
+}
+
+func (c *Client) PostFormData(ctx context.Context, path string, form url.Values) (any, error) {
+	req, err := c.NewRequest(ctx, http.MethodPost, path, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	return c.doAndDecode(req)
+}
+
+func (c *Client) PutFormData(ctx context.Context, path string, form url.Values) (any, error) {
+	req, err := c.NewRequest(ctx, http.MethodPut, path, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	return c.doAndDecode(req)
+}
+
+func (c *Client) doAndDecode(req *http.Request) (any, error) {
 	resp, err := c.Do(req)
 	if resp != nil {
 		defer resp.Body.Close()

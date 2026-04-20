@@ -29,6 +29,10 @@ Global options:
   --debug                          Enable debug logs with redaction
   -h, --help                       Show help
 
+Safety env vars (for mutating actions):
+  PVE_ALLOWED_VMID_MIN             Allowed VMID lower bound (default: 1001)
+  PVE_ALLOWED_VMID_MAX             Allowed VMID upper bound (default: 2000)
+
 Examples:
   proxmox-cli --auth-file ./auth.json auth inspect
   proxmox-cli --api-base https://pve:8006/api2/json action list_nodes
@@ -57,6 +61,21 @@ Phase 1 implemented actions:
   get_next_vmid
   get_vm_status --node <node> --vmid <vmid>
   list_tasks_by_vmid --node <node> --vmid <vmid> [--source active]
+
+Phase 2 implemented actions:
+  clone_template --node <node> --source-vmid <id> --target-vmid <id> [--name <name>] [--target <node>]
+  migrate_vm --node <node> --vmid <id> --target <node>
+  convert_vm_to_template --node <node> --vmid <id>
+  update_vm_config --node <node> --vmid <id> --<config-key> <value>
+  vm_power --node <node> --vmid <id> --mode <start|stop|shutdown|reboot|reset>
+  set_vm_agent --node <node> --vmid <id> [--enabled 1|0]
+  create_vm --node <node> --vmid <id> --name <name> [--memory <mb>] [--cores <n>]
+  attach_cdrom_iso --node <node> --vmid <id> --iso <storage:iso/file.iso> [--slot ide2]
+  set_net_boot_config --node <node> --vmid <id> --net0 <value> --boot <value>
+  start_installer_and_console_ticket --node <node> --vmid <id>
+  enable_serial_console --node <node> --vmid <id>
+  review_install_tasks --node <node> --vmid <id>
+  sendkey --node <node> --vmid <id> --key <key>
 
 Phase roadmap:
   Phase 1: read/task actions

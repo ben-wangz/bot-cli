@@ -331,6 +331,8 @@ applications/proxmox-cli/
 5. Live PVE：可任意时段使用，但仅操作自建 VM；节点资源占用不超过 70%。
 6. 回归约束：每次最多 1 台 VM，规格 2C/4G/32G，结束自动清理 VM 与临时镜像/seed。
 7. 并发测试原则：若采用 sub-agent 并发，单条 action prompt 必须满足顺序无关和数据自洽。
+8. 对 VM 生命周期类写操作（创建/迁移/模板转换/配置变更），即使启用 sub-agent，也应限制为单写并发（有效并发=1），并要求每条用例使用本地新分配 VMID 与独立清理。
+9. 安全范围控制：PVE 写操作使用环境变量 `PVE_ALLOWED_VMID_MIN` 与 `PVE_ALLOWED_VMID_MAX` 限定可操作 VMID 区间，默认范围 `1001-2000`。
 
 ---
 

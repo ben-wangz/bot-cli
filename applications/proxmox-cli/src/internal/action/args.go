@@ -69,6 +69,48 @@ func RequiredVMID(args map[string]string) (int, error) {
 	return vmid, nil
 }
 
+func RequiredOperationVMID(args map[string]string) (int, error) {
+	vmid, err := RequiredVMID(args)
+	if err != nil {
+		return 0, err
+	}
+	if err := EnsureOperationVMID(vmid); err != nil {
+		return 0, err
+	}
+	return vmid, nil
+}
+
+func RequiredInt(args map[string]string, key string) (int, error) {
+	raw := strings.TrimSpace(args[key])
+	if raw == "" {
+		return 0, apperr.New(apperr.CodeInvalidArgs, "missing required action arg --"+key)
+	}
+	v, err := strconv.Atoi(raw)
+	if err != nil || v <= 0 {
+		return 0, apperr.New(apperr.CodeInvalidArgs, key+" must be a positive integer")
+	}
+	return v, nil
+}
+
+func RequiredOperationInt(args map[string]string, key string) (int, error) {
+	v, err := RequiredInt(args, key)
+	if err != nil {
+		return 0, err
+	}
+	if err := EnsureOperationVMID(v); err != nil {
+		return 0, err
+	}
+	return v, nil
+}
+
+func RequiredString(args map[string]string, key string) (string, error) {
+	v := strings.TrimSpace(args[key])
+	if v == "" {
+		return "", apperr.New(apperr.CodeInvalidArgs, "missing required action arg --"+key)
+	}
+	return v, nil
+}
+
 func RequiredUPID(args map[string]string) (string, error) {
 	upid := strings.TrimSpace(args["upid"])
 	if upid == "" {
@@ -84,6 +126,26 @@ func IsPhase1Action(name string) bool {
 	switch name {
 	case "list_nodes", "list_cluster_resources", "list_vms_by_node", "get_vm_config", "get_effective_permissions",
 		"get_task_status", "get_next_vmid", "get_vm_status", "list_tasks_by_vmid":
+		return true
+	default:
+		return false
+	}
+}
+
+func IsPhase2Action(name string) bool {
+	switch name {
+	case "clone_template", "migrate_vm", "convert_vm_to_template", "update_vm_config", "vm_power",
+		"set_vm_agent", "create_vm", "attach_cdrom_iso", "set_net_boot_config",
+		"start_installer_and_console_ticket", "enable_serial_console", "review_install_tasks", "sendkey":
+		return true
+	default:
+		return false
+	}
+}
+
+func IsPhase2AsyncAction(name string) bool {
+	switch name {
+	case "clone_template", "migrate_vm", "convert_vm_to_template", "vm_power", "create_vm", "start_installer_and_console_ticket":
 		return true
 	default:
 		return false

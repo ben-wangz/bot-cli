@@ -13,6 +13,7 @@ Run all Phase 1 action prompts under `applications/proxmox-cli/src/test/prompts/
 - The parent agent aggregates all sub-agent outputs into a single final report.
 - Every prompt must be order-independent: no prompt may consume outputs or side effects produced by another prompt.
 - Each prompt must resolve its own runtime inputs (`NODE`, `VMID`, `UPID`, etc.) inside the same prompt execution.
+- Phase 1 actions are read-only; `--wait` is not required in Phase 1 prompts.
 
 ## Fallback Rule
 
