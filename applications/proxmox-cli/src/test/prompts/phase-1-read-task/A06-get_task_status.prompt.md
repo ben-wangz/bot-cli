@@ -14,10 +14,10 @@ Setup:
 1) Load env vars: `source build/pve-user.env`
 2) Change directory to `applications/proxmox-cli/src`
 3) Discover `NODE` from online nodes.
-4) Discover `VMID` by calling `list_vms_by_node --node "$NODE"`.
+4) Discover `VMID` by calling `list_vms_by_node --node "$NODE"` and selecting a VMID in allowed range (`PVE_ALLOWED_VMID_MIN..PVE_ALLOWED_VMID_MAX`, default `1001..2000`).
 5) Discover `UPID` by calling `list_tasks_by_vmid --node "$NODE" --vmid "$VMID"` and taking the first item.
 6) If the selected VM has no tasks, try the next VM on the same node.
-7) Fail if no `UPID` can be discovered.
+7) Fail if no `UPID` can be discovered for an allowed-range VMID.
 
 Command:
 go run ./cmd/proxmox-cli --output json action get_task_status --node "$NODE" --upid "$UPID"

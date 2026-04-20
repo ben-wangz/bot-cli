@@ -28,6 +28,7 @@ Run all Phase 2 action prompts under `applications/proxmox-cli/src/test/prompts/
 5) Always include `--insecure-tls --output json`.
 6) For mutating prompts, allocate a fresh `TEST_VMID` via `get_next_vmid` inside that prompt.
 7) Teardown must run on both success and failure paths (best-effort cleanup).
+8) For `A08-migrate_vm`, use a lightweight migration candidate (prefer no-disk; fallback to small disk 4G-8G) to avoid long data-copy migration.
 
 ## Prompt Files to Execute
 

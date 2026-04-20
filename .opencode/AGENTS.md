@@ -30,3 +30,4 @@
 
 ## File Operations
 - Prefer `mv` over create-then-delete for rename/move operations.
+- For temporary files, use the project-local `build/` directory instead of `/tmp/` to avoid requiring `/tmp` read/write permissions.

@@ -14,7 +14,6 @@
 - overall_progress: 2/8 issues completed
 - action_coverage: 22/43
 - prompt_coverage: 22/43
-- blocker: ISSUE-003 live migrate task may hang and keep `lock: migrate` (current locked VMIDs: 106, 107 on eva003)
 
 ## Issue Status
 

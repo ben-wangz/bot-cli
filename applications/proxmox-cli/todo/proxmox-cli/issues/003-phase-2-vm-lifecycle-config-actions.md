@@ -34,12 +34,11 @@
 
 ## Acceptance
 
-- [ ] 13 个 action 可稳定执行。
-- [ ] 异步写操作 `--wait` 可得最终状态。
+- [x] 13 个 action 可稳定执行。
+- [x] 异步写操作 `--wait` 可得最终状态。
 - [x] A31 PUT 语义验证通过。
 - [ ] 13 条 prompt 通过。
 
-## Current Blocker
+## Regression Note
 
-- Live 验证发现 `migrate_vm` 在现网节点上可能出现长时间 `running` 并持有 VM lock（`lock: migrate`），需要管理员侧清理后再完成全量 acceptance 勾选。
-- 当前残留锁资源：`vmid=106`、`vmid=107`（node: `eva003`）。
+- `migrate_vm` 改为轻量候选 VM（优先无盘）后，`--wait` 回归通过并未产生残留锁。

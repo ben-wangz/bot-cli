@@ -27,6 +27,7 @@ Run all Phase 1 action prompts under `applications/proxmox-cli/src/test/prompts/
 3) Use source dir: `applications/proxmox-cli/src`.
 4) Use API base: `${PVE_API_BASE_URL%/}/api2/json`.
 5) Always include `--insecure-tls --output json`.
+6) Set VMID policy env vars for this suite: `PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000` (or project-approved override).
 
 ## Prompt Files to Execute
 

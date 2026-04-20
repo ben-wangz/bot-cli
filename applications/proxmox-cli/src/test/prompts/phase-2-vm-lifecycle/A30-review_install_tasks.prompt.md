@@ -24,6 +24,7 @@ Success criteria:
 - JSON field `action == "review_install_tasks"`
 - JSON field `ok == true`
 - `result` is an array
+- JSON contains `diagnostics.wait_skipped == "action is synchronous"`
 
 Teardown:
 - Stop and destroy `TEST_VMID` created for this prompt.

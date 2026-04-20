@@ -23,7 +23,7 @@ Success criteria:
 - exit code = 0
 - JSON field `action == "update_vm_config"`
 - JSON field `ok == true`
-- `result.upid` is non-empty
+- JSON contains `diagnostics.wait_skipped == "action is synchronous"`
 
 Teardown:
 - Destroy `TEST_VMID` in this prompt run.

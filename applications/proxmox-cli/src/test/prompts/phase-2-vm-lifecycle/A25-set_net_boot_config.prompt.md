@@ -14,7 +14,8 @@ Setup:
 1) Load env vars and switch to `applications/proxmox-cli/src`.
 2) Resolve `TEST_NODE`.
 3) Allocate fresh `TEST_VMID` and create a disposable VM.
-3) Prepare URL-safe values for `NET0_VALUE` and `BOOT_VALUE`.
+4) Prepare URL-safe values for `NET0_VALUE` and `BOOT_VALUE`.
+   - Recommended `BOOT_VALUE`: `order=scsi0;net0`
 
 Command:
 go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --wait --output json action set_net_boot_config --node "$TEST_NODE" --vmid "$TEST_VMID" --net0 "$NET0_VALUE" --boot "$BOOT_VALUE"
@@ -23,7 +24,7 @@ Success criteria:
 - exit code = 0
 - JSON field `action == "set_net_boot_config"`
 - JSON field `ok == true`
-- `result.upid` is non-empty
+- JSON contains `diagnostics.wait_skipped == "action is synchronous"`
 
 Teardown:
 - Destroy `TEST_VMID` in this run.

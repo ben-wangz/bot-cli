@@ -24,6 +24,7 @@ Success criteria:
 - JSON field `action == "sendkey"`
 - JSON field `ok == true`
 - `diagnostics.method == "PUT"`
+- JSON contains `diagnostics.wait_skipped == "action is synchronous"`
 
 Teardown:
 - Stop and destroy `TEST_VMID` in this prompt run.

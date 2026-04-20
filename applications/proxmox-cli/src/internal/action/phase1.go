@@ -80,7 +80,7 @@ func runGetVMConfig(ctx context.Context, client *pveapi.Client, req Request) (ma
 	if err != nil {
 		return nil, err
 	}
-	vmid, err := RequiredVMID(req.Args)
+	vmid, err := RequiredOperationVMID(req.Args)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func runGetTaskStatus(ctx context.Context, client *pveapi.Client, req Request) (
 	if err != nil {
 		return nil, err
 	}
-	upid, err := RequiredUPID(req.Args)
+	upid, err := RequiredOperationUPID(req.Args)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func runGetVMStatus(ctx context.Context, client *pveapi.Client, req Request) (ma
 	if err != nil {
 		return nil, err
 	}
-	vmid, err := RequiredVMID(req.Args)
+	vmid, err := RequiredOperationVMID(req.Args)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func runListTasksByVMID(ctx context.Context, client *pveapi.Client, req Request)
 	if err != nil {
 		return nil, err
 	}
-	vmid, err := RequiredVMID(req.Args)
+	vmid, err := RequiredOperationVMID(req.Args)
 	if err != nil {
 		return nil, err
 	}

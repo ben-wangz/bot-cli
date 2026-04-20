@@ -122,6 +122,29 @@ func RequiredUPID(args map[string]string) (string, error) {
 	return upid, nil
 }
 
+func RequiredOperationUPID(args map[string]string) (string, error) {
+	upid, err := RequiredUPID(args)
+	if err != nil {
+		return "", err
+	}
+	parts := strings.Split(upid, ":")
+	if len(parts) < 7 {
+		return "", apperr.New(apperr.CodeInvalidArgs, "invalid upid format")
+	}
+	idPart := strings.TrimSpace(parts[6])
+	if idPart == "" {
+		return "", apperr.New(apperr.CodeInvalidArgs, "upid id field is empty")
+	}
+	vmid, convErr := strconv.Atoi(idPart)
+	if convErr != nil {
+		return "", apperr.New(apperr.CodeInvalidArgs, "upid must reference numeric vmid id")
+	}
+	if err := EnsureOperationVMID(vmid); err != nil {
+		return "", err
+	}
+	return upid, nil
+}
+
 func IsPhase1Action(name string) bool {
 	switch name {
 	case "list_nodes", "list_cluster_resources", "list_vms_by_node", "get_vm_config", "get_effective_permissions",

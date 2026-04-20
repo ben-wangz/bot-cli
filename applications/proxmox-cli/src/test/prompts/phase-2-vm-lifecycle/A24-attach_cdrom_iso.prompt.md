@@ -24,7 +24,7 @@ Success criteria:
 - exit code = 0
 - JSON field `action == "attach_cdrom_iso"`
 - JSON field `ok == true`
-- `result.upid` is non-empty
+- JSON contains `diagnostics.wait_skipped == "action is synchronous"`
 
 Teardown:
 - Destroy `TEST_VMID` in this run.

@@ -14,8 +14,8 @@ Setup:
 1) Load env vars: `source build/pve-user.env`
 2) Change directory to `applications/proxmox-cli/src`
 3) Discover `NODE` from online nodes.
-4) Discover `VMID` by calling `list_vms_by_node --node "$NODE"` and selecting the first VM.
-5) Fail if no VM is found.
+4) Discover `VMID` by calling `list_vms_by_node --node "$NODE"` and selecting a VMID in allowed range (`PVE_ALLOWED_VMID_MIN..PVE_ALLOWED_VMID_MAX`, default `1001..2000`).
+5) Fail if no VM in allowed range is found.
 
 Command:
 go run ./cmd/proxmox-cli --output json action get_vm_config --node "$NODE" --vmid "$VMID"

@@ -29,7 +29,7 @@ Global options:
   --debug                          Enable debug logs with redaction
   -h, --help                       Show help
 
-Safety env vars (for mutating actions):
+Safety env vars (for VMID-scoped actions):
   PVE_ALLOWED_VMID_MIN             Allowed VMID lower bound (default: 1001)
   PVE_ALLOWED_VMID_MAX             Allowed VMID upper bound (default: 2000)
 
