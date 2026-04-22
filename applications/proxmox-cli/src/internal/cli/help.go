@@ -79,7 +79,7 @@ Phase 2 implemented actions:
 
 Phase 3 implemented actions:
   agent_network_get_interfaces --node <node> --vmid <id>
-  agent_exec --node <node> --vmid <id> --command <command> [--timeout-seconds 30]
+  agent_exec --node <node> --vmid <id> --command <command> [--shell 1|0] [--shell-bin /bin/sh] [--script <shell script>] [--input-data <stdin>] [--timeout-seconds 30]
   agent_exec_status --node <node> --vmid <id> --pid <pid>
   dump_cloudinit --node <node> --vmid <id> [--type user|network|meta]
   storage_upload_guard --node <node> --storage <storage> [--content-type snippets]
@@ -91,12 +91,13 @@ Phase 3 implemented actions:
 Phase 4 implemented actions:
   open_vm_termproxy --node <node> --vmid <id> [--serial serial0]
   serial_ws_session_control --node <node> --vmid <id> [--script <multi-line>] [--expect <text>] [--timeout-seconds 60]
-  serial_ws_capture_to_file --node <node> --vmid <id> --log-path <file> [--append 1|0] [--script <multi-line>] [--expect <text>] [--timeout-seconds 120]
+  serial_ws_capture_to_file --node <node> --vmid <id> --log-path <file> [--append 1|0 default=1] [--script <multi-line>] [--expect <text>] [--timeout-seconds 120]
 
 serial_ws_capture_to_file runbook (required for install diagnosis):
   1) Serial output is not persisted by Proxmox; re-run the whole install flow before capture if previous run is gone.
   2) Always run capture in background with long timeout (for example nohup + pid file), then watch log growth and stop early when enough evidence is collected.
-  3) If log only shows "OKstarting serial terminal on interface serial0", treat it as a console redirection failure and re-check ISO kernel cmdline has serial console enabled.
+  3) Reconnect sessions must append to the same log file; do not overwrite. Keep --append at default value 1.
+  4) If log only shows "OKstarting serial terminal on interface serial0", treat it as a console redirection failure and re-check ISO kernel cmdline has serial console enabled.
 
 Phase 5 implemented actions:
   node_termproxy_shell_exec --node <node> [--cmd login] [--cmd-opt <csv>] [--cmd-opts <nul-terminated>] [--script <multi-line>] [--expect <text>] [--timeout-seconds 60]

@@ -163,6 +163,8 @@ func runSerialWSCaptureToFile(ctx context.Context, client *pveapi.Client, req Re
 		timeoutC = timer.C
 		defer timer.Stop()
 	}
+	keepaliveTicker := time.NewTicker(20 * time.Second)
+	defer keepaliveTicker.Stop()
 
 	for {
 		if stopOnExpect && matched {
@@ -173,6 +175,14 @@ func runSerialWSCaptureToFile(ctx context.Context, client *pveapi.Client, req Re
 			return nil, apperr.Wrap(apperr.CodeNetwork, "serial websocket interrupted", ctx.Err())
 		case <-timeoutC:
 			goto finished
+		case <-keepaliveTicker.C:
+			if keepaliveErr := sendWebsocketKeepalive(conn); keepaliveErr != nil {
+				if websocket.IsCloseError(keepaliveErr, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+					closedByRemote = true
+					goto finished
+				}
+				return nil, apperr.Wrap(apperr.CodeNetwork, "failed to send serial websocket keepalive", keepaliveErr)
+			}
 		case read := <-reads:
 			if read.err != nil {
 				if websocket.IsCloseError(read.err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
@@ -454,6 +464,8 @@ func readSerialUntil(ctx context.Context, conn *websocket.Conn, expect string, t
 	}()
 	timer := time.NewTimer(timeout)
 	defer timer.Stop()
+	keepaliveTicker := time.NewTicker(20 * time.Second)
+	defer keepaliveTicker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
@@ -461,6 +473,14 @@ func readSerialUntil(ctx context.Context, conn *websocket.Conn, expect string, t
 		case <-timer.C:
 			raw := buffer.String()
 			return raw, matchesExpect(raw, expect), nil
+		case <-keepaliveTicker.C:
+			if keepaliveErr := sendWebsocketKeepalive(conn); keepaliveErr != nil {
+				if websocket.IsCloseError(keepaliveErr, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+					raw := buffer.String()
+					return raw, matchesExpect(raw, expect), nil
+				}
+				return buffer.String(), false, apperr.Wrap(apperr.CodeNetwork, "failed to send serial websocket keepalive", keepaliveErr)
+			}
 		case read := <-reads:
 			if read.err != nil {
 				if websocket.IsCloseError(read.err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
@@ -617,6 +637,17 @@ func sendTermproxyResize(conn *websocket.Conn, cols int, rows int) error {
 		if !strings.Contains(strings.ToLower(err.Error()), "close") {
 			return err
 		}
+	}
+	return nil
+}
+
+func sendWebsocketKeepalive(conn *websocket.Conn) error {
+	deadline := time.Now().Add(3 * time.Second)
+	if err := conn.WriteControl(websocket.PingMessage, []byte("keepalive"), deadline); err == nil {
+		return nil
+	}
+	if err := sendTermproxyResize(conn, 120, 40); err != nil {
+		return err
 	}
 	return nil
 }

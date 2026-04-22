@@ -10,7 +10,7 @@
 
 ## Current Snapshot
 
-- last_updated: 2026-04-20
+- last_updated: 2026-04-22
 - overall_progress: 3/8 issues completed
 - action_coverage: 31/43
 - prompt_coverage: 28/43
@@ -48,6 +48,8 @@
 - Phase 5 进展：A39 `node_termproxy_shell_exec` 已接入并完成会话交互（脚本命令回显可验证）。
 - 新增验证：A39 已支持 `cmd-opts`（null-terminated strings）并通过 root 会话实测 `upgrade/ceph_install` 提示链路。
 - 新增约束：`root-token` 无法触发节点 `upgrade/ceph_install` 命令（后端仅允许 `root@pam` session），A39 命令执行闭环仍受凭据/协议双重阻塞。
+- 新增问题：当前 `build_ubuntu_autoinstall_iso` 路径为“整盘重打包”，输出 ISO 体积接近官方源 ISO，偏离最初“小 shim”目标。
+- 决策记录：后续回到“小 shim + HTTP 安装源”方案；当前大 ISO 路径作为临时稳定回归手段保留，待 ISSUE-008 编排替换。
 
 ## Dependencies
 

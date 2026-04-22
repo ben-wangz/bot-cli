@@ -76,6 +76,30 @@ func runAgentExec(ctx context.Context, client *pveapi.Client, req Request) (map[
 	if command == "" {
 		return nil, apperr.New(apperr.CodeInvalidArgs, "missing required action arg --command")
 	}
+	originalCommand := command
+	useShell, err := parseOptionalBoolArg(req.Args, "shell")
+	if err != nil {
+		return nil, err
+	}
+	inputData := strings.TrimSpace(req.Args["input-data"])
+	if useShell {
+		shellBin := strings.TrimSpace(req.Args["shell-bin"])
+		if shellBin == "" {
+			shellBin = "/bin/sh"
+		}
+		script := strings.TrimSpace(req.Args["script"])
+		if script == "" {
+			script = originalCommand
+		}
+		if script == "" {
+			return nil, apperr.New(apperr.CodeInvalidArgs, "--shell requires --command or --script")
+		}
+		if !strings.HasSuffix(script, "\n") {
+			script += "\n"
+		}
+		inputData = script
+		command = shellBin
+	}
 	timeoutSeconds := 30
 	if req.Args["timeout-seconds"] != "" {
 		parsedTimeout, parseErr := RequiredInt(req.Args, "timeout-seconds")
@@ -92,8 +116,11 @@ func runAgentExec(ctx context.Context, client *pveapi.Client, req Request) (map[
 		}
 		pollMillis = parsedPoll
 	}
-	form := mapArgsToForm(req.Args, "node", "vmid", "command", "cmd", "timeout-seconds", "poll-interval-ms")
+	form := url.Values{}
 	form.Set("command", command)
+	if inputData != "" {
+		form.Set("input-data", inputData)
+	}
 	path := fmt.Sprintf("/nodes/%s/qemu/%d/agent/exec", url.PathEscape(node), vmid)
 	data, err := client.PostFormData(ctx, path, form)
 	if err != nil {
@@ -107,7 +134,16 @@ func runAgentExec(ctx context.Context, client *pveapi.Client, req Request) (map[
 	if err != nil {
 		return nil, err
 	}
-	return buildResult(req, map[string]any{"node": node, "vmid": vmid, "command": command}, map[string]any{"pid": pid, "status": status}, map[string]any{"poll_count": polls, "timeout_seconds": timeoutSeconds}), nil
+	request := map[string]any{"node": node, "vmid": vmid, "command": originalCommand, "exec_command": command}
+	if useShell {
+		request["shell"] = true
+	}
+	if inputData != "" {
+		request["input_data_len"] = len(inputData)
+	}
+	result := map[string]any{"pid": pid, "status": status, "exec_command": command, "shell": useShell}
+	diagnostics := map[string]any{"poll_count": polls, "timeout_seconds": timeoutSeconds, "shell": useShell, "input_data_len": len(inputData)}
+	return buildResult(req, request, result, diagnostics), nil
 }
 
 func runAgentExecStatus(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
@@ -658,6 +694,21 @@ func toBool(v any) bool {
 		return value != 0
 	default:
 		return false
+	}
+}
+
+func parseOptionalBoolArg(args map[string]string, key string) (bool, error) {
+	raw := strings.TrimSpace(args[key])
+	if raw == "" {
+		return false, nil
+	}
+	switch strings.ToLower(raw) {
+	case "1", "true", "yes", "on":
+		return true, nil
+	case "0", "false", "no", "off":
+		return false, nil
+	default:
+		return false, apperr.New(apperr.CodeInvalidArgs, key+" must be one of 1|0|true|false")
 	}
 }
 

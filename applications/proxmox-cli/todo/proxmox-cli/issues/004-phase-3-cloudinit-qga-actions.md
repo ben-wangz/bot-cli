@@ -34,6 +34,7 @@
 - QGA 正向回归在无 qga-ready 模板时会被环境阻塞，需依赖 Phase 4 的控制台能力（至少 A29/A34 子集）完成来宾内安装与启用。
 - Live 验证补充：`/nodes/{node}/storage/{storage}/upload` 当前返回可上传类型 `iso|vztmpl|import`，`snippets` 不能经该 API 上传；snippet 落盘需依赖后续 root 路径（Phase 5）或预置模板。
 - 已通过 A39 root 会话完成节点 snippet 写入与读取校验，但当前模板侧未形成稳定 cloud-init→qga 生效链路，QGA 正向仍受环境阻塞。
+- 方案记录：当前“单盘自包含 ISO”可用于稳定诊断，但产物体积过大；后续回到“小 shim + HTTP 安装源”方案以满足原始目标。
 
 ## Acceptance
 
