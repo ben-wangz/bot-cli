@@ -3,7 +3,8 @@
 ## Preconditions
 
 - `build/pve-user.env` is loaded.
-- `build/ubuntu-24-with-agent.vm-template.id` exists and points to a valid template VM in policy VMID range.
+- `build/phase1-read-task.shared-node` exists.
+- `build/phase1-read-task.shared-vmid` exists.
 
 ## Prompt
 
@@ -12,25 +13,19 @@ You are a test execution agent. Run the A12 `get_vm_status` positive-path test.
 
 Setup:
 1) Load env vars and switch to `applications/proxmox-cli/src`.
-2) Set VMID policy env vars (`PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000`).
-3) Read `TEMPLATE_VMID` from `build/ubuntu-24-with-agent.vm-template.id`.
-4) Resolve `TEST_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
-5) Allocate fresh `TEST_VMID` in-range via `get_next_vmid`.
-6) Clone `TEMPLATE_VMID` to `TEST_VMID` on `TEST_NODE` (`clone_template --wait`).
+2) Read `SHARED_NODE` from `build/phase1-read-task.shared-node`.
+3) Read `SHARED_VMID` from `build/phase1-read-task.shared-vmid`.
 
 Command:
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action get_vm_status --node "$TEST_NODE" --vmid "$TEST_VMID"
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action get_vm_status --node "$SHARED_NODE" --vmid "$SHARED_VMID"
 
 Success criteria:
 - exit code = 0
 - JSON field `action == "get_vm_status"`
 - JSON field `ok == true`
-- `request.node == TEST_NODE` and `request.vmid == TEST_VMID`
-
-Teardown:
-- Stop and destroy `TEST_VMID` in this prompt run on both success and failure.
+- `request.node == SHARED_NODE` and `request.vmid == SHARED_VMID`
 
 Independence rule:
-- This test must be self-contained and order-independent.
-- Resolve and clean up its own VMID during this prompt run.
+- This test must be self-contained for action execution and order-independent.
+- Do not create, stop, or destroy VMs inside this prompt run.
 ```
