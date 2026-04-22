@@ -81,6 +81,10 @@ func runAgentExec(ctx context.Context, client *pveapi.Client, req Request) (map[
 	if err != nil {
 		return nil, err
 	}
+	noWait, err := parseOptionalBoolArg(req.Args, "no-wait")
+	if err != nil {
+		return nil, err
+	}
 	inputData := strings.TrimSpace(req.Args["input-data"])
 	if useShell {
 		shellBin := strings.TrimSpace(req.Args["shell-bin"])
@@ -101,20 +105,22 @@ func runAgentExec(ctx context.Context, client *pveapi.Client, req Request) (map[
 		command = shellBin
 	}
 	timeoutSeconds := 30
-	if req.Args["timeout-seconds"] != "" {
-		parsedTimeout, parseErr := RequiredInt(req.Args, "timeout-seconds")
-		if parseErr != nil {
-			return nil, parseErr
-		}
-		timeoutSeconds = parsedTimeout
-	}
 	pollMillis := 1000
-	if req.Args["poll-interval-ms"] != "" {
-		parsedPoll, parseErr := RequiredInt(req.Args, "poll-interval-ms")
-		if parseErr != nil {
-			return nil, parseErr
+	if !noWait {
+		if req.Args["timeout-seconds"] != "" {
+			parsedTimeout, parseErr := RequiredInt(req.Args, "timeout-seconds")
+			if parseErr != nil {
+				return nil, parseErr
+			}
+			timeoutSeconds = parsedTimeout
 		}
-		pollMillis = parsedPoll
+		if req.Args["poll-interval-ms"] != "" {
+			parsedPoll, parseErr := RequiredInt(req.Args, "poll-interval-ms")
+			if parseErr != nil {
+				return nil, parseErr
+			}
+			pollMillis = parsedPoll
+		}
 	}
 	form := url.Values{}
 	form.Set("command", command)
@@ -130,19 +136,27 @@ func runAgentExec(ctx context.Context, client *pveapi.Client, req Request) (map[
 	if pid == "" {
 		return nil, apperr.New(apperr.CodeNetwork, "agent_exec response does not contain pid")
 	}
-	status, polls, err := pollAgentExecStatus(ctx, client, node, vmid, pid, time.Duration(timeoutSeconds)*time.Second, time.Duration(pollMillis)*time.Millisecond)
-	if err != nil {
-		return nil, err
-	}
 	request := map[string]any{"node": node, "vmid": vmid, "command": originalCommand, "exec_command": command}
 	if useShell {
 		request["shell"] = true
 	}
+	if noWait {
+		request["no_wait"] = true
+	}
 	if inputData != "" {
 		request["input_data_len"] = len(inputData)
 	}
-	result := map[string]any{"pid": pid, "status": status, "exec_command": command, "shell": useShell}
-	diagnostics := map[string]any{"poll_count": polls, "timeout_seconds": timeoutSeconds, "shell": useShell, "input_data_len": len(inputData)}
+	if noWait {
+		result := map[string]any{"pid": pid, "exec_command": command, "shell": useShell, "no_wait": true}
+		diagnostics := map[string]any{"no_wait": true, "wait_skipped": "agent_exec status polling disabled by --no-wait", "shell": useShell, "input_data_len": len(inputData)}
+		return buildResult(req, request, result, diagnostics), nil
+	}
+	status, polls, err := pollAgentExecStatus(ctx, client, node, vmid, pid, time.Duration(timeoutSeconds)*time.Second, time.Duration(pollMillis)*time.Millisecond)
+	if err != nil {
+		return nil, err
+	}
+	result := map[string]any{"pid": pid, "status": status, "exec_command": command, "shell": useShell, "no_wait": false}
+	diagnostics := map[string]any{"poll_count": polls, "timeout_seconds": timeoutSeconds, "no_wait": false, "shell": useShell, "input_data_len": len(inputData)}
 	return buildResult(req, request, result, diagnostics), nil
 }
 
@@ -310,9 +324,45 @@ func runStorageUploadISO(ctx context.Context, client *pveapi.Client, req Request
 	if filename != "" {
 		uploadFilename = filename
 	}
+	ifExists := strings.TrimSpace(strings.ToLower(req.Args["if-exists"]))
+	if ifExists == "" {
+		ifExists = "replace"
+	}
+	if !isOneOf(ifExists, "replace", "skip") {
+		return nil, apperr.New(apperr.CodeInvalidArgs, "if-exists must be one of replace|skip")
+	}
+	expectedVolID := fmt.Sprintf("%s:iso/%s", storage, uploadFilename)
+	if ifExists == "skip" {
+		exists, existsErr := storageVolumeExists(ctx, client, node, storage, expectedVolID)
+		if existsErr != nil {
+			return nil, existsErr
+		}
+		if exists {
+			result := map[string]any{
+				"node":           node,
+				"storage":        storage,
+				"filename":       uploadFilename,
+				"content":        "iso",
+				"source_path":    sourcePath,
+				"volid":          expectedVolID,
+				"uploaded":       false,
+				"skipped_upload": true,
+			}
+			diagnostics := map[string]any{"if_exists": ifExists, "wait_skipped": "existing iso reused"}
+			return buildResult(req, map[string]any{"node": node, "storage": storage, "source-path": sourcePath, "if-exists": ifExists}, result, diagnostics), nil
+		}
+	}
 	data, err := client.PostMultipartFile(ctx, path, fields, "filename", sourcePath, uploadFilename)
 	if err != nil {
 		return nil, err
+	}
+	raw := strings.TrimSpace(asString(data))
+	volID := expectedVolID
+	uploadUPID := ""
+	if strings.HasPrefix(strings.ToUpper(raw), "UPID:") {
+		uploadUPID = raw
+	} else if strings.Contains(raw, ":") && strings.Contains(raw, "/") {
+		volID = raw
 	}
 	result := map[string]any{
 		"node":        node,
@@ -320,12 +370,20 @@ func runStorageUploadISO(ctx context.Context, client *pveapi.Client, req Request
 		"filename":    uploadFilename,
 		"content":     "iso",
 		"source_path": sourcePath,
-		"volid":       asString(data),
+		"volid":       volID,
+		"uploaded":    true,
+	}
+	if uploadUPID != "" {
+		result["upload_upid"] = uploadUPID
 	}
 	if filename != "" {
 		result["requested_filename"] = filename
 	}
-	return buildResult(req, map[string]any{"node": node, "storage": storage, "source-path": sourcePath}, result, map[string]any{}), nil
+	diagnostics := map[string]any{"if_exists": ifExists}
+	if uploadUPID != "" {
+		diagnostics["upload_task_upid"] = uploadUPID
+	}
+	return buildResult(req, map[string]any{"node": node, "storage": storage, "source-path": sourcePath, "if-exists": ifExists}, result, diagnostics), nil
 }
 
 func runBuildUbuntuAutoinstallISO(req Request) (map[string]any, error) {
@@ -660,6 +718,30 @@ func getStorageConfig(ctx context.Context, client *pveapi.Client, node string, s
 		return nil, apperr.New(apperr.CodeNetwork, "storage response is not an object")
 	}
 	return config, nil
+}
+
+func storageVolumeExists(ctx context.Context, client *pveapi.Client, node string, storage string, expectedVolID string) (bool, error) {
+	path := fmt.Sprintf("/nodes/%s/storage/%s/content", url.PathEscape(node), url.PathEscape(storage))
+	query := url.Values{}
+	query.Set("content", "iso")
+	data, err := client.GetData(ctx, path, query)
+	if err != nil {
+		return false, err
+	}
+	list, ok := data.([]any)
+	if !ok {
+		return false, nil
+	}
+	for _, item := range list {
+		entry, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		if strings.TrimSpace(asString(entry["volid"])) == expectedVolID {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func firstObject(data any) map[string]any {

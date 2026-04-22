@@ -13,7 +13,7 @@ Run all Phase 1 action prompts under `applications/proxmox-cli/src/test/prompts/
 - The parent agent aggregates all sub-agent outputs into a single final report.
 - Every prompt must be order-independent: no prompt may consume outputs or side effects produced by another prompt.
 - Each prompt must resolve its own runtime inputs (`NODE`, `VMID`, `UPID`, etc.) inside the same prompt execution.
-- Phase 1 actions are read-only; `--wait` is not required in Phase 1 prompts.
+- Phase 1 action commands are read-only; setup/teardown may run mutating helper actions for disposable VM lifecycle.
 
 ## Fallback Rule
 
@@ -28,6 +28,9 @@ Run all Phase 1 action prompts under `applications/proxmox-cli/src/test/prompts/
 4) Use API base: `${PVE_API_BASE_URL%/}/api2/json`.
 5) Always include `--insecure-tls --output json`.
 6) Set VMID policy env vars for this suite: `PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000` (or project-approved override).
+7) Before running action prompts, execute bootstrap prompt `../e2e/BOOTSTRAP-UBUNTU24-WITH-AGENT-TEMPLATE.prompt.md` once and ensure `build/ubuntu-24-with-agent.vm-template.id` exists.
+8) Each action prompt must clone from the template VMID in that file to a fresh `TEST_VMID`, then self-check and self-destroy VM assets.
+9) For disposable clones, prefer linked clone (`full=0`, default) to minimize storage I/O.
 
 ## Prompt Files to Execute
 

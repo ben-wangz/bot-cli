@@ -63,13 +63,13 @@ Phase 1 implemented actions:
   list_tasks_by_vmid --node <node> --vmid <vmid> [--source active]
 
 Phase 2 implemented actions:
-  clone_template --node <node> --source-vmid <id> --target-vmid <id> [--name <name>] [--target <node>]
+  clone_template --node <node> --source-vmid <id> --target-vmid <id> [--name <name>] [--target <node>] [--full 0|1 default=0]
   migrate_vm --node <node> --vmid <id> --target <node>
   convert_vm_to_template --node <node> --vmid <id>
   update_vm_config --node <node> --vmid <id> --<config-key> <value>
-  vm_power --node <node> --vmid <id> --mode <start|stop|shutdown|reboot|reset>
+  vm_power --node <node> --vmid <id> --mode <start|stop|shutdown|reboot|reset> [--desired-state running|stopped]
   set_vm_agent --node <node> --vmid <id> [--enabled 1|0]
-  create_vm --node <node> --vmid <id> --name <name> [--memory <mb>] [--cores <n>]
+  create_vm --node <node> --vmid <id> --name <name> [--memory <mb>] [--cores <n>] [--if-exists fail|reuse]
   attach_cdrom_iso --node <node> --vmid <id> --iso <storage:iso/file.iso> [--slot ide2]
   set_net_boot_config --node <node> --vmid <id> --net0 <value> --boot <value>
   start_installer_and_console_ticket --node <node> --vmid <id>
@@ -79,18 +79,22 @@ Phase 2 implemented actions:
 
 Phase 3 implemented actions:
   agent_network_get_interfaces --node <node> --vmid <id>
-  agent_exec --node <node> --vmid <id> --command <command> [--shell 1|0] [--shell-bin /bin/sh] [--script <shell script>] [--input-data <stdin>] [--timeout-seconds 30]
+  agent_exec --node <node> --vmid <id> --command <command> [--shell 1|0] [--shell-bin /bin/sh] [--script <shell script>] [--input-data <stdin>] [--no-wait 1|0] [--timeout-seconds 30]
   agent_exec_status --node <node> --vmid <id> --pid <pid>
   dump_cloudinit --node <node> --vmid <id> [--type user|network|meta]
   storage_upload_guard --node <node> --storage <storage> [--content-type snippets]
   storage_upload_snippet --node <node> --storage <storage> --source-path <file> [--filename <name>]
-  storage_upload_iso --node <node> --storage <storage> --source-path <file.iso> [--filename <name.iso>]
+  storage_upload_iso --node <node> --storage <storage> --source-path <file.iso> [--filename <name.iso>] [--if-exists replace|skip]
   build_ubuntu_autoinstall_iso --source-iso <ubuntu.iso> --output-iso <custom.iso> [--kernel-cmdline <cmdline>] [--username cloud] [--password <plain>] [--password-hash <hash>] [--hostname <name>] [--work-dir build/autoinstall-iso-work/<id>]
   render_and_serve_seed --vmid <id> [--seed-dir build/seed] [--seed-name vm-<id>] [--host 127.0.0.1] [--port 8088]
 
 Phase 4 implemented actions:
+  start_vnc_proxy --node <node> --vmid <id> [--websocket 1|0]
+  connect_vnc_websocket --node <node> --vmid <id> [--port <port>] [--ticket <ticket>] [--probe-seconds 2]
   open_vm_termproxy --node <node> --vmid <id> [--serial serial0]
+  validate_k1_serial_readable --node <node> --vmid <id> [--script <multi-line>] [--expect <text>] [--timeout-seconds 20]
   serial_ws_session_control --node <node> --vmid <id> [--script <multi-line>] [--expect <text>] [--timeout-seconds 60]
+  validate_serial_output_criterion2 --node <node> --vmid <id> [--log-path <file>] [--append 1|0 default=1] [--script <multi-line>] [--expect <text>] [--timeout-seconds 120]
   serial_ws_capture_to_file --node <node> --vmid <id> --log-path <file> [--append 1|0 default=1] [--script <multi-line>] [--expect <text>] [--timeout-seconds 120]
 
 serial_ws_capture_to_file runbook (required for install diagnosis):
@@ -121,6 +125,16 @@ Usage:
 Examples:
   proxmox-cli workflow ubuntu24-serial-autoinstall
   proxmox-cli --dry-run workflow ubuntu24-serial-autoinstall --vmid 120
+  proxmox-cli workflow ubuntu24-with-agent-template --node eva002 --target-vmid 1201
+
+Implemented workflows:
+  ubuntu24-with-agent-template --node <node> --target-vmid <id>
+
+ubuntu24-with-agent-template result:
+  - reuse prebuilt installer ISO when available, otherwise build autoinstall ISO
+  - create fresh VM from scratch, run unattended install, verify qga readiness
+  - convert VM to template and write template VMID to build/ubuntu-24-with-agent.vm-template.id
+  - prints each underlying action call to stderr for troubleshooting (sensitive args redacted)
 `
 }
 

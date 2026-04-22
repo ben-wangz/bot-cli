@@ -3,8 +3,14 @@
 This directory stores OpenCode prompt cases used for action-level and workflow-level positive-path validation.
 
 - One prompt per action in A01-A43.
-- One workflow prompt for `ubuntu24-serial-autoinstall`.
+- One bootstrap workflow prompt for `ubuntu24-with-agent-template`.
 - Prompt files should be executable by OpenCode with minimal manual edits.
+
+## Execution Notes
+
+- Bootstrap once per suite run via `e2e/BOOTSTRAP-UBUNTU24-WITH-AGENT-TEMPLATE.prompt.md`.
+- Action prompts should resolve their own runtime inputs and remain order-independent.
+- Action prompts should clean up disposable VM assets in the same prompt run.
 
 ## Layout
 

@@ -1,4 +1,4 @@
-# A02 list_cluster_resources
+# A34 serial_ws_session_control
 
 ## Preconditions
 
@@ -8,7 +8,7 @@
 ## Prompt
 
 ```text
-You are a test execution agent. Run the A02 `list_cluster_resources` positive-path test.
+You are a test execution agent. Run the A34 `serial_ws_session_control` positive-path test.
 
 Setup:
 1) Load env vars and switch to `applications/proxmox-cli/src`.
@@ -17,20 +17,23 @@ Setup:
 4) Resolve `TEST_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
 5) Allocate fresh `TEST_VMID` in-range via `get_next_vmid`.
 6) Clone `TEMPLATE_VMID` to `TEST_VMID` on `TEST_NODE` (`clone_template --wait`).
+7) Enable serial console (`enable_serial_console`) and start VM (`vm_power --mode start --desired-state running --wait`).
 
 Command:
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action list_cluster_resources --type vm
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action serial_ws_session_control --node "$TEST_NODE" --vmid "$TEST_VMID" --script "<ENTER>" --expect "starting serial terminal on interface serial0" --timeout-seconds 30
 
 Success criteria:
 - exit code = 0
-- JSON field `action == "list_cluster_resources"`
+- JSON field `action == "serial_ws_session_control"`
 - JSON field `ok == true`
-- `result` is an array
+- JSON field `result.matched == true`
+- JSON contains `result.transcript_clean`
 
 Teardown:
 - Stop and destroy `TEST_VMID` in this prompt run on both success and failure.
 
 Independence rule:
 - This test must be self-contained and order-independent.
-- Resolve and clean up its own VMID during this prompt run.
+- Never reuse websocket tickets produced by other prompt runs.
+- Never reuse a VMID created by another prompt run.
 ```

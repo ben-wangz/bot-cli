@@ -410,6 +410,9 @@ func runActionCommand(rt commandRuntime, args []string) (map[string]any, error) 
 		if !rt.Opts.Wait {
 			return result, nil
 		}
+		if hasWaitSkipDiagnostic(result) {
+			return result, nil
+		}
 		if !action.IsPhase2AsyncAction(name) {
 			diagnostics := map[string]any{"wait_skipped": "action is synchronous"}
 			if current, ok := result["diagnostics"].(map[string]any); ok {
@@ -525,6 +528,15 @@ func asStringValue(v any) string {
 	return strings.TrimSpace(fmt.Sprintf("%v", v))
 }
 
+func hasWaitSkipDiagnostic(result map[string]any) bool {
+	diagnostics, ok := result["diagnostics"].(map[string]any)
+	if !ok {
+		return false
+	}
+	message := strings.TrimSpace(asStringValue(diagnostics["wait_skipped"]))
+	return message != ""
+}
+
 func runWorkflowCommand(rt commandRuntime, args []string) (map[string]any, error) {
 	if hasHelp(args) {
 		_, _ = io.WriteString(rt.Stdout, workflowHelp())
@@ -533,12 +545,12 @@ func runWorkflowCommand(rt commandRuntime, args []string) (map[string]any, error
 	if len(args) == 0 {
 		return nil, apperr.New(apperr.CodeInvalidArgs, "workflow name is required")
 	}
-	return map[string]any{
-		"command":  "workflow",
-		"workflow": args[0],
-		"args":     args[1:],
-		"status":   "skeleton-ready",
-	}, nil
+	name := args[0]
+	parsedArgs, err := action.ParseArgs(args[1:])
+	if err != nil {
+		return nil, err
+	}
+	return executeWorkflow(rt, name, parsedArgs)
 }
 
 func runConsoleCommand(rt commandRuntime, args []string) (map[string]any, error) {

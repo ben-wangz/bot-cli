@@ -2,7 +2,9 @@ package action
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -19,15 +21,161 @@ import (
 
 func ExecutePhase4(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
 	switch req.Name {
+	case "start_vnc_proxy":
+		return runStartVNCProxy(ctx, client, req)
+	case "connect_vnc_websocket":
+		return runConnectVNCWebsocket(ctx, client, req)
 	case "open_vm_termproxy":
 		return runOpenVMTermproxy(ctx, client, req)
+	case "validate_k1_serial_readable":
+		return runValidateK1SerialReadable(ctx, client, req)
 	case "serial_ws_session_control":
 		return runSerialWSSessionControl(ctx, client, req)
+	case "validate_serial_output_criterion2":
+		return runValidateSerialOutputCriterion2(ctx, client, req)
 	case "serial_ws_capture_to_file":
 		return runSerialWSCaptureToFile(ctx, client, req)
 	default:
 		return nil, apperr.New(apperr.CodeInvalidArgs, "unsupported action in phase 4: "+req.Name)
 	}
+}
+
+func runStartVNCProxy(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
+	node, err := RequiredNode(req.Args)
+	if err != nil {
+		return nil, err
+	}
+	vmid, err := RequiredOperationVMID(req.Args)
+	if err != nil {
+		return nil, err
+	}
+	form := url.Values{}
+	websocketMode := strings.TrimSpace(req.Args["websocket"])
+	if websocketMode == "" {
+		websocketMode = "1"
+	}
+	if !isOneOf(websocketMode, "0", "1") {
+		return nil, apperr.New(apperr.CodeInvalidArgs, "websocket must be 0 or 1")
+	}
+	form.Set("websocket", websocketMode)
+	if rawGeneratePassword := strings.TrimSpace(req.Args["generate-password"]); rawGeneratePassword != "" {
+		if !isOneOf(rawGeneratePassword, "0", "1") {
+			return nil, apperr.New(apperr.CodeInvalidArgs, "generate-password must be 0 or 1")
+		}
+		form.Set("generate-password", rawGeneratePassword)
+	}
+	path := fmt.Sprintf("/nodes/%s/qemu/%d/vncproxy", url.PathEscape(node), vmid)
+	data, err := client.PostFormData(ctx, path, form)
+	if err != nil {
+		return nil, err
+	}
+	payload := firstObject(unwrapResultField(data))
+	if payload == nil {
+		return nil, apperr.New(apperr.CodeNetwork, "vncproxy response is not an object")
+	}
+	port := strings.TrimSpace(asString(payload["port"]))
+	ticket := strings.TrimSpace(asString(payload["ticket"]))
+	proxyNode := strings.TrimSpace(asString(payload["node"]))
+	if proxyNode == "" {
+		proxyNode = parseUPIDNode(asString(payload["upid"]))
+	}
+	if proxyNode == "" {
+		proxyNode = node
+	}
+	result := map[string]any{
+		"port":       port,
+		"ticket":     ticket,
+		"cert":       asString(payload["cert"]),
+		"user":       asString(payload["user"]),
+		"password":   asString(payload["password"]),
+		"upid":       asString(payload["upid"]),
+		"proxy_node": proxyNode,
+		"websocket":  buildVNCWebsocketPath(proxyNode, vmid, port, ticket),
+	}
+	request := map[string]any{"node": node, "vmid": vmid, "websocket": websocketMode == "1"}
+	return buildResult(req, request, result, map[string]any{}), nil
+}
+
+func runConnectVNCWebsocket(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
+	node, err := RequiredNode(req.Args)
+	if err != nil {
+		return nil, err
+	}
+	vmid, err := RequiredOperationVMID(req.Args)
+	if err != nil {
+		return nil, err
+	}
+	port := strings.TrimSpace(req.Args["port"])
+	ticket := strings.TrimSpace(req.Args["ticket"])
+	proxyNode := node
+	if port == "" || ticket == "" {
+		proxyData, proxyErr := runStartVNCProxy(ctx, client, Request{Name: "start_vnc_proxy", Args: req.Args, Scope: req.Scope})
+		if proxyErr != nil {
+			return nil, proxyErr
+		}
+		proxyResult, _ := proxyData["result"].(map[string]any)
+		port = strings.TrimSpace(asString(proxyResult["port"]))
+		ticket = strings.TrimSpace(asString(proxyResult["ticket"]))
+		if fromProxy := strings.TrimSpace(asString(proxyResult["proxy_node"])); fromProxy != "" {
+			proxyNode = fromProxy
+		}
+	}
+	if port == "" || ticket == "" {
+		return nil, apperr.New(apperr.CodeInvalidArgs, "missing vnc websocket endpoint: provide --port and --ticket or allow proxy bootstrap")
+	}
+	probeSeconds := 2
+	if rawProbe := strings.TrimSpace(req.Args["probe-seconds"]); rawProbe != "" {
+		parsedProbe, parseErr := strconv.Atoi(rawProbe)
+		if parseErr != nil || parsedProbe < 0 {
+			return nil, apperr.New(apperr.CodeInvalidArgs, "probe-seconds must be an integer >= 0")
+		}
+		probeSeconds = parsedProbe
+	}
+	wsPath := buildVNCWebsocketPath(proxyNode, vmid, port, ticket)
+	conn, _, dialErr := client.DialWebsocket(ctx, wsPath, url.Values{})
+	if dialErr != nil {
+		if proxyNode != node {
+			fallbackPath := buildVNCWebsocketPath(node, vmid, port, ticket)
+			fallbackConn, _, fallbackErr := client.DialWebsocket(ctx, fallbackPath, url.Values{})
+			if fallbackErr == nil {
+				conn = fallbackConn
+				wsPath = fallbackPath
+				dialErr = nil
+			}
+		}
+	}
+	if dialErr != nil {
+		return nil, dialErr
+	}
+	defer conn.Close()
+	messageType := ""
+	probePreview := ""
+	probeBytes := 0
+	if probeSeconds > 0 {
+		if deadlineErr := conn.SetReadDeadline(time.Now().Add(time.Duration(probeSeconds) * time.Second)); deadlineErr != nil {
+			return nil, apperr.Wrap(apperr.CodeNetwork, "failed to set websocket probe deadline", deadlineErr)
+		}
+		msgType, payload, readErr := conn.ReadMessage()
+		if readErr != nil {
+			if !isWebsocketReadTimeout(readErr) && !websocket.IsCloseError(readErr, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+				return nil, apperr.Wrap(apperr.CodeNetwork, "failed to probe vnc websocket", readErr)
+			}
+		} else {
+			messageType = websocketMessageTypeName(msgType)
+			probeBytes = len(payload)
+			probePreview = previewWebsocketPayload(payload, 64)
+		}
+	}
+	request := map[string]any{"node": node, "vmid": vmid, "port": port, "probe_seconds": probeSeconds}
+	result := map[string]any{
+		"connected":      true,
+		"websocket":      wsPath,
+		"probe_received": probeBytes > 0,
+		"probe_bytes":    probeBytes,
+		"probe_type":     messageType,
+		"probe_preview":  probePreview,
+	}
+	return buildResult(req, request, result, map[string]any{"probe_seconds": probeSeconds}), nil
 }
 
 func runSerialWSCaptureToFile(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
@@ -296,6 +444,99 @@ func runOpenVMTermproxy(ctx context.Context, client *pveapi.Client, req Request)
 	return buildResult(req, map[string]any{"node": node, "vmid": vmid}, result, map[string]any{}), nil
 }
 
+func runValidateK1SerialReadable(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
+	node, err := RequiredNode(req.Args)
+	if err != nil {
+		return nil, err
+	}
+	vmid, err := RequiredOperationVMID(req.Args)
+	if err != nil {
+		return nil, err
+	}
+	sessionArgs := map[string]string{}
+	for key, value := range req.Args {
+		sessionArgs[key] = value
+	}
+	if strings.TrimSpace(sessionArgs["timeout-seconds"]) == "" {
+		sessionArgs["timeout-seconds"] = "20"
+	}
+	sessionData, err := runSerialWSSessionControl(ctx, client, Request{Name: "serial_ws_session_control", Args: sessionArgs, Scope: req.Scope})
+	if err != nil {
+		return nil, err
+	}
+	sessionResult, _ := sessionData["result"].(map[string]any)
+	rawTranscript := asString(sessionResult["transcript"])
+	cleanTranscript := normalizeSerialText(rawTranscript)
+	if strings.TrimSpace(cleanTranscript) == "" {
+		return nil, apperr.New(apperr.CodeNetwork, "serial output is empty; cannot validate readability")
+	}
+	bannerOnly := isOnlySerialStartupBanner(cleanTranscript)
+	request := map[string]any{"node": node, "vmid": vmid, "timeout_seconds": sessionArgs["timeout-seconds"], "expect": strings.TrimSpace(sessionArgs["expect"])}
+	result := map[string]any{
+		"readable":         true,
+		"banner_only":      bannerOnly,
+		"transcript_clean": cleanTranscript,
+		"transcript_tail":  tailText(cleanTranscript, 240),
+		"bytes":            len(rawTranscript),
+		"websocket":        asString(sessionResult["websocket"]),
+	}
+	return buildResult(req, request, result, map[string]any{"criterion": "k1_serial_readable", "banner_only": bannerOnly}), nil
+}
+
+func runValidateSerialOutputCriterion2(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
+	node, err := RequiredNode(req.Args)
+	if err != nil {
+		return nil, err
+	}
+	vmid, err := RequiredOperationVMID(req.Args)
+	if err != nil {
+		return nil, err
+	}
+	captureArgs := map[string]string{}
+	for key, value := range req.Args {
+		captureArgs[key] = value
+	}
+	if strings.TrimSpace(captureArgs["log-path"]) == "" {
+		captureArgs["log-path"] = filepath.Join("build", fmt.Sprintf("serial-criterion2-%d.log", vmid))
+	}
+	if strings.TrimSpace(captureArgs["append"]) == "" {
+		captureArgs["append"] = "1"
+	}
+	if strings.TrimSpace(captureArgs["timeout-seconds"]) == "" {
+		captureArgs["timeout-seconds"] = "120"
+	}
+	captureData, err := runSerialWSCaptureToFile(ctx, client, Request{Name: "serial_ws_capture_to_file", Args: captureArgs, Scope: req.Scope})
+	if err != nil {
+		return nil, err
+	}
+	captureResult, _ := captureData["result"].(map[string]any)
+	cleanTranscript := normalizeSerialText(asString(captureResult["transcript_clean"]))
+	if strings.TrimSpace(cleanTranscript) == "" {
+		return nil, apperr.New(apperr.CodeNetwork, "serial output is empty; criterion2 failed")
+	}
+	if isOnlySerialStartupBanner(cleanTranscript) {
+		return nil, apperr.New(apperr.CodeNetwork, "serial output only contains termproxy startup banner; verify kernel cmdline enables serial console")
+	}
+	request := map[string]any{
+		"node":            node,
+		"vmid":            vmid,
+		"log_path":        captureArgs["log-path"],
+		"append":          captureArgs["append"] == "1",
+		"timeout_seconds": captureArgs["timeout-seconds"],
+		"expect":          strings.TrimSpace(captureArgs["expect"]),
+	}
+	result := map[string]any{
+		"criterion2_passed": true,
+		"log_path":          captureResult["log_path"],
+		"bytes_written":     captureResult["bytes_written"],
+		"matched":           captureResult["matched"],
+		"transcript_clean":  cleanTranscript,
+		"transcript_tail":   tailText(cleanTranscript, 240),
+		"websocket":         captureResult["websocket"],
+	}
+	return buildResult(req, request, result, map[string]any{"criterion": "serial_output_criterion2"}), nil
+}
+
 func runSerialWSSessionControl(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
 	node, err := RequiredNode(req.Args)
 	if err != nil {
@@ -404,6 +645,10 @@ func parseUPIDNode(upid string) string {
 }
 
 func buildSerialWebsocketPath(node string, vmid int, port string, ticket string) string {
+	return buildVNCWebsocketPath(node, vmid, port, ticket)
+}
+
+func buildVNCWebsocketPath(node string, vmid int, port string, ticket string) string {
 	query := url.Values{}
 	query.Set("port", port)
 	query.Set("vncticket", ticket)
@@ -650,6 +895,71 @@ func sendWebsocketKeepalive(conn *websocket.Conn) error {
 		return err
 	}
 	return nil
+}
+
+func isWebsocketReadTimeout(err error) bool {
+	if err == nil {
+		return false
+	}
+	var netErr net.Error
+	if errors.As(err, &netErr) {
+		return netErr.Timeout()
+	}
+	message := strings.ToLower(err.Error())
+	return strings.Contains(message, "timeout") || strings.Contains(message, "deadline exceeded")
+}
+
+func websocketMessageTypeName(messageType int) string {
+	switch messageType {
+	case websocket.TextMessage:
+		return "text"
+	case websocket.BinaryMessage:
+		return "binary"
+	case websocket.PingMessage:
+		return "ping"
+	case websocket.PongMessage:
+		return "pong"
+	case websocket.CloseMessage:
+		return "close"
+	default:
+		return strconv.Itoa(messageType)
+	}
+}
+
+func previewWebsocketPayload(payload []byte, max int) string {
+	if len(payload) == 0 {
+		return ""
+	}
+	limit := len(payload)
+	if max > 0 && limit > max {
+		limit = max
+	}
+	buf := make([]byte, 0, limit)
+	for _, b := range payload[:limit] {
+		if b >= 32 && b <= 126 {
+			buf = append(buf, b)
+			continue
+		}
+		buf = append(buf, '.')
+	}
+	return string(buf)
+}
+
+var serialStartupBannerPattern = regexp.MustCompile(`^OKstarting serial terminal on interface serial[0-3]$`)
+
+func isOnlySerialStartupBanner(raw string) bool {
+	clean := strings.Join(strings.Fields(normalizeSerialText(raw)), " ")
+	if clean == "" {
+		return false
+	}
+	return serialStartupBannerPattern.MatchString(clean)
+}
+
+func tailText(raw string, max int) string {
+	if max <= 0 || len(raw) <= max {
+		return raw
+	}
+	return raw[len(raw)-max:]
 }
 
 var serialANSIEscapePattern = regexp.MustCompile("\x1b\\[[0-9;?]*[ -/]*[@-~]|\x1b[@-Z\\-_]")

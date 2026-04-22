@@ -59,15 +59,22 @@ func runCloneTemplate(ctx context.Context, client *pveapi.Client, req Request) (
 	}
 	form := url.Values{}
 	form.Set("newid", strconv.Itoa(targetVMID))
+	full := strings.TrimSpace(req.Args["full"])
+	if full == "" {
+		full = "0"
+	}
+	if !isOneOf(full, "0", "1") {
+		return nil, apperr.New(apperr.CodeInvalidArgs, "full must be 0 or 1")
+	}
 	setIfPresent(form, "name", req.Args["name"])
 	setIfPresent(form, "target", req.Args["target"])
-	setIfPresent(form, "full", req.Args["full"])
+	form.Set("full", full)
 	path := fmt.Sprintf("/nodes/%s/qemu/%d/clone", url.PathEscape(node), sourceVMID)
 	data, err := client.PostFormData(ctx, path, form)
 	if err != nil {
 		return nil, err
 	}
-	return writeResult(req, map[string]any{"node": node, "source_vmid": sourceVMID, "target_vmid": targetVMID}, data), nil
+	return writeResult(req, map[string]any{"node": node, "source_vmid": sourceVMID, "target_vmid": targetVMID, "full": full == "1"}, data), nil
 }
 
 func runMigrateVM(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
@@ -149,13 +156,47 @@ func runVMPower(ctx context.Context, client *pveapi.Client, req Request) (map[st
 	if !isOneOf(mode, "start", "stop", "shutdown", "reboot", "reset") {
 		return nil, apperr.New(apperr.CodeInvalidArgs, "mode must be one of start|stop|shutdown|reboot|reset")
 	}
-	form := mapArgsToForm(req.Args, "node", "vmid", "mode")
+	desiredState := strings.TrimSpace(strings.ToLower(req.Args["desired-state"]))
+	if desiredState != "" && !isOneOf(desiredState, "running", "stopped") {
+		return nil, apperr.New(apperr.CodeInvalidArgs, "desired-state must be one of running|stopped")
+	}
+	if desiredState != "" {
+		running, statusErr := isVMRunning(ctx, client, node, vmid)
+		if statusErr != nil {
+			return nil, statusErr
+		}
+		currentState := "stopped"
+		if running {
+			currentState = "running"
+		}
+		if currentState == desiredState {
+			request := map[string]any{"node": node, "vmid": vmid, "mode": mode, "desired_state": desiredState}
+			result := map[string]any{"node": node, "vmid": vmid, "mode": mode, "current_state": currentState, "desired_state": desiredState, "changed": false, "idempotent_noop": true}
+			diagnostics := map[string]any{"wait_skipped": "vm already in desired state", "desired_state": desiredState, "current_state": currentState}
+			return buildResult(req, request, result, diagnostics), nil
+		}
+	}
+	form := mapArgsToForm(req.Args, "node", "vmid", "mode", "desired-state")
 	path := fmt.Sprintf("/nodes/%s/qemu/%d/status/%s", url.PathEscape(node), vmid, url.PathEscape(mode))
 	data, err := client.PostFormData(ctx, path, form)
 	if err != nil {
 		return nil, err
 	}
-	return writeResult(req, map[string]any{"node": node, "vmid": vmid, "mode": mode}, data), nil
+	request := map[string]any{"node": node, "vmid": vmid, "mode": mode}
+	if desiredState != "" {
+		request["desired_state"] = desiredState
+	}
+	result := writeResult(req, request, data)
+	if desiredState != "" {
+		diagnostics := map[string]any{"desired_state": desiredState}
+		if current, ok := result["diagnostics"].(map[string]any); ok {
+			for k, v := range current {
+				diagnostics[k] = v
+			}
+		}
+		result["diagnostics"] = diagnostics
+	}
+	return result, nil
 }
 
 func runSetVMAgent(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
@@ -193,7 +234,30 @@ func runCreateVM(ctx context.Context, client *pveapi.Client, req Request) (map[s
 	if err != nil {
 		return nil, err
 	}
-	form := mapArgsToForm(req.Args, "node")
+	ifExists := strings.TrimSpace(strings.ToLower(req.Args["if-exists"]))
+	if ifExists == "" {
+		ifExists = "fail"
+	}
+	if !isOneOf(ifExists, "fail", "reuse") {
+		return nil, apperr.New(apperr.CodeInvalidArgs, "if-exists must be one of fail|reuse")
+	}
+	exists, existsStatus, existsErr := vmExistsOnNode(ctx, client, node, vmid)
+	if existsErr != nil {
+		return nil, existsErr
+	}
+	if exists {
+		if ifExists == "fail" {
+			return nil, apperr.New(apperr.CodeInvalidArgs, fmt.Sprintf("vm %d already exists on node %s", vmid, node))
+		}
+		request := map[string]any{"node": node, "vmid": vmid, "if_exists": ifExists}
+		result := map[string]any{"node": node, "vmid": vmid, "created": false, "reused": true}
+		if existsStatus != nil {
+			result["existing_status"] = existsStatus
+		}
+		diagnostics := map[string]any{"wait_skipped": "vm already exists; reused existing vm", "if_exists": ifExists}
+		return buildResult(req, request, result, diagnostics), nil
+	}
+	form := mapArgsToForm(req.Args, "node", "if-exists")
 	form.Set("vmid", strconv.Itoa(vmid))
 	if len(form) == 1 {
 		return nil, apperr.New(apperr.CodeInvalidArgs, "create_vm requires vm config args like --name --memory --cores")
@@ -203,7 +267,9 @@ func runCreateVM(ctx context.Context, client *pveapi.Client, req Request) (map[s
 	if err != nil {
 		return nil, err
 	}
-	return writeResult(req, map[string]any{"node": node, "vmid": vmid}, data), nil
+	request := map[string]any{"node": node, "vmid": vmid, "if_exists": ifExists}
+	result := map[string]any{"upid": asString(data), "created": true, "reused": false}
+	return buildResult(req, request, result, map[string]any{"if_exists": ifExists}), nil
 }
 
 func runAttachCDROMISO(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
@@ -398,6 +464,23 @@ func setIfPresent(form url.Values, key string, value string) {
 	if v != "" {
 		form.Set(key, v)
 	}
+}
+
+func vmExistsOnNode(ctx context.Context, client *pveapi.Client, node string, vmid int) (bool, map[string]any, error) {
+	path := fmt.Sprintf("/nodes/%s/qemu/%d/status/current", url.PathEscape(node), vmid)
+	data, err := client.GetData(ctx, path, url.Values{})
+	if err != nil {
+		message := strings.ToLower(err.Error())
+		if strings.Contains(message, "does not exist") || strings.Contains(message, "status 404") || strings.Contains(message, "not found") {
+			return false, nil, nil
+		}
+		return false, nil, err
+	}
+	status := firstObject(unwrapResultField(data))
+	if status == nil {
+		return true, map[string]any{}, nil
+	}
+	return true, status, nil
 }
 
 func isOneOf(v string, values ...string) bool {

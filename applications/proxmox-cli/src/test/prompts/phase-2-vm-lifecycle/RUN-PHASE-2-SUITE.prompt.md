@@ -26,9 +26,12 @@ Run all Phase 2 action prompts under `applications/proxmox-cli/src/test/prompts/
 3) Use source dir: `applications/proxmox-cli/src`.
 4) Use API base: `${PVE_API_BASE_URL%/}/api2/json`.
 5) Always include `--insecure-tls --output json`.
-6) For mutating prompts, allocate a fresh `TEST_VMID` via `get_next_vmid` inside that prompt.
-7) Teardown must run on both success and failure paths (best-effort cleanup).
-8) For `A08-migrate_vm`, use a lightweight migration candidate (prefer no-disk; fallback to small disk 4G-8G) to avoid long data-copy migration.
+6) Set VMID policy env vars for this suite: `PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000` (or approved override).
+7) Before running action prompts, execute bootstrap prompt `../e2e/BOOTSTRAP-UBUNTU24-WITH-AGENT-TEMPLATE.prompt.md` once and ensure `build/ubuntu-24-with-agent.vm-template.id` exists.
+8) Each action prompt must resolve its own `TEST_VMID` and disposable assets inside that prompt run.
+9) Prefer cloning from the template VMID for disposable VM setup; always self-destroy on both success and failure.
+10) For `A08-migrate_vm`, choose a target node different from template node and clean up VM on its final host.
+11) For disposable clones, prefer linked clone (`full=0`, default) to minimize storage I/O.
 
 ## Prompt Files to Execute
 

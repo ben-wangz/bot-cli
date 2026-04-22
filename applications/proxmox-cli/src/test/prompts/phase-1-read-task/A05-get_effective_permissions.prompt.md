@@ -3,19 +3,23 @@
 ## Preconditions
 
 - `build/pve-user.env` is loaded.
-- `<PATH>` is a valid ACL path (default `/`).
+- `build/ubuntu-24-with-agent.vm-template.id` exists and points to a valid template VM in policy VMID range.
 
 ## Prompt
 
 ```text
-You are a test execution agent. Run the A05 `get_effective_permissions` positive-path test in the bot-cli repository.
+You are a test execution agent. Run the A05 `get_effective_permissions` positive-path test.
 
 Setup:
-1) Load env vars: `source build/pve-user.env`
-2) Change directory to `applications/proxmox-cli/src`
+1) Load env vars and switch to `applications/proxmox-cli/src`.
+2) Set VMID policy env vars (`PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000`).
+3) Read `TEMPLATE_VMID` from `build/ubuntu-24-with-agent.vm-template.id`.
+4) Resolve `TEST_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
+5) Allocate fresh `TEST_VMID` in-range via `get_next_vmid`.
+6) Clone `TEMPLATE_VMID` to `TEST_VMID` on `TEST_NODE` (`clone_template --wait`).
 
 Command:
-go run ./cmd/proxmox-cli --output json action get_effective_permissions --path <PATH>
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action get_effective_permissions --path /
 
 Success criteria:
 - exit code = 0
@@ -23,10 +27,10 @@ Success criteria:
 - JSON field `ok == true`
 - `request.path` exists
 
-Return only this structure:
-- action
-- command
-- success
-- key_result
-- diagnostics
+Teardown:
+- Stop and destroy `TEST_VMID` in this prompt run on both success and failure.
+
+Independence rule:
+- This test must be self-contained and order-independent.
+- Resolve and clean up its own VMID during this prompt run.
 ```

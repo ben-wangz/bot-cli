@@ -1,18 +1,17 @@
-# Phase 3 Suite Runner
+# Phase 4 Suite Runner
 
 ## Purpose
 
-Run all Phase 3 action prompts under `applications/proxmox-cli/src/test/prompts/phase-3-cloudinit-qga/`.
+Run all Phase 4 action prompts under `applications/proxmox-cli/src/test/prompts/phase-4-console-websocket/`.
 
 ## Required Execution Mode
 
 - If sub-agents are supported, you **must** use sub-agents.
-- Spawn one sub-agent per action prompt file (A15, A17-exec, A17-status, A20, A22, A27).
+- Spawn one sub-agent per action prompt file (A18, A19, A29, A32, A34, A40).
 - Sub-agent concurrency must be <= 2.
 - Each sub-agent executes exactly one prompt file and returns the result in the required schema.
 - Every prompt must be order-independent and self-contained.
 - Do not reuse VMIDs across prompt files.
-- `agent_exec` mutates guest state; keep effective VM write concurrency = 1 for VM mutating prompts.
 
 ## Fallback Rule
 
@@ -28,17 +27,17 @@ Run all Phase 3 action prompts under `applications/proxmox-cli/src/test/prompts/
 6) Set VMID policy env vars for this suite: `PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000` (or approved override).
 7) Before running action prompts, execute bootstrap prompt `../e2e/BOOTSTRAP-UBUNTU24-WITH-AGENT-TEMPLATE.prompt.md` once and ensure `build/ubuntu-24-with-agent.vm-template.id` exists.
 8) Each action prompt must clone from the template VMID in that file to a fresh `TEST_VMID`, then self-check and self-destroy VM assets.
-9) For A15/A17, bootstrap and validate qga readiness inside each prompt's own disposable VM.
+9) If websocket setup fails, return actionable diagnostics and still clean up the disposable VM.
 10) For disposable clones, prefer linked clone (`full=0`, default) to minimize storage I/O.
 
 ## Prompt Files to Execute
 
-- `A15-agent_network_get_interfaces.prompt.md`
-- `A17-agent_exec.prompt.md`
-- `A17-agent_exec_status.prompt.md`
-- `A20-dump_cloudinit.prompt.md`
-- `A22-storage_upload_guard.prompt.md`
-- `A27-render_and_serve_seed.prompt.md`
+- `A18-start_vnc_proxy.prompt.md`
+- `A19-connect_vnc_websocket.prompt.md`
+- `A29-open_vm_termproxy.prompt.md`
+- `A32-validate_k1_serial_readable.prompt.md`
+- `A34-serial_ws_session_control.prompt.md`
+- `A40-validate_serial_output_criterion2.prompt.md`
 
 ## Final Output Format
 
@@ -46,7 +45,7 @@ Return one JSON object:
 
 ```json
 {
-  "suite": "phase-3-cloudinit-qga",
+  "suite": "phase-4-console-websocket",
   "mode": "sub-agent",
   "success": true,
   "summary": {
@@ -55,7 +54,7 @@ Return one JSON object:
   },
   "results": [
     {
-      "action": "agent_network_get_interfaces",
+      "action": "start_vnc_proxy",
       "command": "...",
       "success": true,
       "key_result": "...",

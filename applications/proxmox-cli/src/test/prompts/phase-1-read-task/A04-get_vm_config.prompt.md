@@ -3,37 +3,34 @@
 ## Preconditions
 
 - `build/pve-user.env` is loaded.
-- At least one online node has at least one VM.
+- `build/ubuntu-24-with-agent.vm-template.id` exists and points to a valid template VM in policy VMID range.
 
 ## Prompt
 
 ```text
-You are a test execution agent. Run the A04 `get_vm_config` positive-path test in the bot-cli repository.
+You are a test execution agent. Run the A04 `get_vm_config` positive-path test.
 
 Setup:
-1) Load env vars: `source build/pve-user.env`
-2) Change directory to `applications/proxmox-cli/src`
-3) Discover `NODE` from online nodes.
-4) Discover `VMID` by calling `list_vms_by_node --node "$NODE"` and selecting a VMID in allowed range (`PVE_ALLOWED_VMID_MIN..PVE_ALLOWED_VMID_MAX`, default `1001..2000`).
-5) Fail if no VM in allowed range is found.
+1) Load env vars and switch to `applications/proxmox-cli/src`.
+2) Set VMID policy env vars (`PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000`).
+3) Read `TEMPLATE_VMID` from `build/ubuntu-24-with-agent.vm-template.id`.
+4) Resolve `TEST_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
+5) Allocate fresh `TEST_VMID` in-range via `get_next_vmid`.
+6) Clone `TEMPLATE_VMID` to `TEST_VMID` on `TEST_NODE` (`clone_template --wait`).
 
 Command:
-go run ./cmd/proxmox-cli --output json action get_vm_config --node "$NODE" --vmid "$VMID"
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action get_vm_config --node "$TEST_NODE" --vmid "$TEST_VMID"
 
 Success criteria:
 - exit code = 0
 - JSON field `action == "get_vm_config"`
 - JSON field `ok == true`
-- `request.node == NODE` and `request.vmid == VMID`
+- `request.node == TEST_NODE` and `request.vmid == TEST_VMID`
+
+Teardown:
+- Stop and destroy `TEST_VMID` in this prompt run on both success and failure.
 
 Independence rule:
-- This test must be self-contained and must not depend on outputs from other prompt files.
-- Resolve `NODE` and `VMID` locally inside this prompt execution.
-
-Return only this structure:
-- action
-- command
-- success
-- key_result
-- diagnostics
+- This test must be self-contained and order-independent.
+- Resolve and clean up its own VMID during this prompt run.
 ```

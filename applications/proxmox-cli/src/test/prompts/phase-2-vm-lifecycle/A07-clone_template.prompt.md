@@ -3,7 +3,7 @@
 ## Preconditions
 
 - `build/pve-user.env` is loaded.
-- A disposable template VM exists on `TEST_NODE` as `SOURCE_VMID`.
+- `build/ubuntu-24-with-agent.vm-template.id` exists and points to a valid template VM in policy VMID range.
 
 ## Prompt
 
@@ -12,12 +12,13 @@ You are a test execution agent. Run the A07 `clone_template` positive-path test.
 
 Setup:
 1) Load env vars and switch to `applications/proxmox-cli/src`.
-2) Resolve `TEST_NODE` from an online node.
-3) Resolve `TARGET_VMID` with `get_next_vmid`.
-4) Ensure `SOURCE_VMID` is a template VM dedicated for this prompt run.
+2) Set VMID policy env vars (`PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000`).
+3) Read `TEMPLATE_VMID` from `build/ubuntu-24-with-agent.vm-template.id`.
+4) Resolve `TEST_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
+5) Allocate fresh `TARGET_VMID` in-range via `get_next_vmid`.
 
 Command:
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --wait --output json action clone_template --node "$TEST_NODE" --source-vmid "$SOURCE_VMID" --target-vmid "$TARGET_VMID" --name "p2-a07-$TARGET_VMID"
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --wait --output json action clone_template --node "$TEST_NODE" --source-vmid "$TEMPLATE_VMID" --target-vmid "$TARGET_VMID" --name "p2-a07-$TARGET_VMID"
 
 Success criteria:
 - exit code = 0
@@ -32,5 +33,5 @@ Teardown:
 
 Independence rule:
 - This test must be self-contained and order-independent.
-- Never reuse a VMID created by another prompt.
+- Never reuse a VMID created by another prompt run.
 ```
