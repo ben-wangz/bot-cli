@@ -12,8 +12,8 @@
 
 - last_updated: 2026-04-20
 - overall_progress: 3/8 issues completed
-- action_coverage: 22/43
-- prompt_coverage: 22/43
+- action_coverage: 31/43
+- prompt_coverage: 28/43
 
 ## Issue Status
 
@@ -22,9 +22,9 @@
 | ISSUE-001 | 0 | completed | foundation baseline | - |
 | ISSUE-002 | 1 | completed | 9 actions / 9 prompts | ISSUE-001 |
 | ISSUE-003 | 2 | completed | 13 actions / 13 prompts | ISSUE-002 |
-| ISSUE-004 | 3 | open | 6 actions / 6 prompts | ISSUE-003 |
-| ISSUE-005 | 4 | open | 6 actions / 6 prompts | ISSUE-004 |
-| ISSUE-006 | 5 | open | 6 actions / 6 prompts | ISSUE-005 |
+| ISSUE-004 | 3 | in_progress | 6 actions / 6 prompts | ISSUE-003 |
+| ISSUE-005 | 4 | in_progress | 6 actions / 6 prompts | ISSUE-004 |
+| ISSUE-006 | 5 | in_progress | 6 actions / 6 prompts | ISSUE-005 |
 | ISSUE-007 | 6 | open | 3 actions / 3 prompts | ISSUE-006 |
 | ISSUE-008 | cross | open | E2E + full prompt sweep | ISSUE-001..007 |
 
@@ -37,6 +37,17 @@
 - [ ] M3: ISSUE-005 完成
 - [ ] M4: ISSUE-006 + ISSUE-007 完成
 - [ ] M5: ISSUE-008 完成（E2E 联调与回归）
+
+## Active Blockers
+
+- ISSUE-004 QGA 正向回归受环境阻塞：当前无 qga-ready 模板可用。
+- 解除路径：提前落地 ISSUE-005 最小子集（A29 + A34）以通过串口在来宾内安装并启用 qemu-guest-agent。
+- 当前进展：A29/A34 协议层已打通（可执行脚本并匹配回显）；当前阻塞为模板环境未稳定提供 VM 串口 login，仍不能完成来宾内 QGA 安装。
+- A22 保持 guard 职责；seed/snippet 上传需独立 action 承担（待新 issue/action 编排）。
+- 存储上传实测：PVE upload API 当前仅接受 `iso|vztmpl|import`，不接受 `snippets`，因此 cloud-init snippet 自动落盘需依赖 Phase 5 root 路径。
+- Phase 5 进展：A39 `node_termproxy_shell_exec` 已接入并完成会话交互（脚本命令回显可验证）。
+- 新增验证：A39 已支持 `cmd-opts`（null-terminated strings）并通过 root 会话实测 `upgrade/ceph_install` 提示链路。
+- 新增约束：`root-token` 无法触发节点 `upgrade/ceph_install` 命令（后端仅允许 `root@pam` session），A39 命令执行闭环仍受凭据/协议双重阻塞。
 
 ## Dependencies
 

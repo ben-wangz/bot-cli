@@ -166,6 +166,33 @@ func IsPhase2Action(name string) bool {
 	}
 }
 
+func IsPhase3Action(name string) bool {
+	switch name {
+	case "agent_network_get_interfaces", "agent_exec", "agent_exec_status", "dump_cloudinit", "storage_upload_guard", "storage_upload_snippet", "storage_upload_iso", "build_ubuntu_autoinstall_iso", "render_and_serve_seed":
+		return true
+	default:
+		return false
+	}
+}
+
+func IsPhase4Action(name string) bool {
+	switch name {
+	case "open_vm_termproxy", "serial_ws_session_control", "serial_ws_capture_to_file":
+		return true
+	default:
+		return false
+	}
+}
+
+func IsPhase5Action(name string) bool {
+	switch name {
+	case "node_termproxy_shell_exec":
+		return true
+	default:
+		return false
+	}
+}
+
 func IsPhase2AsyncAction(name string) bool {
 	switch name {
 	case "clone_template", "migrate_vm", "convert_vm_to_template", "vm_power", "create_vm", "start_installer_and_console_ticket":

@@ -1,9 +1,25 @@
 # ISSUE-005 Phase 4 Console and WebSocket
 
-- status: open
+- status: in_progress
 - priority: high
 - phase: 4
 - depends_on: ISSUE-004
+
+## Dependency Note
+
+- 为解除 ISSUE-004 的 QGA 环境阻塞，需提前实现 Phase 4 最小子集：
+  - A29 `open_vm_termproxy`
+  - A34 `serial_ws_session_control`（脚本模式最小能力）
+- 该最小子集用于在来宾内执行 `qemu-guest-agent` 安装与启用流程，不改变 ISSUE-005 的完整验收范围。
+
+## Current Validation Note
+
+- A29/A34 代码路径已接入 CLI 并完成本地编译验证。
+- Live PVE 验证中，websocket 握手已打通（`open_vm_termproxy` + `vncwebsocket` 可建立会话）。
+- 当前验证结果：`serial_ws_session_control` 协议层已打通，支持脚本输入与回显匹配。
+- 当前阻塞转为环境侧：现有模板在 VM 串口仍未稳定出现可交互 login 提示，暂无法通过串口完成来宾内安装 QGA。
+- 同期验证发现 snippet 无法经 upload API 直接写入（`snippets` 不在可上传枚举），如需 cloud-init 自举仍需 Phase 5 root 文件落盘路径。
+- 已转入 Phase 5 并实现 `node_termproxy_shell_exec` 初版，root-token 会话可建立；下一步需完善命令执行回显能力后回灌 ISSUE-004。
 
 ## Goal
 
@@ -20,6 +36,7 @@
 
 ## Tasks
 
+- [x] 提前落地最小子集：A29 `open_vm_termproxy` + A34 `serial_ws_session_control`（用于 QGA 安装前置）。
 - [ ] 实现 termproxy 握手与 ticket 提取。
 - [ ] 实现 websocket 认证行发送。
 - [ ] 实现 xterm 帧协议编解码与 keepalive。

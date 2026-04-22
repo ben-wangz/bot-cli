@@ -8,6 +8,7 @@ Agent-facing CLI for Proxmox-related operations.
 - Entrypoint: `applications/proxmox-cli/src/cmd/proxmox-cli`
 - Internal packages: `applications/proxmox-cli/src/internal`
 - Prompt tests: `applications/proxmox-cli/src/test/prompts`
+- Versioned workflow assets: `applications/proxmox-cli/assets`
 
 ## Versioning
 

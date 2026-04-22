@@ -1,0 +1,14 @@
+#cloud-config
+autoinstall:
+  version: 1
+  identity:
+    hostname: ubuntu-single-disk
+    username: cloud
+    password: "$6$YA4JcdmjdVbTpSrO$pzTMqrEOL9BOXQiHEsOWaP1PKr9ujOB2P3gT27c/UxVTKmcsbCz8eLxwJCJQU8f7/VcArRmaCT/K91N7fwUiO1"
+  ssh:
+    install-server: true
+    allow-pw: true
+  packages:
+    - qemu-guest-agent
+  late-commands:
+    - curtin in-target --target=/target -- systemctl enable qemu-guest-agent.service

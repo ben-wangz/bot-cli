@@ -437,6 +437,69 @@ func runActionCommand(rt commandRuntime, args []string) (map[string]any, error) 
 		result["diagnostics"] = diagnostics
 		return result, nil
 	}
+	if action.IsPhase3Action(name) {
+		result, phaseErr := action.ExecutePhase3(context.Background(), rt.Client, action.Request{
+			Name:  name,
+			Args:  parsedArgs,
+			Scope: rt.Opts.AuthScope,
+		})
+		if phaseErr != nil {
+			return nil, phaseErr
+		}
+		if !rt.Opts.Wait {
+			return result, nil
+		}
+		diagnostics := map[string]any{"wait_skipped": "action is synchronous or self-polled"}
+		if current, ok := result["diagnostics"].(map[string]any); ok {
+			for k, v := range current {
+				diagnostics[k] = v
+			}
+		}
+		result["diagnostics"] = diagnostics
+		return result, nil
+	}
+	if action.IsPhase4Action(name) {
+		result, phaseErr := action.ExecutePhase4(context.Background(), rt.Client, action.Request{
+			Name:  name,
+			Args:  parsedArgs,
+			Scope: rt.Opts.AuthScope,
+		})
+		if phaseErr != nil {
+			return nil, phaseErr
+		}
+		if !rt.Opts.Wait {
+			return result, nil
+		}
+		diagnostics := map[string]any{"wait_skipped": "action is synchronous or session-driven"}
+		if current, ok := result["diagnostics"].(map[string]any); ok {
+			for k, v := range current {
+				diagnostics[k] = v
+			}
+		}
+		result["diagnostics"] = diagnostics
+		return result, nil
+	}
+	if action.IsPhase5Action(name) {
+		result, phaseErr := action.ExecutePhase5(context.Background(), rt.Client, action.Request{
+			Name:  name,
+			Args:  parsedArgs,
+			Scope: rt.Opts.AuthScope,
+		})
+		if phaseErr != nil {
+			return nil, phaseErr
+		}
+		if !rt.Opts.Wait {
+			return result, nil
+		}
+		diagnostics := map[string]any{"wait_skipped": "action is synchronous or session-driven"}
+		if current, ok := result["diagnostics"].(map[string]any); ok {
+			for k, v := range current {
+				diagnostics[k] = v
+			}
+		}
+		result["diagnostics"] = diagnostics
+		return result, nil
+	}
 	return nil, apperr.New(apperr.CodeInvalidArgs, "action not implemented yet: "+name)
 }
 

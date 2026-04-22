@@ -40,6 +40,14 @@
 3. `sendkey` 必须使用 `PUT`。
 4. storage upload 需识别 `snippets` 限制并给出可理解报错。
 5. 串口 websocket 要实现 xterm 帧协议（输入/窗口/keepalive）。
+6. 初始环境依赖必须可代码化创建：测试环境不依赖人工预置镜像/服务。
+
+## 2.3 初始环境依赖开发要求（新增）
+
+1. 对任何“先决环境能力”（如 qga-ready 基础镜像、seed 上传能力、串口会话入口），必须提供 action/workflow 级自动化创建路径。
+2. 测试用例默认假设“环境可由当前仓库自举”；若暂不可自举，必须在 issue 中显式标记 blocker 与解除路径。
+3. 禁止将长期依赖固化为“手工前置步骤”；手工步骤仅允许短期过渡，并需在后续 issue 中被替换为可执行动作。
+4. 回归入口应优先验证“环境创建动作”再验证业务动作，确保在新环境可重复恢复。
 
 ## 3. 总体技术设计
 
@@ -166,6 +174,9 @@ applications/proxmox-cli/
 1. `render_and_serve_seed` 封装 seed 生成和本地托管。
 2. `storage_upload_guard` 前置检查 `snippets` 受限场景。
 3. qga 相关 action 要有“未安装/未启动”可读错误。
+4. `storage_upload_guard` 仅做守卫与提示，不耦合上传写入；上传建议独立 action。
+5. 若无 qga-ready 模板，QGA 回归依赖 Phase 4 串口最小能力先行（A29/A34）。
+6. Live 环境补充：PVE upload API 对 `snippets` 存在限制（仅 `iso|vztmpl|import` 可传），snippet 自动落盘需后续 root 路径支持。
 
 ## 5.5 Phase 4：串口与 websocket 控制面
 
@@ -186,6 +197,7 @@ applications/proxmox-cli/
 1. `args` 写入失败时识别并引导到 root 会话路径。
 2. 节点 shell 侧动作单独走 root session 通道。
 3. 重新验证权限梯度并输出可审计结论。
+4. root-token 与 root session 在节点 shell 能力上不等价：`upgrade/ceph_install` 需 `root@pam` session 身份。
 
 ## 5.7 Phase 6：策略类与收尾动作
 

@@ -77,6 +77,30 @@ Phase 2 implemented actions:
   review_install_tasks --node <node> --vmid <id>
   sendkey --node <node> --vmid <id> --key <key>
 
+Phase 3 implemented actions:
+  agent_network_get_interfaces --node <node> --vmid <id>
+  agent_exec --node <node> --vmid <id> --command <command> [--timeout-seconds 30]
+  agent_exec_status --node <node> --vmid <id> --pid <pid>
+  dump_cloudinit --node <node> --vmid <id> [--type user|network|meta]
+  storage_upload_guard --node <node> --storage <storage> [--content-type snippets]
+  storage_upload_snippet --node <node> --storage <storage> --source-path <file> [--filename <name>]
+  storage_upload_iso --node <node> --storage <storage> --source-path <file.iso> [--filename <name.iso>]
+  build_ubuntu_autoinstall_iso --source-iso <ubuntu.iso> --output-iso <custom.iso> [--kernel-cmdline <cmdline>] [--username cloud] [--password <plain>] [--password-hash <hash>] [--hostname <name>] [--work-dir build/autoinstall-iso-work/<id>]
+  render_and_serve_seed --vmid <id> [--seed-dir build/seed] [--seed-name vm-<id>] [--host 127.0.0.1] [--port 8088]
+
+Phase 4 implemented actions:
+  open_vm_termproxy --node <node> --vmid <id> [--serial serial0]
+  serial_ws_session_control --node <node> --vmid <id> [--script <multi-line>] [--expect <text>] [--timeout-seconds 60]
+  serial_ws_capture_to_file --node <node> --vmid <id> --log-path <file> [--append 1|0] [--script <multi-line>] [--expect <text>] [--timeout-seconds 120]
+
+serial_ws_capture_to_file runbook (required for install diagnosis):
+  1) Serial output is not persisted by Proxmox; re-run the whole install flow before capture if previous run is gone.
+  2) Always run capture in background with long timeout (for example nohup + pid file), then watch log growth and stop early when enough evidence is collected.
+  3) If log only shows "OKstarting serial terminal on interface serial0", treat it as a console redirection failure and re-check ISO kernel cmdline has serial console enabled.
+
+Phase 5 implemented actions:
+  node_termproxy_shell_exec --node <node> [--cmd login] [--cmd-opt <csv>] [--cmd-opts <nul-terminated>] [--script <multi-line>] [--expect <text>] [--timeout-seconds 60]
+
 Phase roadmap:
   Phase 1: read/task actions
   Phase 2: VM lifecycle/config actions
