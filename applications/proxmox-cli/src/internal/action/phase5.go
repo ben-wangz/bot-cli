@@ -18,6 +18,14 @@ func ExecutePhase5(ctx context.Context, client *pveapi.Client, req Request) (map
 	switch req.Name {
 	case "node_termproxy_shell_exec":
 		return runNodeTermproxyShellExec(ctx, client, req)
+	case "create_pve_user_with_root":
+		return runCreatePVEUserWithRoot(ctx, client, req)
+	case "get_user_acl_binding":
+		return runGetUserACLBinding(ctx, client, req)
+	case "grant_user_acl":
+		return runGrantUserACL(ctx, client, req)
+	case "revoke_user_acl":
+		return runRevokeUserACL(ctx, client, req)
 	default:
 		return nil, apperr.New(apperr.CodeInvalidArgs, "unsupported action in phase 5: "+req.Name)
 	}

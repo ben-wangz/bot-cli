@@ -141,6 +141,15 @@ func (c *Client) PutFormData(ctx context.Context, path string, form url.Values) 
 	return c.doAndDecode(req)
 }
 
+func (c *Client) DeleteFormData(ctx context.Context, path string, form url.Values) (any, error) {
+	req, err := c.NewRequest(ctx, http.MethodDelete, path, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	return c.doAndDecode(req)
+}
+
 func (c *Client) PostMultipartFile(ctx context.Context, path string, fields map[string]string, fileField string, filePath string, uploadFilename string) (any, error) {
 	if strings.TrimSpace(fileField) == "" {
 		return nil, apperr.New(apperr.CodeInvalidArgs, "multipart file field is required")

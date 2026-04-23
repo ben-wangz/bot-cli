@@ -2,7 +2,7 @@
 
 This directory stores OpenCode prompt cases used for action-level and workflow-level positive-path validation.
 
-- One prompt per action in A01-A51.
+- One prompt per active action in the roadmap.
 - One bootstrap workflow prompt for `ubuntu24-with-agent-template`.
 - Prompt files should be executable by OpenCode with minimal manual edits.
 

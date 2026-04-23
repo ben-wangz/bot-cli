@@ -187,7 +187,7 @@ func IsPhase4Action(name string) bool {
 
 func IsPhase5Action(name string) bool {
 	switch name {
-	case "node_termproxy_shell_exec":
+	case "node_termproxy_shell_exec", "create_pve_user_with_root", "get_user_acl_binding", "grant_user_acl", "revoke_user_acl":
 		return true
 	default:
 		return false

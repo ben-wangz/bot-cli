@@ -12,8 +12,8 @@
 
 - last_updated: 2026-04-23
 - overall_progress: 5/8 issues completed
-- action_coverage: 43/51
-- prompt_coverage: 42/51
+- action_coverage: 47/51
+- prompt_coverage: 46/51
 
 ## Issue Status
 
@@ -24,7 +24,7 @@
 | ISSUE-003 | 2 | completed | 13 actions / 13 prompts | ISSUE-002 |
 | ISSUE-004 | 3 | completed | 6 actions / 6 prompts | ISSUE-003 |
 | ISSUE-005 | 4 | completed | 8 actions / 8 prompts | ISSUE-004 |
-| ISSUE-006 | 5 | in_progress | 1 action / 1 prompt | ISSUE-005 |
+| ISSUE-006 | 5 | in_progress | 4 actions / 4 prompts | ISSUE-005 |
 | ISSUE-007 | 6 | open | 3 actions / 3 prompts | ISSUE-006 |
 | ISSUE-008 | cross | open | E2E + full prompt sweep | ISSUE-001..007 |
 
@@ -46,7 +46,7 @@
 - A22 保持 guard 职责；seed/snippet 上传需独立 action 承担（待新 issue/action 编排）。
 - 存储上传实测：PVE upload API 当前仅接受 `iso|vztmpl|import`，不接受 `snippets`，因此 cloud-init snippet 自动落盘需依赖 Phase 5 root 路径。
 - Phase 5 范围已重审：root 仅用于一次性 user 授权 bootstrap；常规 VM 管理与回归不再依赖 root action。
-- ISSUE-006 当前目标收敛为 1 个 action：A39 `bootstrap_user_acl_with_root`（幂等授权与审计输出）。
+- ISSUE-006 当前目标为 user+ACL 管理 4 个 action：创建用户 + 授权关系查询/新增/撤销（变更使用 delete+add 组合）。
 - 新增问题：当前 `build_ubuntu_autoinstall_iso` 路径为“整盘重打包”，输出 ISO 体积接近官方源 ISO，偏离最初“小 shim”目标。
 - 决策记录：后续回到“小 shim + HTTP 安装源”方案；当前大 ISO 路径作为临时稳定回归手段保留，待 ISSUE-008 编排替换。
 
