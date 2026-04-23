@@ -18,3 +18,15 @@ Version is managed via `forgekit` in module mode.
 - Version file: `applications/proxmox-cli/container/VERSION`
 
 The `container/` directory here is used as a compatibility path for `forgekit version` conventions. It does not imply this project builds container images for this module.
+
+## Build
+
+Use the module build script:
+
+`/root/code/github/bot-cli/applications/proxmox-cli/build.sh`
+
+Output binary path:
+
+`applications/proxmox-cli/build/bin/proxmox-cli`
+
+Do not build to `applications/proxmox-cli/src/proxmox-cli`.
