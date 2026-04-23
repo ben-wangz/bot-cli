@@ -129,7 +129,6 @@ Phase roadmap:
   Phase 3: cloud-init/qga actions
   Phase 4: console/websocket + ssh control-plane actions
   Phase 5: privilege ladder/root actions
-  Phase 6: policy/cleanup actions
 `
 }
 

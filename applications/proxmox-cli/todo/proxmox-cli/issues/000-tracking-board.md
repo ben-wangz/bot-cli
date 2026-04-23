@@ -6,12 +6,12 @@
 
 ## Objective
 
-维护 Phase 0-6 的全局进度、依赖关系和里程碑状态。
+维护 Phase 0-5 的全局进度、依赖关系和里程碑状态。
 
 ## Current Snapshot
 
 - last_updated: 2026-04-23
-- overall_progress: 5/8 issues completed
+- overall_progress: 5/7 issues completed
 - action_coverage: 47/51
 - prompt_coverage: 50/51
 
@@ -25,8 +25,7 @@
 | ISSUE-004 | 3 | completed | 6 actions / 6 prompts | ISSUE-003 |
 | ISSUE-005 | 4 | completed | 8 actions / 8 prompts | ISSUE-004 |
 | ISSUE-006 | 5 | in_progress | 4 actions / 4 prompts | ISSUE-005 |
-| ISSUE-007 | 6 | open | 3 actions / 3 prompts | ISSUE-006 |
-| ISSUE-008 | cross | open | E2E + full prompt sweep | ISSUE-001..007 |
+| ISSUE-008 | cross | open | E2E + full prompt sweep | ISSUE-001..006 |
 
 > 注：A17 包含 `agent_exec` 与 `agent_exec_status` 两个可执行动作，计入 2 条 prompt；ISSUE-005 新增 A44-A51 后总计为 51。
 
@@ -35,7 +34,7 @@
 - [x] M1: ISSUE-001 + ISSUE-002 完成
 - [x] M2: ISSUE-003 + ISSUE-004 完成
 - [x] M3: ISSUE-005 完成
-- [ ] M4: ISSUE-006 + ISSUE-007 完成
+- [ ] M4: ISSUE-006 完成
 - [ ] M5: ISSUE-008 完成（E2E 联调与回归）
 
 ## Active Blockers
@@ -58,8 +57,7 @@
 4. `004-phase-3-cloudinit-qga-actions.md`
 5. `005-phase-4-console-websocket.md`
 6. `006-phase-5-privilege-root-ops.md`
-7. `007-phase-6-policy-cleanup.md`
-8. `008-e2e-workflow-and-prompt-coverage.md`
+7. `008-e2e-workflow-and-prompt-coverage.md`
 
 ## Working Rules
 

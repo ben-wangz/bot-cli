@@ -3,7 +3,7 @@
 - status: open
 - priority: high
 - phase: cross
-- depends_on: ISSUE-001, ISSUE-002, ISSUE-003, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-007
+- depends_on: ISSUE-001, ISSUE-002, ISSUE-003, ISSUE-004, ISSUE-005, ISSUE-006
 
 ## Goal
 

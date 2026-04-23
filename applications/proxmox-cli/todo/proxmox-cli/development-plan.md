@@ -199,12 +199,6 @@ applications/proxmox-cli/
 3. 提供 user+ACL 管理闭环：查询授权、授权新增、授权撤销（变更通过 revoke+grant 组合，幂等）。
 4. 历史 root shell 能力不再作为验收依赖路径。
 
-## 5.7 Phase 6：策略类与收尾动作
-
-覆盖：A33 A35 A43
-
-目标：把已验证约束产品化，输出稳定且可机器消费的结论。
-
 ## 6. 工作流方案（ubuntu24-serial-autoinstall）
 
 将需求中的 12 步闭环落地为可重放 workflow：
@@ -303,7 +297,7 @@ applications/proxmox-cli/
 1. M1（2-3 天）: Phase 0 + Phase 1。
 2. M2（3-5 天）: Phase 2 + Phase 3。
 3. M3（3-4 天）: Phase 4。
-4. M4（2-3 天）: Phase 5 + Phase 6。
+4. M4（2-3 天）: Phase 5。
 5. M5（2 天）: 全量联调、文档补齐、验收回归。
 
 ## 10. 风险与缓解
@@ -319,7 +313,7 @@ applications/proxmox-cli/
 
 ## 11. 已确认实现策略
 
-1. Action 实现优先级按 Phase 顺序推进（Phase 0 -> Phase 6）。
+1. Action 实现优先级按 Phase 顺序推进（Phase 0 -> Phase 5）。
 2. A01-A43 测试 prompt 不做多套模板，每个 action 仅 1 条独立正向用例。
 3. 对存在依赖关系的 action，测试前置假设“依赖 action 已通过”，并在 prompt 中显式声明。
 
