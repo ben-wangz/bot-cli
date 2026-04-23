@@ -1,6 +1,6 @@
 # ISSUE-005 Phase 4 SSH Control Plane (QGA Bootstrap)
 
-- status: in_progress
+- status: completed
 - priority: high
 - phase: 4
 - depends_on: ISSUE-004
@@ -21,6 +21,7 @@
 
 - QGA 主链路（A15/A17）已可用于来宾内执行命令。
 - 下一步聚焦将“可执行命令”升级为“稳定 SSH 控制面能力”。
+- 2026-04-23 实测：`build/phase4-suite/summary.json` 显示 A44-A51 全部通过（8/8）。
 
 ## Goal
 
@@ -107,4 +108,4 @@
 - [x] SCP 双向传输可闭环并可验证文件一致性。
 - [x] 可输出用户手动接管用的 SSH 连接命令。
 - [x] Tunnel 生命周期（start/status/stop）可闭环，含 pid 文件回溯。
-- [ ] A44-A51 prompt 全部通过。
+- [x] A44-A51 prompt 全部通过。
