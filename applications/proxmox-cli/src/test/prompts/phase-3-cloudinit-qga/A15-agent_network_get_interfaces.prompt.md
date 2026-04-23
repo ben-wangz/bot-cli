@@ -3,7 +3,8 @@
 ## Preconditions
 
 - `build/pve-user.env` is loaded.
-- `build/ubuntu-24-with-agent.vm-template.id` exists and points to a valid template VM in policy VMID range.
+- `build/phase3-cloudinit-qga.shared-node` exists.
+- `build/phase3-cloudinit-qga.shared-vmid` exists.
 
 ## Prompt
 
@@ -12,15 +13,13 @@ You are a test execution agent. Run the A15 `agent_network_get_interfaces` posit
 
 Setup:
 1) Load env vars and switch to `applications/proxmox-cli/src`.
-2) Set VMID policy env vars (`PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000`).
-3) Read `TEMPLATE_VMID` from `build/ubuntu-24-with-agent.vm-template.id`.
-4) Resolve `TEST_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
-5) Allocate fresh `TEST_VMID` in-range via `get_next_vmid`.
-6) Clone `TEMPLATE_VMID` to `TEST_VMID` on `TEST_NODE` (`clone_template --wait`) and start VM (`vm_power --mode start --desired-state running --wait`).
-7) Probe guest-agent readiness with retry/backoff for `TEST_VMID`.
+2) Read `SHARED_NODE` from `build/phase3-cloudinit-qga.shared-node`.
+3) Read `SHARED_VMID` from `build/phase3-cloudinit-qga.shared-vmid`.
+4) Ensure shared VM is running (`vm_power --mode start --desired-state running --wait`).
+5) Probe guest-agent readiness with retry/backoff for `SHARED_VMID`.
 
 Command:
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action agent_network_get_interfaces --node "$TEST_NODE" --vmid "$TEST_VMID"
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action agent_network_get_interfaces --node "$SHARED_NODE" --vmid "$SHARED_VMID"
 
 Success criteria:
 - exit code = 0
@@ -29,9 +28,9 @@ Success criteria:
 - JSON contains `diagnostics.ipv4_addresses` (array, may be empty)
 
 Teardown:
-- Stop and destroy `TEST_VMID` in this prompt run on both success and failure.
+- Restore shared VM to `stopped` state (`vm_power --mode stop --desired-state stopped --wait`).
 
 Independence rule:
-- This test must be self-contained and order-independent.
-- Resolve and clean up its own VMID during this prompt run.
+- This test must be self-contained for action execution and order-independent.
+- Do not create or destroy VMs inside this prompt run.
 ```

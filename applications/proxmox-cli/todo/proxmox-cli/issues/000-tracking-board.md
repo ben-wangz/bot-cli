@@ -11,7 +11,7 @@
 ## Current Snapshot
 
 - last_updated: 2026-04-22
-- overall_progress: 3/8 issues completed
+- overall_progress: 4/8 issues completed
 - action_coverage: 35/43
 - prompt_coverage: 34/43
 
@@ -22,7 +22,7 @@
 | ISSUE-001 | 0 | completed | foundation baseline | - |
 | ISSUE-002 | 1 | completed | 9 actions / 9 prompts | ISSUE-001 |
 | ISSUE-003 | 2 | completed | 13 actions / 13 prompts | ISSUE-002 |
-| ISSUE-004 | 3 | in_progress | 6 actions / 6 prompts | ISSUE-003 |
+| ISSUE-004 | 3 | completed | 6 actions / 6 prompts | ISSUE-003 |
 | ISSUE-005 | 4 | in_progress | 6 actions / 6 prompts | ISSUE-004 |
 | ISSUE-006 | 5 | in_progress | 6 actions / 6 prompts | ISSUE-005 |
 | ISSUE-007 | 6 | open | 3 actions / 3 prompts | ISSUE-006 |
@@ -33,16 +33,15 @@
 ## Milestones
 
 - [x] M1: ISSUE-001 + ISSUE-002 完成
-- [ ] M2: ISSUE-003 + ISSUE-004 完成
+- [x] M2: ISSUE-003 + ISSUE-004 完成
 - [ ] M3: ISSUE-005 完成
 - [ ] M4: ISSUE-006 + ISSUE-007 完成
 - [ ] M5: ISSUE-008 完成（E2E 联调与回归）
 
 ## Active Blockers
 
-- ISSUE-004 QGA 正向回归受环境阻塞：当前无 qga-ready 模板可用。
-- 解除路径：提前落地 ISSUE-005 最小子集（A29 + A34）以通过串口在来宾内安装并启用 qemu-guest-agent。
-- 当前进展：A18/A19/A29/A32/A34/A40 协议层已打通（含 keepalive 与串口输出判据校验）；当前阻塞为模板环境未稳定提供 VM 串口 login，仍不能完成来宾内 QGA 安装。
+- ISSUE-004 已完成：Phase 3 的 6 个 action / 6 条 prompt 已通过正向回归。
+- QGA 安装路径依赖已记录：当无 qga-ready 基础镜像时，仍需 Phase 4 串口路径保障来宾内安装与启用。
 - A22 保持 guard 职责；seed/snippet 上传需独立 action 承担（待新 issue/action 编排）。
 - 存储上传实测：PVE upload API 当前仅接受 `iso|vztmpl|import`，不接受 `snippets`，因此 cloud-init snippet 自动落盘需依赖 Phase 5 root 路径。
 - Phase 5 进展：A39 `node_termproxy_shell_exec` 已接入并完成会话交互（脚本命令回显可验证）。

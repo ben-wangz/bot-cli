@@ -1,6 +1,6 @@
 # ISSUE-004 Phase 3 Cloud-init and QGA Actions
 
-- status: in_progress
+- status: completed
 - priority: high
 - phase: 3
 - depends_on: ISSUE-003
@@ -25,7 +25,7 @@
 - [x] 实现 storage upload guard 并处理 snippets 限制提示。
 - [x] 实现 seed 渲染与本地托管。
 - [x] 为 6 个 action 新增独立正向 prompt（A17 拆分 exec/status）。
-- [ ] 补充 QGA 安装路径依赖说明：当无 qga-ready 基础镜像时，需提前实现 Phase 4 串口路径用于来宾内安装 qemu-guest-agent。
+- [x] 补充 QGA 安装路径依赖说明：当无 qga-ready 基础镜像时，需提前实现 Phase 4 串口路径用于来宾内安装 qemu-guest-agent。
 
 ## Dependency Note
 
@@ -38,7 +38,7 @@
 
 ## Acceptance
 
-- [ ] 6 个 action 均通过正向主流程。
-- [ ] A22 对受限类型可正确提示。
-- [ ] A27 输出 seed 路径与可访问地址。
-- [ ] 6 条 prompt 通过（A17 拆分 exec/status）。
+- [x] 6 个 action 均通过正向主流程。
+- [x] A22 对受限类型可正确提示。
+- [x] A27 输出 seed 路径与可访问地址。
+- [x] 6 条 prompt 通过（A17 拆分 exec/status）。
