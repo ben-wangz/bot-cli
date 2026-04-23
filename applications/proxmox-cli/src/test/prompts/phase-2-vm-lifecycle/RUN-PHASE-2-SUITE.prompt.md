@@ -10,9 +10,12 @@ Run all Phase 2 action prompts under `applications/proxmox-cli/src/test/prompts/
 - Spawn one sub-agent per action prompt file (A07, A08, A09, A10, A13, A14, A23, A24, A25, A26, A28, A30, A31).
 - Sub-agent concurrency must be <= 2.
 - Each sub-agent executes exactly one prompt file and returns the result in the required schema.
-- Every prompt must be order-independent and must not consume outputs from other prompt runs.
-- Phase 2 actions are mutating operations; enforce a single active VM-mutating prompt at a time (effective VM write concurrency = 1).
-- A prompt must never reuse a VMID produced by another prompt, even inside the same suite run.
+- Prompts are split into two execution classes:
+  - Independent-VM prompts: A07, A08, A09, A23 (each prompt provisions and destroys its own VM assets).
+  - Shared-VM prompts: A10, A13, A14, A24, A25, A26, A28, A30, A31 (consume one suite-level shared VM).
+- Shared-VM prompts must run sequentially (shared VM write concurrency = 1).
+- Independent-VM prompts may run concurrently up to the suite concurrency limit when infra allows.
+- A prompt must never reuse a VMID produced by another prompt, except the suite-level shared VM artifacts explicitly defined below.
 - For async actions, prompt commands must include `--wait`, and validation must assert final task success (`status=stopped` and `exitstatus=OK`).
 
 ## Fallback Rule
@@ -28,26 +31,34 @@ Run all Phase 2 action prompts under `applications/proxmox-cli/src/test/prompts/
 5) Always include `--insecure-tls --output json`.
 6) Set VMID policy env vars for this suite: `PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000` (or approved override).
 7) Before running action prompts, execute bootstrap prompt `../e2e/BOOTSTRAP-UBUNTU24-WITH-AGENT-TEMPLATE.prompt.md` once and ensure `build/ubuntu-24-with-agent.vm-template.id` exists.
-8) Each action prompt must resolve its own `TEST_VMID` and disposable assets inside that prompt run.
-9) Prefer cloning from the template VMID for disposable VM setup; always self-destroy on both success and failure.
-10) For `A08-migrate_vm`, choose a target node different from template node and clean up VM on its final host.
-11) For disposable clones, prefer linked clone (`full=0`, default) to minimize storage I/O.
+8) Resolve `TEMPLATE_VMID` from `build/ubuntu-24-with-agent.vm-template.id` and resolve `SHARED_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
+9) Allocate one fresh in-range `SHARED_VMID` via `get_next_vmid`, then clone once: `clone_template --wait --full 0` from `TEMPLATE_VMID` to `SHARED_VMID` on `SHARED_NODE`.
+10) Persist shared inputs for sub-agents:
+   - `build/phase2-vm-lifecycle.shared-node`
+   - `build/phase2-vm-lifecycle.shared-vmid`
+11) Independent-VM prompts must still resolve their own `TEST_VMID` and self-destroy assets inside each prompt run.
+12) For `A08-migrate_vm`, choose a target node different from template node and clean up VM on its final host.
+13) For disposable clones, prefer linked clone (`full=0`, default) to minimize storage I/O.
+14) After all prompts finish (success or failure), run suite teardown once: stop and destroy `SHARED_VMID`, then remove shared input files.
+15) For `A08-migrate_vm`, use extended timeout (`--timeout 20m`); when timeout happens, include task `upid` and task log tail in diagnostics.
 
 ## Prompt Files to Execute
 
-- `A07-clone_template.prompt.md`
-- `A08-migrate_vm.prompt.md`
-- `A09-convert_vm_to_template.prompt.md`
-- `A10-update_vm_config.prompt.md`
-- `A13-vm_power.prompt.md`
-- `A14-set_vm_agent.prompt.md`
-- `A23-create_vm.prompt.md`
-- `A24-attach_cdrom_iso.prompt.md`
-- `A25-set_net_boot_config.prompt.md`
-- `A26-start_installer_and_console_ticket.prompt.md`
-- `A28-enable_serial_console.prompt.md`
-- `A30-review_install_tasks.prompt.md`
-- `A31-sendkey.prompt.md`
+- Independent-VM prompts:
+  - `A07-clone_template.prompt.md`
+  - `A08-migrate_vm.prompt.md`
+  - `A09-convert_vm_to_template.prompt.md`
+  - `A23-create_vm.prompt.md`
+- Shared-VM prompts:
+  - `A10-update_vm_config.prompt.md`
+  - `A13-vm_power.prompt.md`
+  - `A14-set_vm_agent.prompt.md`
+  - `A24-attach_cdrom_iso.prompt.md`
+  - `A25-set_net_boot_config.prompt.md`
+  - `A26-start_installer_and_console_ticket.prompt.md`
+  - `A28-enable_serial_console.prompt.md`
+  - `A30-review_install_tasks.prompt.md`
+  - `A31-sendkey.prompt.md`
 
 ## Final Output Format
 

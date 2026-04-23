@@ -289,15 +289,27 @@ func runAttachCDROMISO(ctx context.Context, client *pveapi.Client, req Request) 
 	if ideSlot == "" {
 		ideSlot = "ide2"
 	}
+	media := strings.TrimSpace(req.Args["media"])
+	slotValue := iso
+	if media != "" && !strings.Contains(strings.ToLower(slotValue), "media=") {
+		slotValue = slotValue + ",media=" + media
+	}
 	form := url.Values{}
-	form.Set(ideSlot, iso)
-	setIfPresent(form, "media", req.Args["media"])
+	form.Set(ideSlot, slotValue)
 	path := fmt.Sprintf("/nodes/%s/qemu/%d/config", url.PathEscape(node), vmid)
 	data, err := client.PutFormData(ctx, path, form)
 	if err != nil {
 		return nil, err
 	}
-	return writeResult(req, map[string]any{"node": node, "vmid": vmid, "slot": ideSlot, "iso": iso}, data), nil
+	request := map[string]any{"node": node, "vmid": vmid, "slot": ideSlot, "iso": iso}
+	if media != "" {
+		request["media"] = media
+	}
+	result := writeResult(req, request, data)
+	if media != "" {
+		mergeDiagnosticsMap(result, map[string]any{"slot_value": slotValue})
+	}
+	return result, nil
 }
 
 func runSetNetBootConfig(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
@@ -464,6 +476,19 @@ func setIfPresent(form url.Values, key string, value string) {
 	if v != "" {
 		form.Set(key, v)
 	}
+}
+
+func mergeDiagnosticsMap(result map[string]any, extra map[string]any) {
+	diagnostics := map[string]any{}
+	if current, ok := result["diagnostics"].(map[string]any); ok {
+		for k, v := range current {
+			diagnostics[k] = v
+		}
+	}
+	for k, v := range extra {
+		diagnostics[k] = v
+	}
+	result["diagnostics"] = diagnostics
 }
 
 func vmExistsOnNode(ctx context.Context, client *pveapi.Client, node string, vmid int) (bool, map[string]any, error) {

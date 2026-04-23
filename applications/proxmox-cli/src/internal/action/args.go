@@ -193,11 +193,28 @@ func IsPhase5Action(name string) bool {
 	}
 }
 
-func IsPhase2AsyncAction(name string) bool {
+func IsActionAsync(name string) bool {
 	switch name {
 	case "clone_template", "migrate_vm", "convert_vm_to_template", "vm_power", "create_vm", "start_installer_and_console_ticket":
 		return true
 	default:
 		return false
+	}
+}
+
+func IsPhase2AsyncAction(name string) bool {
+	return IsActionAsync(name)
+}
+
+func WaitSkipReason(name string) string {
+	switch {
+	case IsPhase1Action(name):
+		return "action is read-only"
+	case IsPhase3Action(name):
+		return "action is synchronous or self-polled"
+	case IsPhase4Action(name), IsPhase5Action(name):
+		return "action is synchronous or session-driven"
+	default:
+		return "action is synchronous"
 	}
 }

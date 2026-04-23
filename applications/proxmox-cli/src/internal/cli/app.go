@@ -391,119 +391,67 @@ func runActionCommand(rt commandRuntime, args []string) (map[string]any, error) 
 			"request": parsedArgs,
 		}, nil
 	}
+	result, err := executeActionByPhase(rt, name, parsedArgs)
+	if err != nil {
+		return nil, err
+	}
+	if !rt.Opts.Wait {
+		return result, nil
+	}
+	return applyActionWait(rt, name, result)
+}
+
+func executeActionByPhase(rt commandRuntime, name string, parsedArgs map[string]string) (map[string]any, error) {
+	req := action.Request{Name: name, Args: parsedArgs, Scope: rt.Opts.AuthScope}
 	if action.IsPhase1Action(name) {
-		return action.ExecutePhase1(context.Background(), rt.Client, action.Request{
-			Name:  name,
-			Args:  parsedArgs,
-			Scope: rt.Opts.AuthScope,
-		})
+		return action.ExecutePhase1(context.Background(), rt.Client, req)
 	}
 	if action.IsPhase2Action(name) {
-		result, phaseErr := action.ExecutePhase2(context.Background(), rt.Client, action.Request{
-			Name:  name,
-			Args:  parsedArgs,
-			Scope: rt.Opts.AuthScope,
-		})
-		if phaseErr != nil {
-			return nil, phaseErr
-		}
-		if !rt.Opts.Wait {
-			return result, nil
-		}
-		if hasWaitSkipDiagnostic(result) {
-			return result, nil
-		}
-		if !action.IsPhase2AsyncAction(name) {
-			diagnostics := map[string]any{"wait_skipped": "action is synchronous"}
-			if current, ok := result["diagnostics"].(map[string]any); ok {
-				for k, v := range current {
-					diagnostics[k] = v
-				}
-			}
-			result["diagnostics"] = diagnostics
-			return result, nil
-		}
-		node, upid := getWaitTarget(result)
-		if node == "" || upid == "" {
-			return nil, apperr.New(apperr.CodeInternal, "wait requested but async action did not provide node/upid")
-		}
-		waitResult, waitErr := action.WaitTask(context.Background(), rt.Client, node, upid, action.WaitOptions{Timeout: waitTimeout(rt.Opts.Timeout), Interval: 2 * time.Second})
-		if waitErr != nil {
-			return nil, waitErr
-		}
-		diagnostics := map[string]any{"wait_status": waitResult}
-		if current, ok := result["diagnostics"].(map[string]any); ok {
-			for k, v := range current {
-				diagnostics[k] = v
-			}
-		}
-		result["diagnostics"] = diagnostics
-		return result, nil
+		return action.ExecutePhase2(context.Background(), rt.Client, req)
 	}
 	if action.IsPhase3Action(name) {
-		result, phaseErr := action.ExecutePhase3(context.Background(), rt.Client, action.Request{
-			Name:  name,
-			Args:  parsedArgs,
-			Scope: rt.Opts.AuthScope,
-		})
-		if phaseErr != nil {
-			return nil, phaseErr
-		}
-		if !rt.Opts.Wait {
-			return result, nil
-		}
-		diagnostics := map[string]any{"wait_skipped": "action is synchronous or self-polled"}
-		if current, ok := result["diagnostics"].(map[string]any); ok {
-			for k, v := range current {
-				diagnostics[k] = v
-			}
-		}
-		result["diagnostics"] = diagnostics
-		return result, nil
+		return action.ExecutePhase3(context.Background(), rt.Client, req)
 	}
 	if action.IsPhase4Action(name) {
-		result, phaseErr := action.ExecutePhase4(context.Background(), rt.Client, action.Request{
-			Name:  name,
-			Args:  parsedArgs,
-			Scope: rt.Opts.AuthScope,
-		})
-		if phaseErr != nil {
-			return nil, phaseErr
-		}
-		if !rt.Opts.Wait {
-			return result, nil
-		}
-		diagnostics := map[string]any{"wait_skipped": "action is synchronous or session-driven"}
-		if current, ok := result["diagnostics"].(map[string]any); ok {
-			for k, v := range current {
-				diagnostics[k] = v
-			}
-		}
-		result["diagnostics"] = diagnostics
-		return result, nil
+		return action.ExecutePhase4(context.Background(), rt.Client, req)
 	}
 	if action.IsPhase5Action(name) {
-		result, phaseErr := action.ExecutePhase5(context.Background(), rt.Client, action.Request{
-			Name:  name,
-			Args:  parsedArgs,
-			Scope: rt.Opts.AuthScope,
-		})
-		if phaseErr != nil {
-			return nil, phaseErr
-		}
-		if !rt.Opts.Wait {
-			return result, nil
-		}
-		diagnostics := map[string]any{"wait_skipped": "action is synchronous or session-driven"}
-		if current, ok := result["diagnostics"].(map[string]any); ok {
-			for k, v := range current {
-				diagnostics[k] = v
-			}
-		}
-		result["diagnostics"] = diagnostics
-		return result, nil
+		return action.ExecutePhase5(context.Background(), rt.Client, req)
 	}
 	return nil, apperr.New(apperr.CodeInvalidArgs, "action not implemented yet: "+name)
+}
+
+func applyActionWait(rt commandRuntime, name string, result map[string]any) (map[string]any, error) {
+	if hasWaitSkipDiagnostic(result) {
+		return result, nil
+	}
+	if !action.IsActionAsync(name) {
+		mergeDiagnostics(result, map[string]any{"wait_skipped": action.WaitSkipReason(name)})
+		return result, nil
+	}
+	node, upid := getWaitTarget(result)
+	if node == "" || upid == "" {
+		return nil, apperr.New(apperr.CodeInternal, "wait requested but async action did not provide node/upid")
+	}
+	waitResult, waitErr := action.WaitTask(context.Background(), rt.Client, node, upid, action.WaitOptions{Timeout: waitTimeout(rt.Opts.Timeout), Interval: 2 * time.Second})
+	if waitErr != nil {
+		return nil, waitErr
+	}
+	mergeDiagnostics(result, map[string]any{"wait_status": waitResult})
+	return result, nil
+}
+
+func mergeDiagnostics(result map[string]any, extra map[string]any) {
+	diagnostics := map[string]any{}
+	if current, ok := result["diagnostics"].(map[string]any); ok {
+		for k, v := range current {
+			diagnostics[k] = v
+		}
+	}
+	for k, v := range extra {
+		diagnostics[k] = v
+	}
+	result["diagnostics"] = diagnostics
 }
 
 func waitTimeout(timeout time.Duration) time.Duration {

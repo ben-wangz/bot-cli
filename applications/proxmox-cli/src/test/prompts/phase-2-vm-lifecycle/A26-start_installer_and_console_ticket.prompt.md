@@ -3,7 +3,8 @@
 ## Preconditions
 
 - `build/pve-user.env` is loaded.
-- `build/ubuntu-24-with-agent.vm-template.id` exists and points to a valid template VM in policy VMID range.
+- `build/phase2-vm-lifecycle.shared-node` exists.
+- `build/phase2-vm-lifecycle.shared-vmid` exists.
 
 ## Prompt
 
@@ -12,15 +13,12 @@ You are a test execution agent. Run the A26 `start_installer_and_console_ticket`
 
 Setup:
 1) Load env vars and switch to `applications/proxmox-cli/src`.
-2) Set VMID policy env vars (`PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000`).
-3) Read `TEMPLATE_VMID` from `build/ubuntu-24-with-agent.vm-template.id`.
-4) Resolve `TEST_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
-5) Allocate fresh `TEST_VMID` in-range via `get_next_vmid`.
-6) Clone `TEMPLATE_VMID` to `TEST_VMID` on `TEST_NODE` (`clone_template --wait`).
-7) Ensure VM is stopped before action execution (`vm_power --mode stop --desired-state stopped --wait`).
+2) Read `SHARED_NODE` from `build/phase2-vm-lifecycle.shared-node`.
+3) Read `SHARED_VMID` from `build/phase2-vm-lifecycle.shared-vmid`.
+4) Ensure VM is stopped before action execution (`vm_power --mode stop --desired-state stopped --wait`).
 
 Command:
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --wait --output json action start_installer_and_console_ticket --node "$TEST_NODE" --vmid "$TEST_VMID"
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --wait --output json action start_installer_and_console_ticket --node "$SHARED_NODE" --vmid "$SHARED_VMID"
 
 Success criteria:
 - exit code = 0
@@ -31,9 +29,9 @@ Success criteria:
 - `diagnostics.wait_status.exitstatus == "OK"`
 
 Teardown:
-- Stop and destroy `TEST_VMID` inside this prompt run.
+- Restore shared VM to `stopped` state (`vm_power --mode stop --desired-state stopped --wait`).
 
 Independence rule:
-- This test must be self-contained and order-independent.
-- Never reuse a VMID created by another prompt.
+- This test must be self-contained for action execution and order-independent.
+- Do not create or destroy VMs inside this prompt run.
 ```

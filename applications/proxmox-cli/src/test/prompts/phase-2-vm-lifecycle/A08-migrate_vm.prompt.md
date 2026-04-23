@@ -22,7 +22,7 @@ Setup:
 8) Ensure cloned VM is stopped before migration (`vm_power --mode stop --desired-state stopped --wait`).
 
 Command:
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --wait --output json action migrate_vm --node "$SOURCE_NODE" --vmid "$TEST_VMID" --target "$TARGET_NODE"
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --timeout 20m --wait --output json action migrate_vm --node "$SOURCE_NODE" --vmid "$TEST_VMID" --target "$TARGET_NODE"
 
 Success criteria:
 - exit code = 0
@@ -31,6 +31,10 @@ Success criteria:
 - `result.upid` is non-empty
 - `diagnostics.wait_status.status == "stopped"`
 - `diagnostics.wait_status.exitstatus == "OK"`
+
+Timeout diagnostics rule:
+- If wait times out, report the timeout message including `node`, `upid`, and task log tail from the error output.
+- Capture and return the latest `get_task_status` output for the same `upid` before teardown.
 
 Teardown:
 - Destroy `TEST_VMID` in this prompt run, even when migration fails.

@@ -70,7 +70,7 @@ Phase 2 implemented actions:
   vm_power --node <node> --vmid <id> --mode <start|stop|shutdown|reboot|reset> [--desired-state running|stopped]
   set_vm_agent --node <node> --vmid <id> [--enabled 1|0]
   create_vm --node <node> --vmid <id> --name <name> [--memory <mb>] [--cores <n>] [--if-exists fail|reuse]
-  attach_cdrom_iso --node <node> --vmid <id> --iso <storage:iso/file.iso> [--slot ide2]
+  attach_cdrom_iso --node <node> --vmid <id> --iso <storage:iso/file.iso> [--slot ide2] [--media cdrom]
   set_net_boot_config --node <node> --vmid <id> --net0 <value> --boot <value>
   start_installer_and_console_ticket --node <node> --vmid <id>
   enable_serial_console --node <node> --vmid <id>

@@ -3,7 +3,8 @@
 ## Preconditions
 
 - `build/pve-user.env` is loaded.
-- `build/ubuntu-24-with-agent.vm-template.id` exists and points to a valid template VM in policy VMID range.
+- `build/phase2-vm-lifecycle.shared-node` exists.
+- `build/phase2-vm-lifecycle.shared-vmid` exists.
 - A readable ISO path `TEST_ISO` exists.
 
 ## Prompt
@@ -13,15 +14,12 @@ You are a test execution agent. Run the A24 `attach_cdrom_iso` positive-path tes
 
 Setup:
 1) Load env vars and switch to `applications/proxmox-cli/src`.
-2) Set VMID policy env vars (`PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000`).
-3) Read `TEMPLATE_VMID` from `build/ubuntu-24-with-agent.vm-template.id`.
-4) Resolve `TEST_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
-5) Allocate fresh `TEST_VMID` in-range via `get_next_vmid`.
-6) Clone `TEMPLATE_VMID` to `TEST_VMID` on `TEST_NODE` (`clone_template --wait`).
-7) Resolve `TEST_ISO` from available ISO storage.
+2) Read `SHARED_NODE` from `build/phase2-vm-lifecycle.shared-node`.
+3) Read `SHARED_VMID` from `build/phase2-vm-lifecycle.shared-vmid`.
+4) Resolve `TEST_ISO` from available ISO storage.
 
 Command:
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --wait --output json action attach_cdrom_iso --node "$TEST_NODE" --vmid "$TEST_VMID" --iso "$TEST_ISO" --slot ide2
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --wait --output json action attach_cdrom_iso --node "$SHARED_NODE" --vmid "$SHARED_VMID" --iso "$TEST_ISO" --slot ide2 --media cdrom
 
 Success criteria:
 - exit code = 0
@@ -29,10 +27,7 @@ Success criteria:
 - JSON field `ok == true`
 - JSON contains `diagnostics.wait_skipped == "action is synchronous"`
 
-Teardown:
-- Destroy `TEST_VMID` in this run.
-
 Independence rule:
-- This test must be self-contained and order-independent.
-- Never reuse a VMID created by another prompt.
+- This test must be self-contained for action execution and order-independent.
+- Do not create or destroy VMs inside this prompt run.
 ```
