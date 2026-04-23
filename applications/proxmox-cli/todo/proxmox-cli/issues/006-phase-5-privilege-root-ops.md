@@ -39,7 +39,7 @@
 - [x] P5-01..P5-04 可执行并形成完整 user+ACL 管理闭环。
 - [ ] bootstrap 后，Phase 1-4 与 workflow 在 user 凭据下可执行，不依赖 root action。
 - [x] 可输出可审计结论（授予对象、角色、路径、校验状态）。
-- [ ] 4 条 prompt 通过。
+- [x] 4 条 prompt 通过。
 
 ## Validation Note
 
@@ -50,6 +50,7 @@
   - P5-03：对 `/vms` 授予 `PVEAuditor` 成功。
   - P5-02：授权后可读到 binding，撤销后 count 返回 0。
   - P5-04：授权撤销成功（幂等可重复）。
+- prompt 执行汇总：`build/phase5-suite/prompt_summary.json`（4/4 通过）。
 
 ## Least-Privilege Profile (Initial)
 
