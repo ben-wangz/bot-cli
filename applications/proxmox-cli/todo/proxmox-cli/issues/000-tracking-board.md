@@ -10,10 +10,10 @@
 
 ## Current Snapshot
 
-- last_updated: 2026-04-22
+- last_updated: 2026-04-23
 - overall_progress: 4/8 issues completed
-- action_coverage: 35/43
-- prompt_coverage: 34/43
+- action_coverage: 35/51
+- prompt_coverage: 42/51
 
 ## Issue Status
 
@@ -23,12 +23,12 @@
 | ISSUE-002 | 1 | completed | 9 actions / 9 prompts | ISSUE-001 |
 | ISSUE-003 | 2 | completed | 13 actions / 13 prompts | ISSUE-002 |
 | ISSUE-004 | 3 | completed | 6 actions / 6 prompts | ISSUE-003 |
-| ISSUE-005 | 4 | in_progress | 6 actions / 6 prompts | ISSUE-004 |
+| ISSUE-005 | 4 | in_progress | 8 actions / 8 prompts | ISSUE-004 |
 | ISSUE-006 | 5 | in_progress | 6 actions / 6 prompts | ISSUE-005 |
 | ISSUE-007 | 6 | open | 3 actions / 3 prompts | ISSUE-006 |
 | ISSUE-008 | cross | open | E2E + full prompt sweep | ISSUE-001..007 |
 
-> 注：A17 包含 `agent_exec` 与 `agent_exec_status` 两个可执行动作，计入 2 条 prompt，总计保持 43。
+> 注：A17 包含 `agent_exec` 与 `agent_exec_status` 两个可执行动作，计入 2 条 prompt；ISSUE-005 新增 A44-A51 后总计为 51。
 
 ## Milestones
 
@@ -42,6 +42,7 @@
 
 - ISSUE-004 已完成：Phase 3 的 6 个 action / 6 条 prompt 已通过正向回归。
 - QGA 安装路径依赖已记录：当无 qga-ready 基础镜像时，仍需 Phase 4 串口路径保障来宾内安装与启用。
+- ISSUE-005 范围已切换为 SSH 控制面：A44-A51（QGA 引导 SSH + SSH/SCP/Tunnel）。
 - A22 保持 guard 职责；seed/snippet 上传需独立 action 承担（待新 issue/action 编排）。
 - 存储上传实测：PVE upload API 当前仅接受 `iso|vztmpl|import`，不接受 `snippets`，因此 cloud-init snippet 自动落盘需依赖 Phase 5 root 路径。
 - Phase 5 进展：A39 `node_termproxy_shell_exec` 已接入并完成会话交互（脚本命令回显可验证）。
@@ -70,6 +71,6 @@
 
 ## Exit Criteria
 
-- [ ] A01-A43 覆盖完成。
-- [ ] 43 条 action prompt 覆盖完成并可执行。
+- [ ] A01-A51 覆盖完成。
+- [ ] 51 条 action prompt 覆盖完成并可执行。
 - [ ] Ubuntu24 workflow 闭环验证通过。

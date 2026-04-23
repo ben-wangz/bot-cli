@@ -1,4 +1,4 @@
-# ISSUE-005 Phase 4 Console and WebSocket
+# ISSUE-005 Phase 4 SSH Control Plane (QGA Bootstrap)
 
 - status: in_progress
 - priority: high
@@ -12,43 +12,93 @@
   - A34 `serial_ws_session_control`（脚本模式最小能力）
 - 该最小子集用于在来宾内执行 `qemu-guest-agent` 安装与启用流程，不改变 ISSUE-005 的完整验收范围。
 
+## Scope Update
+
+- ISSUE-005 当前范围收敛为 SSH 控制面交付：通过 QGA 完成 SSH 通路引导，后续稳定交互使用 SSH/SCP/Tunnel。
+- A18 `start_vnc_proxy` 与 A19 `connect_vnc_websocket` 从 ISSUE-005 范围中移除。
+
 ## Current Validation Note
 
-- A18/A19/A29/A32/A34/A40 代码路径已接入 CLI 并完成本地编译验证。
-- Live PVE 验证中，websocket 握手已打通（`open_vm_termproxy` + `vncwebsocket` 可建立会话）。
-- 当前验证结果：`serial_ws_session_control` 协议层已打通，支持脚本输入与回显匹配。
-- `start_vnc_proxy` 与 `connect_vnc_websocket` 已补齐，支持 vncproxy 启动与 websocket 探测连通性。
-- `validate_k1_serial_readable` 与 `validate_serial_output_criterion2` 已补齐：前者验证串口可读，后者对“仅 termproxy 启动横幅”场景给出失败诊断。
-- 当前阻塞转为环境侧：现有模板在 VM 串口仍未稳定出现可交互 login 提示，暂无法通过串口完成来宾内安装 QGA。
-- 同期验证发现 snippet 无法经 upload API 直接写入（`snippets` 不在可上传枚举），如需 cloud-init 自举仍需 Phase 5 root 文件落盘路径。
-- 已转入 Phase 5 并实现 `node_termproxy_shell_exec` 初版，root-token 会话可建立；下一步需完善命令执行回显能力后回灌 ISSUE-004。
+- QGA 主链路（A15/A17）已可用于来宾内执行命令。
+- 下一步聚焦将“可执行命令”升级为“稳定 SSH 控制面能力”。
 
 ## Goal
 
-交付串口控制面能力：脚本模式为主，交互模式基础版。
+交付 SSH 控制面能力：QGA 负责引导 SSH 通路，SSH 负责稳定命令执行与文件传输。
 
 ## Actions
 
-- A18 start_vnc_proxy
-- A19 connect_vnc_websocket
-- A29 open_vm_termproxy
-- A32 validate_k1_serial_readable
-- A34 serial_ws_session_control
-- A40 validate_serial_output_criterion2
+- A44 ssh_check_service
+- A45 ssh_inject_pubkey_qga
+- A46 ssh_exec
+- A47 ssh_scp_transfer
+- A48 ssh_print_connect_command
+- A49 ssh_tunnel_start
+- A50 ssh_tunnel_status
+- A51 ssh_tunnel_stop
+
+## Action Contracts
+
+- A44 `ssh_check_service`
+  - 输入：`host` `port` `user` `identity-file`(optional) `connect-timeout-seconds`(default 5)
+  - 行为：使用本机 ssh client 执行 batch 探活，不进入交互模式。
+  - 输出：`reachable` `auth_ok` `latency_ms` `stderr_tail`。
+- A45 `ssh_inject_pubkey_qga`
+  - 输入：`node` `vmid` `username`，以及 `pub-key-file` 或 `pub-key`（二选一）。
+  - 行为：通过 QGA 创建/修正 `~/.ssh/authorized_keys` 与权限（700/600）。
+  - 输出：`username` `authorized_keys_path` `fingerprint`。
+- A46 `ssh_exec`
+  - 输入：`host` `port` `user` `identity-file` `command` `timeout-seconds`。
+  - 行为：通过 ssh client 执行远程命令，支持参数透传与超时控制。
+  - 输出：`exit_code` `stdout` `stderr` `duration_ms`。
+- A47 `ssh_scp_transfer`
+  - 输入：`direction(upload|download)` `host` `port` `user` `identity-file` `local-path` `remote-path` `recursive`。
+  - 行为：通过 scp 双向传输文件或目录。
+  - 输出：`direction` `bytes` `duration_ms` `verified_exists`。
+- A48 `ssh_print_connect_command`
+  - 输入：`host` `port` `user` `identity-file` `extra-args`。
+  - 行为：仅生成可复制执行的 ssh 命令，供用户手动进入交互。
+  - 输出：`command`。
+- A49 `ssh_tunnel_start`
+  - 输入：`host` `port` `user` `identity-file` `local-port` `remote-host` `remote-port` `pid-file` `log-file`。
+  - 行为：后台创建 SSH 隧道并写入 pid/log 文件。
+  - 输出：`pid` `pid_file` `log_file` `local_endpoint`。
+- A50 `ssh_tunnel_status`
+  - 输入：`pid-file`。
+  - 行为：读取 pid 并检查进程与本地监听状态。
+  - 输出：`running` `pid` `pid_file` `local_endpoint` `last_error`。
+- A51 `ssh_tunnel_stop`
+  - 输入：`pid-file`。
+  - 行为：按 pid 停止 tunnel 并清理状态文件（尽量幂等）。
+  - 输出：`stopped` `pid` `pid_file` `cleanup`。
 
 ## Tasks
 
-- [x] 提前落地最小子集：A29 `open_vm_termproxy` + A34 `serial_ws_session_control`（用于 QGA 安装前置）。
-- [x] 实现 termproxy 握手与 ticket 提取。
-- [x] 实现 websocket 认证行发送。
-- [x] 实现 xterm 帧协议编解码与 keepalive。
-- [x] 实现脚本模式（expect/timeout/summary）。
-- [ ] 实现交互模式基础版（stdin/stdout 透传）。
-- [x] 为 6 个 action 各新增 1 条独立正向 prompt。
+- [ ] 实现 A44：使用本机 ssh client 检查目标 SSH 可达与认证结果。
+- [ ] 实现 A45：通过 QGA 注入登录公钥，支持 `--pub-key-file` 与 `--pub-key`。
+- [ ] 实现 A46：通过 ssh client 执行命令（支持 timeout/identity/port 参数）。
+- [ ] 实现 A47：通过 scp 执行双向文件传输（upload/download）。
+- [ ] 实现 A48：生成可复制执行的 ssh 命令，供用户手动进入交互会话。
+- [ ] 实现 A49：创建 SSH tunnel 并写入 pid/log 文件用于监控与回溯。
+- [ ] 实现 A50：读取 pid 文件并检查 tunnel 进程/端口存活状态。
+- [ ] 实现 A51：基于 pid 文件停止 tunnel 并输出清理结果。
+- [x] 为 A44-A51 新增独立正向 prompt。
+
+## Suggested Validation Flow
+
+- `A15 agent_network_get_interfaces` 获取 guest IP。
+- `A45 ssh_inject_pubkey_qga` 注入登录公钥。
+- `A44 ssh_check_service` 验证 SSH 服务可达。
+- `A46 ssh_exec` 执行 `hostname` 作为命令链路验证。
+- `A47 ssh_scp_transfer` 执行 upload/download 双向验证。
+- `A48 ssh_print_connect_command` 输出用户手动接管命令。
+- `A49 -> A50 -> A51` 验证 tunnel 生命周期闭环。
 
 ## Acceptance
 
-- [ ] 6 个 action 可执行。
-- [ ] 脚本模式可用于自动化闭环步骤。
-- [ ] 交互模式可人工接管排障。
-- [ ] 6 条 prompt 通过。
+- [ ] A44-A51 可执行。
+- [ ] QGA 注入公钥后，SSH 命令执行链路可闭环。
+- [ ] SCP 双向传输可闭环并可验证文件一致性。
+- [ ] 可输出用户手动接管用的 SSH 连接命令。
+- [ ] Tunnel 生命周期（start/status/stop）可闭环，含 pid 文件回溯。
+- [ ] A44-A51 prompt 全部通过。
