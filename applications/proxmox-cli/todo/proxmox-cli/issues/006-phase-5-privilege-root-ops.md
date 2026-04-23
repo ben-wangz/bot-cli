@@ -35,6 +35,7 @@
 - [x] 输出最小权限授予清单（路径、角色、动词）与审计结果。
 - [ ] 为 5 个 action 各新增 1 条独立正向 prompt。
 - [x] 文档化切换策略：bootstrap 完成后，所有 workflow/action 统一使用 user 凭据。
+- [x] 设计并文档化 pool+user 初始化 workflow（创建 user/pool、pool 级 PVEAdmin、A01/A02 与 A22/A27 最小补充权限）。
 
 ## Acceptance
 
@@ -53,6 +54,17 @@
   - P5-02：授权后可读到 binding，撤销后 count 返回 0。
   - P5-04：授权撤销成功（幂等可重复）。
 - prompt 执行汇总：`build/phase5-suite/prompt_summary.json`（4/4 通过）。
+
+## Bootstrap Workflow Design (New)
+
+- 已新增 workflow 设计文档：`todo/proxmox-cli/workflows/010-bootstrap-bot-user-pool-acl.md`。
+- 设计目标：一次执行完成测试账号与最小补充权限初始化；workflow 仅返回标准 JSON 输出，不直接写 env 文件。
+- 设计步骤（action-first）：
+  1. `create_pve_user_with_root`
+  2. `create_pool_with_root`
+  3. `grant_user_acl` -> `/pool/<poolid>` + `PVEAdmin`
+  4. `grant_user_acl` -> `/` + `PVEAuditor`（A01/A02）
+  5. `grant_user_acl` -> `/storage` + `PVEDatastoreAdmin`（支持 A22 与 ISO 上传；A27 为本地渲染）
 
 ## Least-Privilege Profile (Initial)
 

@@ -7,7 +7,7 @@ Agent-facing CLI for Proxmox-related operations.
 - Default execution path uses `pve user` credentials for VM management actions and workflows.
 - `root` credentials are not required for normal day-to-day VM lifecycle operations.
 - Root scope is reserved for one-time bootstrap tasks (for example, creating/assigning a least-privilege user), then execution should return to user scope.
-- Phase 5 planning is limited to root-assisted user/ACL bootstrap (create user, get ACL binding, grant ACL, revoke ACL).
+- Phase 5 planning is limited to root-assisted pool/user ACL bootstrap (create pool/user, get ACL binding, grant ACL, revoke ACL).
 - ACL "change" operations are modeled as `revoke + grant`; no standalone update action is required.
 - Historical root-shell action support remains in code for compatibility, but is not part of the recommended main path.
 

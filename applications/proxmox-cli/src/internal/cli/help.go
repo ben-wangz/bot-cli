@@ -146,12 +146,18 @@ Examples:
 
 Implemented workflows:
   ubuntu24-with-agent-template --node <node> --target-vmid <id>
+  bootstrap-bot-user-pool-acl --userid <user@realm> --poolid <poolid> [--password <plain>] [--if-exists fail|reuse]
 
 ubuntu24-with-agent-template result:
   - reuse prebuilt installer ISO when available, otherwise build autoinstall ISO
   - create fresh VM from scratch, run unattended install, verify qga readiness
   - convert VM to template and write template VMID to build/ubuntu-24-with-agent.vm-template.id
   - prints each underlying action call to stderr for troubleshooting (sensitive args redacted)
+
+bootstrap-bot-user-pool-acl result:
+  - creates or reuses user and pool with root-assisted bootstrap actions
+  - grants ACLs: /pool/<poolid>=PVEAdmin, /=PVEAuditor, /storage=PVEDatastoreAdmin
+  - returns workflow-standard JSON result (no local env file mutation)
 `
 }
 

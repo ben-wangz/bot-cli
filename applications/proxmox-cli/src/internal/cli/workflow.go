@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"crypto/rand"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,6 +16,7 @@ import (
 
 const (
 	workflowUbuntu24WithAgentTemplate = "ubuntu24-with-agent-template"
+	workflowBootstrapUserPoolACL      = "bootstrap-bot-user-pool-acl"
 	workflowISOStorage                = "local"
 	workflowDiskStorage               = "local-lvm"
 	workflowDiskSizeGB                = 32
@@ -41,9 +43,129 @@ func executeWorkflow(rt commandRuntime, name string, args map[string]string) (ma
 	switch name {
 	case workflowUbuntu24WithAgentTemplate:
 		return runWorkflowUbuntu24WithAgentTemplate(rt, args)
+	case workflowBootstrapUserPoolACL:
+		return runWorkflowBootstrapTestUserPoolACL(rt, args)
 	default:
 		return nil, apperr.New(apperr.CodeInvalidArgs, "workflow not implemented yet: "+name)
 	}
+}
+
+func runWorkflowBootstrapTestUserPoolACL(rt commandRuntime, args map[string]string) (map[string]any, error) {
+	if err := ensureAllowedWorkflowArgs(args, "userid", "poolid", "password", "pool-comment", "user-comment", "if-exists"); err != nil {
+		return nil, err
+	}
+	if rt.Opts.AuthScope != "root" && rt.Opts.AuthScope != "root-token" {
+		return nil, apperr.New(apperr.CodeAuth, "workflow bootstrap-bot-user-pool-acl requires --auth-scope root or root-token")
+	}
+	userID, err := requiredWorkflowString(args, "userid")
+	if err != nil {
+		return nil, err
+	}
+	if !strings.Contains(userID, "@") {
+		return nil, apperr.New(apperr.CodeInvalidArgs, "userid must include realm suffix, for example user@pve")
+	}
+	poolID, err := requiredWorkflowString(args, "poolid")
+	if err != nil {
+		return nil, err
+	}
+	ifExists := strings.TrimSpace(strings.ToLower(args["if-exists"]))
+	if ifExists == "" {
+		ifExists = "reuse"
+	}
+	if ifExists != "fail" && ifExists != "reuse" {
+		return nil, apperr.New(apperr.CodeInvalidArgs, "if-exists must be one of fail|reuse")
+	}
+	password := strings.TrimSpace(args["password"])
+	passwordGenerated := false
+	if password == "" {
+		generated, genErr := generateWorkflowPassword(20)
+		if genErr != nil {
+			return nil, genErr
+		}
+		password = generated
+		passwordGenerated = true
+	}
+
+	actions := make([]map[string]any, 0, 8)
+
+	createUserArgs := map[string]string{"userid": userID, "password": password, "if-exists": ifExists}
+	if userComment := strings.TrimSpace(args["user-comment"]); userComment != "" {
+		createUserArgs["comment"] = userComment
+	}
+	createUserPayload, err := runWorkflowAction(rt, "create_pve_user_with_root", createUserArgs, false)
+	if err != nil {
+		return nil, err
+	}
+	actions = append(actions, workflowActionSummary("create_pve_user_with_root", createUserPayload))
+
+	createPoolArgs := map[string]string{"poolid": poolID, "if-exists": ifExists}
+	if poolComment := strings.TrimSpace(args["pool-comment"]); poolComment != "" {
+		createPoolArgs["comment"] = poolComment
+	}
+	createPoolPayload, err := runWorkflowAction(rt, "create_pool_with_root", createPoolArgs, false)
+	if err != nil {
+		return nil, err
+	}
+	actions = append(actions, workflowActionSummary("create_pool_with_root", createPoolPayload))
+
+	grants := []map[string]any{
+		{"path": "/pool/" + poolID, "role": "PVEAdmin", "propagate": true},
+		{"path": "/", "role": "PVEAuditor", "propagate": true},
+		{"path": "/storage", "role": "PVEDatastoreAdmin", "propagate": true},
+	}
+	for _, grant := range grants {
+		path := asStringValue(grant["path"])
+		role := asStringValue(grant["role"])
+		grantPayload, grantErr := runWorkflowAction(rt, "grant_user_acl", map[string]string{
+			"userid":    userID,
+			"path":      path,
+			"role":      role,
+			"propagate": "1",
+		}, false)
+		if grantErr != nil {
+			return nil, grantErr
+		}
+		actions = append(actions, workflowActionSummary("grant_user_acl", grantPayload))
+	}
+
+	bindingPayload, err := runWorkflowAction(rt, "get_user_acl_binding", map[string]string{"userid": userID}, false)
+	if err != nil {
+		return nil, err
+	}
+	actions = append(actions, workflowActionSummary("get_user_acl_binding", bindingPayload))
+	bindingResult, _ := bindingPayload["result"].(map[string]any)
+	bindingRows := 0
+	if count, ok := bindingResult["count"].(int); ok {
+		bindingRows = count
+	} else if n, ok := workflowAnyToInt(bindingResult["count"]); ok {
+		bindingRows = n
+	}
+
+	result := map[string]any{
+		"userid":             userID,
+		"poolid":             poolID,
+		"password":           password,
+		"password_generated": passwordGenerated,
+		"grants":             grants,
+		"actions":            actions,
+	}
+	request := map[string]any{"userid": userID, "poolid": poolID, "if_exists": ifExists}
+	if strings.TrimSpace(args["user-comment"]) != "" {
+		request["user_comment"] = strings.TrimSpace(args["user-comment"])
+	}
+	if strings.TrimSpace(args["pool-comment"]) != "" {
+		request["pool_comment"] = strings.TrimSpace(args["pool-comment"])
+	}
+	diagnostics := map[string]any{"action_count": len(actions), "acl_bindings_total": bindingRows}
+
+	return map[string]any{
+		"workflow":    workflowBootstrapUserPoolACL,
+		"ok":          true,
+		"scope":       rt.Opts.AuthScope,
+		"request":     request,
+		"result":      result,
+		"diagnostics": diagnostics,
+	}, nil
 }
 
 func runWorkflowUbuntu24WithAgentTemplate(rt commandRuntime, args map[string]string) (map[string]any, error) {
@@ -557,4 +679,29 @@ func isWorkflowSensitiveArg(key string) bool {
 		}
 	}
 	return false
+}
+
+func workflowActionSummary(actionName string, payload map[string]any) map[string]any {
+	result, _ := payload["result"]
+	return map[string]any{
+		"action": actionName,
+		"ok":     payload["ok"],
+		"result": result,
+	}
+}
+
+func generateWorkflowPassword(length int) (string, error) {
+	if length <= 0 {
+		return "", apperr.New(apperr.CodeInvalidArgs, "password length must be positive")
+	}
+	const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	buf := make([]byte, length)
+	raw := make([]byte, length)
+	if _, err := rand.Read(raw); err != nil {
+		return "", apperr.Wrap(apperr.CodeInternal, "failed to generate workflow password", err)
+	}
+	for i := 0; i < length; i++ {
+		buf[i] = alphabet[int(raw[i])%len(alphabet)]
+	}
+	return string(buf), nil
 }
