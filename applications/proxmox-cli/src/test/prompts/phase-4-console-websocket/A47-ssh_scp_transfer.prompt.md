@@ -15,14 +15,14 @@ Setup:
 2) Set VMID policy env vars (`PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000`).
 3) Resolve template/node, allocate `TEST_VMID`, clone template, and start VM.
 4) Resolve `GUEST_IP` via `agent_network_get_interfaces`.
-5) Generate key pair and inject public key via `ssh_inject_pubkey_qga`.
+5) Generate key pair and inject public key via `ssh_inject_pubkey_qga` (`--username cloud`).
 6) Create a local test file `build/phase4-a47-upload.txt`.
 
 Command (upload):
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action ssh_scp_transfer --direction upload --host "$GUEST_IP" --port 22 --user ubuntu --identity-file "build/phase4-a47-id_ed25519" --local-path "build/phase4-a47-upload.txt" --remote-path "/home/ubuntu/phase4-a47-upload.txt"
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action ssh_scp_transfer --direction upload --host "$GUEST_IP" --port 22 --user cloud --identity-file "build/phase4-a47-id_ed25519" --local-path "build/phase4-a47-upload.txt" --remote-path "/home/cloud/phase4-a47-upload.txt"
 
 Command (download):
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action ssh_scp_transfer --direction download --host "$GUEST_IP" --port 22 --user ubuntu --identity-file "build/phase4-a47-id_ed25519" --remote-path "/home/ubuntu/phase4-a47-upload.txt" --local-path "build/phase4-a47-download.txt"
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action ssh_scp_transfer --direction download --host "$GUEST_IP" --port 22 --user cloud --identity-file "build/phase4-a47-id_ed25519" --remote-path "/home/cloud/phase4-a47-upload.txt" --local-path "build/phase4-a47-download.txt"
 
 Success criteria:
 - both commands exit code = 0

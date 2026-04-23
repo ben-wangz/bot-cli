@@ -74,14 +74,14 @@
 
 ## Tasks
 
-- [ ] 实现 A44：使用本机 ssh client 检查目标 SSH 可达与认证结果。
-- [ ] 实现 A45：通过 QGA 注入登录公钥，支持 `--pub-key-file` 与 `--pub-key`。
-- [ ] 实现 A46：通过 ssh client 执行命令（支持 timeout/identity/port 参数）。
-- [ ] 实现 A47：通过 scp 执行双向文件传输（upload/download）。
-- [ ] 实现 A48：生成可复制执行的 ssh 命令，供用户手动进入交互会话。
-- [ ] 实现 A49：创建 SSH tunnel 并写入 pid/log 文件用于监控与回溯。
-- [ ] 实现 A50：读取 pid 文件并检查 tunnel 进程/端口存活状态。
-- [ ] 实现 A51：基于 pid 文件停止 tunnel 并输出清理结果。
+- [x] 实现 A44：使用本机 ssh client 检查目标 SSH 可达与认证结果。
+- [x] 实现 A45：通过 QGA 注入登录公钥，支持 `--pub-key-file` 与 `--pub-key`。
+- [x] 实现 A46：通过 ssh client 执行命令（支持 timeout/identity/port 参数）。
+- [x] 实现 A47：通过 scp 执行双向文件传输（upload/download）。
+- [x] 实现 A48：生成可复制执行的 ssh 命令，供用户手动进入交互会话。
+- [x] 实现 A49：创建 SSH tunnel 并写入 pid/log 文件用于监控与回溯。
+- [x] 实现 A50：读取 pid 文件并检查 tunnel 进程/端口存活状态。
+- [x] 实现 A51：基于 pid 文件停止 tunnel 并输出清理结果。
 - [x] 为 A44-A51 新增独立正向 prompt。
 
 ## Suggested Validation Flow
@@ -94,11 +94,17 @@
 - `A48 ssh_print_connect_command` 输出用户手动接管命令。
 - `A49 -> A50 -> A51` 验证 tunnel 生命周期闭环。
 
+## Prompt Execution Classes
+
+- Independent-VM：A45、A47（会修改 guest 状态，需每条 prompt 自建自清理）。
+- Shared-VM：A44、A46、A49（低副作用或同链路验证，复用 suite 级 shared VM）。
+- No-VM：A48、A50、A51（不创建/销毁 VM；A50/A51 依赖 A49 产出的 pid 文件）。
+
 ## Acceptance
 
-- [ ] A44-A51 可执行。
-- [ ] QGA 注入公钥后，SSH 命令执行链路可闭环。
-- [ ] SCP 双向传输可闭环并可验证文件一致性。
-- [ ] 可输出用户手动接管用的 SSH 连接命令。
-- [ ] Tunnel 生命周期（start/status/stop）可闭环，含 pid 文件回溯。
+- [x] A44-A51 可执行。
+- [x] QGA 注入公钥后，SSH 命令执行链路可闭环。
+- [x] SCP 双向传输可闭环并可验证文件一致性。
+- [x] 可输出用户手动接管用的 SSH 连接命令。
+- [x] Tunnel 生命周期（start/status/stop）可闭环，含 pid 文件回溯。
 - [ ] A44-A51 prompt 全部通过。

@@ -177,7 +177,8 @@ func IsPhase3Action(name string) bool {
 
 func IsPhase4Action(name string) bool {
 	switch name {
-	case "start_vnc_proxy", "connect_vnc_websocket", "open_vm_termproxy", "validate_k1_serial_readable", "serial_ws_session_control", "validate_serial_output_criterion2", "serial_ws_capture_to_file":
+	case "start_vnc_proxy", "connect_vnc_websocket", "open_vm_termproxy", "validate_k1_serial_readable", "serial_ws_session_control", "validate_serial_output_criterion2", "serial_ws_capture_to_file",
+		"ssh_check_service", "ssh_inject_pubkey_qga", "ssh_exec", "ssh_scp_transfer", "ssh_print_connect_command", "ssh_tunnel_start", "ssh_tunnel_status", "ssh_tunnel_stop":
 		return true
 	default:
 		return false

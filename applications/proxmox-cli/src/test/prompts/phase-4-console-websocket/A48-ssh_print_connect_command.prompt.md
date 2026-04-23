@@ -3,7 +3,8 @@
 ## Preconditions
 
 - `build/pve-user.env` is loaded.
-- `build/ubuntu-24-with-agent.vm-template.id` exists and points to a valid template VM in policy VMID range.
+- `build/phase4-ssh-control-plane.shared-guest-ip` exists.
+- `build/phase4-ssh-control-plane.shared-identity-file` exists.
 
 ## Prompt
 
@@ -12,26 +13,20 @@ You are a test execution agent. Run the A48 `ssh_print_connect_command` positive
 
 Setup:
 1) Load env vars and switch to `applications/proxmox-cli/src`.
-2) Set VMID policy env vars (`PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000`).
-3) Resolve template/node, allocate `TEST_VMID`, clone template, and start VM.
-4) Resolve `GUEST_IP` via `agent_network_get_interfaces`.
-5) Ensure a local identity key path exists at `build/phase4-a48-id_ed25519`.
+2) Read `SHARED_GUEST_IP` from `build/phase4-ssh-control-plane.shared-guest-ip`.
+3) Read `SHARED_IDENTITY_FILE` from `build/phase4-ssh-control-plane.shared-identity-file`.
 
 Command:
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action ssh_print_connect_command --host "$GUEST_IP" --port 22 --user ubuntu --identity-file "build/phase4-a48-id_ed25519" --extra-args "-o StrictHostKeyChecking=no"
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action ssh_print_connect_command --host "$SHARED_GUEST_IP" --port 22 --user cloud --identity-file "$SHARED_IDENTITY_FILE" --extra-args "-o StrictHostKeyChecking=no"
 
 Success criteria:
 - exit code = 0
 - JSON field `action == "ssh_print_connect_command"`
 - JSON field `ok == true`
 - JSON contains `result.command`
-- `result.command` includes `ssh`, `ubuntu@`, and `-p 22`
-
-Teardown:
-- Stop and destroy `TEST_VMID` in this prompt run on both success and failure.
-- Delete temporary key files created for this prompt.
+- `result.command` includes `ssh`, `cloud@`, and `-p 22`
 
 Independence rule:
-- This test must be self-contained and order-independent.
+- This is a no-VM prompt: do not create/stop/destroy VMs in this run.
 - Do not attempt interactive SSH inside this prompt.
 ```

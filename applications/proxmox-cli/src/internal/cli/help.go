@@ -7,7 +7,7 @@ Usage:
   proxmox-cli [global options] <command> [args]
 
 Commands:
-  action      Execute one action (A01-A43 roadmap)
+  action      Execute one action (A01-A51 roadmap)
   workflow    Execute composed workflow
   console     Serial console script/interactive helpers
   auth        Auth inspect and diagnostics
@@ -96,6 +96,14 @@ Phase 4 implemented actions:
   serial_ws_session_control --node <node> --vmid <id> [--script <multi-line>] [--expect <text>] [--timeout-seconds 60]
   validate_serial_output_criterion2 --node <node> --vmid <id> [--log-path <file>] [--append 1|0 default=1] [--script <multi-line>] [--expect <text>] [--timeout-seconds 120]
   serial_ws_capture_to_file --node <node> --vmid <id> --log-path <file> [--append 1|0 default=1] [--script <multi-line>] [--expect <text>] [--timeout-seconds 120]
+  ssh_check_service --host <ip> [--port 22] --user <user> [--identity-file <key>] [--connect-timeout-seconds 5]
+  ssh_inject_pubkey_qga --node <node> --vmid <id> --username <user> (--pub-key-file <file> | --pub-key <key>)
+  ssh_exec --host <ip> [--port 22] --user <user> [--identity-file <key>] --command <cmd> [--timeout-seconds 30]
+  ssh_scp_transfer --direction upload|download --host <ip> [--port 22] --user <user> [--identity-file <key>] --local-path <path> --remote-path <path> [--recursive 1|0]
+  ssh_print_connect_command --host <ip> [--port 22] --user <user> [--identity-file <key>] [--extra-args "..."]
+  ssh_tunnel_start --host <ip> [--port 22] --user <user> [--identity-file <key>] --local-port <port> --remote-host <host> --remote-port <port> [--pid-file <file>] [--log-file <file>]
+  ssh_tunnel_status --pid-file <file>
+  ssh_tunnel_stop --pid-file <file>
 
 serial_ws_capture_to_file runbook (required for install diagnosis):
   1) Serial output is not persisted by Proxmox; re-run the whole install flow before capture if previous run is gone.
@@ -110,7 +118,7 @@ Phase roadmap:
   Phase 1: read/task actions
   Phase 2: VM lifecycle/config actions
   Phase 3: cloud-init/qga actions
-  Phase 4: console/websocket actions
+  Phase 4: console/websocket + ssh control-plane actions
   Phase 5: privilege ladder/root actions
   Phase 6: policy/cleanup actions
 `

@@ -18,13 +18,13 @@ Setup:
 5) Generate temporary key pair under `build/phase4-a45-id_ed25519`.
 
 Command:
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action ssh_inject_pubkey_qga --node "$TEST_NODE" --vmid "$TEST_VMID" --username ubuntu --pub-key-file "build/phase4-a45-id_ed25519.pub"
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action ssh_inject_pubkey_qga --node "$TEST_NODE" --vmid "$TEST_VMID" --username cloud --pub-key-file "build/phase4-a45-id_ed25519.pub"
 
 Success criteria:
 - exit code = 0
 - JSON field `action == "ssh_inject_pubkey_qga"`
 - JSON field `ok == true`
-- JSON contains `result.username == "ubuntu"`
+- JSON contains `result.username == "cloud"`
 - JSON contains `result.authorized_keys_path`
 - JSON contains `result.fingerprint`
 

@@ -12,7 +12,7 @@
 
 - last_updated: 2026-04-23
 - overall_progress: 4/8 issues completed
-- action_coverage: 35/51
+- action_coverage: 43/51
 - prompt_coverage: 42/51
 
 ## Issue Status
