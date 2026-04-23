@@ -2,6 +2,13 @@
 
 Agent-facing CLI for Proxmox-related operations.
 
+## Auth Strategy
+
+- Default execution path uses `pve user` credentials for VM management actions and workflows.
+- `root` credentials are not required for normal day-to-day VM lifecycle operations.
+- Root scope is reserved for one-time bootstrap tasks (for example, creating/assigning a least-privilege user), then execution should return to user scope.
+- Historical root-shell action support remains in code for compatibility, but is not part of the recommended main path.
+
 ## Code Layout
 
 - Go source root: `applications/proxmox-cli/src`

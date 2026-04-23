@@ -188,16 +188,16 @@ applications/proxmox-cli/
 2. 实现 xterm 帧收发与 keepalive。
 3. 支持 expect 风格等待关键字（含超时和日志片段回显）。
 
-## 5.6 Phase 5：权限阶梯与 root 专属操作
+## 5.6 Phase 5：root 辅助用户授权（收敛后）
 
-覆盖：A36 A37 A38 A39 A41 A42
+覆盖：A39
 
 关键点：
 
-1. `args` 写入失败时识别并引导到 root 会话路径。
-2. 节点 shell 侧动作单独走 root session 通道。
-3. 重新验证权限梯度并输出可审计结论。
-4. root-token 与 root session 在节点 shell 能力上不等价：`upgrade/ceph_install` 需 `root@pam` session 身份。
+1. 项目主路径不依赖 root；常规 VM 管理统一走 user 凭据。
+2. root 仅用于一次性 bootstrap：创建 user、绑定角色、下发 ACL。
+3. bootstrap action 需幂等可重放，并输出可审计结论。
+4. 历史 root shell 能力不再作为验收依赖路径。
 
 ## 5.7 Phase 6：策略类与收尾动作
 
@@ -339,7 +339,7 @@ applications/proxmox-cli/
 1. 语言：Go。
 2. Console：脚本模式为主，交互模式基础版。
 3. Workflow：不支持 `--resume-from`。
-4. 测试：A01-A43 每个 action 1 条独立正向 prompt；可声明依赖前置 action 已通过。
+4. 测试：每个 active action 1 条独立正向 prompt；可声明依赖前置 action 已通过。
 5. Live PVE：可任意时段使用，但仅操作自建 VM；节点资源占用不超过 70%。
 6. 回归约束：每次最多 1 台 VM，规格 2C/4G/32G，结束自动清理 VM 与临时镜像/seed。
 7. 并发测试原则：若采用 sub-agent 并发，单条 action prompt 必须满足顺序无关和数据自洽。

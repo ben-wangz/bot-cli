@@ -24,7 +24,7 @@
 | ISSUE-003 | 2 | completed | 13 actions / 13 prompts | ISSUE-002 |
 | ISSUE-004 | 3 | completed | 6 actions / 6 prompts | ISSUE-003 |
 | ISSUE-005 | 4 | completed | 8 actions / 8 prompts | ISSUE-004 |
-| ISSUE-006 | 5 | in_progress | 6 actions / 6 prompts | ISSUE-005 |
+| ISSUE-006 | 5 | in_progress | 1 action / 1 prompt | ISSUE-005 |
 | ISSUE-007 | 6 | open | 3 actions / 3 prompts | ISSUE-006 |
 | ISSUE-008 | cross | open | E2E + full prompt sweep | ISSUE-001..007 |
 
@@ -45,9 +45,8 @@
 - ISSUE-005 已完成：SSH 控制面 A44-A51 已实现并通过回归（8/8）。
 - A22 保持 guard 职责；seed/snippet 上传需独立 action 承担（待新 issue/action 编排）。
 - 存储上传实测：PVE upload API 当前仅接受 `iso|vztmpl|import`，不接受 `snippets`，因此 cloud-init snippet 自动落盘需依赖 Phase 5 root 路径。
-- Phase 5 进展：A39 `node_termproxy_shell_exec` 已接入并完成会话交互（脚本命令回显可验证）。
-- 新增验证：A39 已支持 `cmd-opts`（null-terminated strings）并通过 root 会话实测 `upgrade/ceph_install` 提示链路。
-- 新增约束：`root-token` 无法触发节点 `upgrade/ceph_install` 命令（后端仅允许 `root@pam` session），A39 命令执行闭环仍受凭据/协议双重阻塞。
+- Phase 5 范围已重审：root 仅用于一次性 user 授权 bootstrap；常规 VM 管理与回归不再依赖 root action。
+- ISSUE-006 当前目标收敛为 1 个 action：A39 `bootstrap_user_acl_with_root`（幂等授权与审计输出）。
 - 新增问题：当前 `build_ubuntu_autoinstall_iso` 路径为“整盘重打包”，输出 ISO 体积接近官方源 ISO，偏离最初“小 shim”目标。
 - 决策记录：后续回到“小 shim + HTTP 安装源”方案；当前大 ISO 路径作为临时稳定回归手段保留，待 ISSUE-008 编排替换。
 
