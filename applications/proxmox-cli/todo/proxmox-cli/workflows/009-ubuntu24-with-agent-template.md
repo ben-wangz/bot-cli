@@ -12,6 +12,16 @@
 
 该文件作为后续 action prompt 的统一输入，确保每个测试都可从同一基线模板克隆独立 VM。
 
+## Refactor Plan
+
+当前 workflow 同时承担“制备安装介质 + 消费介质创建模板”两类职责。为支持多 OS 扩展（例如 Fedora/Android），计划拆分为：
+
+1. `ACTION build_ubuntu_autoinstall_iso`（本地制备 Ubuntu installer ISO）
+2. `ACTION storage_upload_iso`（上传 ISO 到 PVE storage，已实现）
+3. `WORKFLOW-012 provision-template-from-artifact`（仅消费已上传 artifact 创建模板）
+
+本文件在拆分完成后保留为兼容入口（wrapper）或降级为历史记录。
+
 ## Scope
 
 - command: `proxmox-cli workflow ubuntu24-with-agent-template`

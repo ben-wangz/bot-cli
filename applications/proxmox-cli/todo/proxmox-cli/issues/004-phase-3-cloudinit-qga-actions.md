@@ -16,6 +16,8 @@
 - A20 dump_cloudinit
 - A22 storage_upload_guard
 - A27 render_and_serve_seed
+- A52 build_ubuntu_autoinstall_iso
+- A53 storage_upload_iso
 
 ## Tasks
 
@@ -24,7 +26,9 @@
 - [x] 实现 cloudinit dump 三种类型。
 - [x] 实现 storage upload guard 并处理 snippets 限制提示。
 - [x] 实现 seed 渲染与本地托管。
-- [x] 为 6 个 action 新增独立正向 prompt（A17 拆分 exec/status）。
+- [x] 实现 Ubuntu autoinstall ISO 本地构建能力（A52）。
+- [x] 实现 ISO 上传能力（A53）。
+- [x] 为 8 个 action 新增独立正向 prompt（A17 拆分 exec/status）。
 - [x] 补充 QGA 安装路径依赖说明：当无 qga-ready 基础镜像时，需提前实现 Phase 4 串口路径用于来宾内安装 qemu-guest-agent。
 
 ## Dependency Note
@@ -38,7 +42,7 @@
 
 ## Acceptance
 
-- [x] 6 个 action 均通过正向主流程。
+- [x] 8 个 action 均通过正向主流程。
 - [x] A22 对受限类型可正确提示。
 - [x] A27 输出 seed 路径与可访问地址。
-- [x] 6 条 prompt 通过（A17 拆分 exec/status）。
+- [x] 8 条 prompt 通过（A17 拆分 exec/status）。

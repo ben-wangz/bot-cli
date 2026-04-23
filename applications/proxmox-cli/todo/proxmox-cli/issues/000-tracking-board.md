@@ -12,8 +12,8 @@
 
 - last_updated: 2026-04-23
 - overall_progress: 5/7 issues completed
-- action_coverage: 47/51
-- prompt_coverage: 50/51
+- action_coverage: 49/53
+- prompt_coverage: 52/53
 
 ## Issue Status
 
@@ -22,12 +22,12 @@
 | ISSUE-001 | 0 | completed | foundation baseline | - |
 | ISSUE-002 | 1 | completed | 9 actions / 9 prompts | ISSUE-001 |
 | ISSUE-003 | 2 | completed | 13 actions / 13 prompts | ISSUE-002 |
-| ISSUE-004 | 3 | completed | 6 actions / 6 prompts | ISSUE-003 |
+| ISSUE-004 | 3 | completed | 8 actions / 8 prompts | ISSUE-003 |
 | ISSUE-005 | 4 | completed | 8 actions / 8 prompts | ISSUE-004 |
 | ISSUE-006 | 5 | in_progress | 5 actions / 5 prompts | ISSUE-005 |
 | ISSUE-008 | cross | open | E2E + full prompt sweep | ISSUE-001..006 |
 
-> 注：A17 包含 `agent_exec` 与 `agent_exec_status` 两个可执行动作，计入 2 条 prompt；ISSUE-005 新增 A44-A51 后总计为 51。
+> 注：A17 包含 `agent_exec` 与 `agent_exec_status` 两个可执行动作，计入 2 条 prompt；新增 A52/A53 后总计为 53。
 
 ## Milestones
 
@@ -68,6 +68,6 @@
 
 ## Exit Criteria
 
-- [ ] A01-A51 覆盖完成。
-- [ ] 51 条 action prompt 覆盖完成并可执行。
+- [ ] A01-A53 覆盖完成。
+- [ ] 53 条 action prompt 覆盖完成并可执行。
 - [ ] Ubuntu24 workflow 闭环验证通过。

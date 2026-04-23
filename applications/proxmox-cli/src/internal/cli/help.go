@@ -7,7 +7,7 @@ Usage:
   proxmox-cli [global options] <command> [args]
 
 Commands:
-  action      Execute one action (A01-A51 roadmap)
+  action      Execute one action (A01-A53 roadmap)
   workflow    Execute composed workflow
   console     Serial console script/interactive helpers
   auth        Auth inspect and diagnostics
@@ -84,7 +84,7 @@ Phase 3 implemented actions:
   dump_cloudinit --node <node> --vmid <id> [--type user|network|meta]
   storage_upload_guard --node <node> --storage <storage> [--content-type snippets]
   storage_upload_snippet --node <node> --storage <storage> --source-path <file> [--filename <name>]
-  storage_upload_iso --node <node> --storage <storage> --source-path <file.iso> [--filename <name.iso>] [--if-exists replace|skip]
+  storage_upload_iso --node <node> --storage <storage> --source-path <file.iso> [--filename <name.iso>] [--if-exists replace|skip] (hint: run storage_upload_guard first)
   build_ubuntu_autoinstall_iso --source-iso <ubuntu.iso> --output-iso <custom.iso> [--kernel-cmdline <cmdline>] [--username cloud] [--password <plain>] [--password-hash <hash>] [--hostname <name>] [--work-dir build/autoinstall-iso-work/<id>]
   render_and_serve_seed --vmid <id> [--seed-dir build/seed] [--seed-name vm-<id>] [--host 127.0.0.1] [--port 8088]
 
