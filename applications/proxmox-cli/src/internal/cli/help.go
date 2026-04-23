@@ -113,13 +113,14 @@ serial_ws_capture_to_file runbook (required for install diagnosis):
 
 Phase 5 implemented actions:
   create_pve_user_with_root --userid <user@realm> [--password <password>] [--comment <text>] [--email <mail>] [--firstname <name>] [--lastname <name>] [--enable 1|0] [--expire <epoch>] [--if-exists fail|reuse]
+  create_pool_with_root --poolid <poolid> [--comment <text>] [--if-exists fail|reuse]
   get_user_acl_binding --userid <user@realm> [--path <acl-path>] [--role <role>]
   grant_user_acl --userid <user@realm> --path <acl-path> --role <role> [--propagate 1|0]
   revoke_user_acl --userid <user@realm> --path <acl-path> --role <role>
   node_termproxy_shell_exec --node <node> [--cmd login] [--cmd-opt <csv>] [--cmd-opts <nul-terminated>] [--script <multi-line>] [--expect <text>] [--timeout-seconds 60]
 
 Phase 5 scope note:
-  - Recommended direction is root-assisted user/ACL bootstrap only (create/get/grant/revoke).
+  - Recommended direction is root-assisted bootstrap only (create pool/user + get/grant/revoke ACL).
   - ACL changes should use revoke+grant composition; no dedicated update action is required.
   - node_termproxy_shell_exec remains available as legacy compatibility path.
 

@@ -24,7 +24,7 @@
 | ISSUE-003 | 2 | completed | 13 actions / 13 prompts | ISSUE-002 |
 | ISSUE-004 | 3 | completed | 6 actions / 6 prompts | ISSUE-003 |
 | ISSUE-005 | 4 | completed | 8 actions / 8 prompts | ISSUE-004 |
-| ISSUE-006 | 5 | in_progress | 4 actions / 4 prompts | ISSUE-005 |
+| ISSUE-006 | 5 | in_progress | 5 actions / 5 prompts | ISSUE-005 |
 | ISSUE-008 | cross | open | E2E + full prompt sweep | ISSUE-001..006 |
 
 > 注：A17 包含 `agent_exec` 与 `agent_exec_status` 两个可执行动作，计入 2 条 prompt；ISSUE-005 新增 A44-A51 后总计为 51。
@@ -45,7 +45,7 @@
 - A22 保持 guard 职责；seed/snippet 上传需独立 action 承担（待新 issue/action 编排）。
 - 存储上传实测：PVE upload API 当前仅接受 `iso|vztmpl|import`，不接受 `snippets`，因此 cloud-init snippet 自动落盘需依赖 Phase 5 root 路径。
 - Phase 5 范围已重审：root 仅用于一次性 user 授权 bootstrap；常规 VM 管理与回归不再依赖 root action。
-- ISSUE-006 当前目标为 user+ACL 管理 4 个 action：创建用户 + 授权关系查询/新增/撤销（变更使用 delete+add 组合）。
+- ISSUE-006 当前目标为 pool+user+ACL 管理 5 个 action：创建 pool + 创建用户 + 授权关系查询/新增/撤销（变更使用 delete+add 组合）。
 - 新增问题：当前 `build_ubuntu_autoinstall_iso` 路径为“整盘重打包”，输出 ISO 体积接近官方源 ISO，偏离最初“小 shim”目标。
 - 决策记录：后续回到“小 shim + HTTP 安装源”方案；当前大 ISO 路径作为临时稳定回归手段保留，待 ISSUE-008 编排替换。
 

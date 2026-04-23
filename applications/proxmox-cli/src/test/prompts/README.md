@@ -19,5 +19,4 @@ This directory stores OpenCode prompt cases used for action-level and workflow-l
 - `phase-3-cloudinit-qga/`
 - `phase-4-console-websocket/` (SSH control plane scope)
 - `phase-5-privilege-root/`
-- `phase-6-policy-cleanup/`
 - `e2e/`

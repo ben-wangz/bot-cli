@@ -62,6 +62,54 @@ func runCreatePVEUserWithRoot(ctx context.Context, client *pveapi.Client, req Re
 	return buildResult(req, request, result, map[string]any{}), nil
 }
 
+func runCreatePoolWithRoot(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
+	if err := ensureRootBootstrapScope(req.Scope); err != nil {
+		return nil, err
+	}
+	poolID, err := RequiredString(req.Args, "poolid")
+	if err != nil {
+		return nil, err
+	}
+	ifExists := strings.TrimSpace(strings.ToLower(req.Args["if-exists"]))
+	if ifExists == "" {
+		ifExists = "fail"
+	}
+	if !isOneOf(ifExists, "fail", "reuse") {
+		return nil, apperr.New(apperr.CodeInvalidArgs, "if-exists must be one of fail|reuse")
+	}
+	exists, existing, err := getPoolByID(ctx, client, poolID)
+	if err != nil {
+		return nil, err
+	}
+	request := map[string]any{"poolid": poolID, "if_exists": ifExists}
+	if comment := strings.TrimSpace(req.Args["comment"]); comment != "" {
+		request["comment"] = comment
+	}
+	if exists {
+		if ifExists == "fail" {
+			return nil, apperr.New(apperr.CodeInvalidArgs, "pool already exists: "+poolID)
+		}
+		result := map[string]any{"poolid": poolID, "created": false, "reused": true, "pool": existing}
+		diagnostics := map[string]any{"wait_skipped": "pool already exists; reused existing pool"}
+		return buildResult(req, request, result, diagnostics), nil
+	}
+	form := url.Values{}
+	form.Set("poolid", poolID)
+	if comment := strings.TrimSpace(req.Args["comment"]); comment != "" {
+		form.Set("comment", comment)
+	}
+	data, err := client.PostFormData(ctx, "/pools", form)
+	if err != nil {
+		return nil, err
+	}
+	poolExists, pool, inspectErr := getPoolByID(ctx, client, poolID)
+	result := map[string]any{"poolid": poolID, "created": true, "reused": false, "api_response": data}
+	if inspectErr == nil && poolExists {
+		result["pool"] = pool
+	}
+	return buildResult(req, request, result, map[string]any{}), nil
+}
+
 func runGetUserACLBinding(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
 	if err := ensureRootBootstrapScope(req.Scope); err != nil {
 		return nil, err
@@ -198,6 +246,28 @@ func getUserByID(ctx context.Context, client *pveapi.Client, userID string) (boo
 		payload = map[string]any{}
 	}
 	return true, payload, nil
+}
+
+func getPoolByID(ctx context.Context, client *pveapi.Client, poolID string) (bool, map[string]any, error) {
+	data, err := client.GetData(ctx, "/pools", url.Values{})
+	if err != nil {
+		return false, nil, err
+	}
+	raw := unwrapResultField(data)
+	list, ok := raw.([]any)
+	if !ok {
+		return false, nil, nil
+	}
+	for _, row := range list {
+		m, isMap := row.(map[string]any)
+		if !isMap {
+			continue
+		}
+		if strings.TrimSpace(asString(m["poolid"])) == poolID {
+			return true, m, nil
+		}
+	}
+	return false, nil, nil
 }
 
 func fetchACLRows(ctx context.Context, client *pveapi.Client, pathFilter string) ([]map[string]any, error) {

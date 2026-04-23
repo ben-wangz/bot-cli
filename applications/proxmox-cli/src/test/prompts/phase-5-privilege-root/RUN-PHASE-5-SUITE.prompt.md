@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Run all Phase 5 root-assisted user ACL bootstrap prompts under `applications/proxmox-cli/src/test/prompts/phase-5-privilege-root/`.
+Run all Phase 5 root-assisted pool/user ACL bootstrap prompts under `applications/proxmox-cli/src/test/prompts/phase-5-privilege-root/`.
 
 ## Required Execution Mode
 
 - If sub-agents are supported, you **must** use sub-agents.
-- Spawn one sub-agent per prompt file (P5-01..P5-04).
+- Spawn one sub-agent per prompt file (P5-00..P5-04).
 - Sub-agent concurrency must be <= 2.
 - Each sub-agent executes exactly one prompt file and returns the result in the required schema.
 - This suite has no VM dependency; prompts must not create/stop/destroy VMs.
@@ -29,6 +29,7 @@ Run all Phase 5 root-assisted user ACL bootstrap prompts under `applications/pro
 
 ## Prompt Files to Execute
 
+- `P5-00-create_pool_with_root.prompt.md`
 - `P5-01-create_pve_user_with_root.prompt.md`
 - `P5-02-get_user_acl_binding.prompt.md`
 - `P5-03-grant_user_acl.prompt.md`
@@ -44,7 +45,7 @@ Return one JSON object:
   "mode": "sub-agent",
   "success": true,
   "summary": {
-    "passed": 4,
+    "passed": 5,
     "failed": 0
   },
   "results": [

@@ -20,6 +20,8 @@ func ExecutePhase5(ctx context.Context, client *pveapi.Client, req Request) (map
 		return runNodeTermproxyShellExec(ctx, client, req)
 	case "create_pve_user_with_root":
 		return runCreatePVEUserWithRoot(ctx, client, req)
+	case "create_pool_with_root":
+		return runCreatePoolWithRoot(ctx, client, req)
 	case "get_user_acl_binding":
 		return runGetUserACLBinding(ctx, client, req)
 	case "grant_user_acl":

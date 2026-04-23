@@ -190,13 +190,13 @@ applications/proxmox-cli/
 
 ## 5.6 Phase 5：root 辅助用户授权（收敛后）
 
-覆盖：P5-01 P5-02 P5-03 P5-04
+覆盖：P5-00 P5-01 P5-02 P5-03 P5-04
 
 关键点：
 
 1. 项目主路径不依赖 root；常规 VM 管理统一走 user 凭据。
 2. root 仅用于一次性 bootstrap：创建 user、绑定角色、下发 ACL。
-3. 提供 user+ACL 管理闭环：查询授权、授权新增、授权撤销（变更通过 revoke+grant 组合，幂等）。
+3. 提供 pool+user+ACL 管理闭环：创建 pool、查询授权、授权新增、授权撤销（变更通过 revoke+grant 组合，幂等）。
 4. 历史 root shell 能力不再作为验收依赖路径。
 
 ## 6. 工作流方案（ubuntu24-serial-autoinstall）
