@@ -35,3 +35,37 @@ Run prompts in this order:
 - `phase-4-console-websocket/`
 - `phase-5-privilege-root/`
 - `e2e/`
+
+## Run Record Template
+
+Use this lightweight template for each full regression run:
+
+```text
+Regression Run Record
+- date:
+- operator:
+- env:
+  - pve-root.env: ok/missing
+  - pve-user.env: ok/missing
+  - template-id file: ok/missing
+  - source iso: ok/missing
+
+Execution (README order)
+1) setup.md -> pass/fail (note)
+2) phase-1 RUN -> pass/fail (note)
+3) phase-2 RUN -> pass/fail (note)
+4) phase-3 RUN -> pass/fail (note)
+5) phase-4 RUN -> pass/fail (note)
+6) phase-5 RUN -> pass/fail (note)
+7) e2e bootstrap -> pass/fail (note)
+8) e2e provision-template -> pass/fail (note)
+
+Summary
+- overall: pass/fail
+- first_failed_step:
+- key artifacts:
+  - user env:
+  - template id:
+  - serial log:
+  - e2e log file:
+```

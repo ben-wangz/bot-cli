@@ -64,7 +64,13 @@ Execution requirements:
     - execute workflow (first attempt):
       - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json workflow provision-template-from-artifact --node "$NODE" --target-vmid "$TEMPLATE_VMID" --artifact-iso "$ARTIFACT_ISO" --install-timeout-seconds 1800 --resume-from none --pool "$PVE_POOL"`
     - if first attempt times out in serial wait, continue with resume mode using 600s windows until success or non-timeout failure:
-      - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json workflow provision-template-from-artifact --node "$NODE" --target-vmid "$TEMPLATE_VMID" --artifact-iso "$ARTIFACT_ISO" --install-timeout-seconds 600 --resume-from serial_wait --pool "$PVE_POOL"`
+      - before each resume attempt, inspect install health and fail fast on known error states:
+        - resolve `SERIAL_LOG_PATH` from latest workflow result `result.serial_log_path` (fallback `build/serial-provision-template-$TEMPLATE_VMID.log`)
+        - run `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json action review_install_tasks --node "$NODE" --vmid "$TEMPLATE_VMID"`
+        - if review result reports any `state` in `{error,failed}` or any task with non-empty `error`, stop and report `installer_error_detected`
+        - scan the latest serial log segment (or full file if small) and if fatal markers are found, stop and report `installer_error_detected`; suggested markers include: `subiquity.*ERROR`, `curtin command .* failed`, `installation failed`, `Traceback`, `No space left on device`
+      - only when checks above do not indicate fatal failure, run resume:
+        - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json workflow provision-template-from-artifact --node "$NODE" --target-vmid "$TEMPLATE_VMID" --artifact-iso "$ARTIFACT_ISO" --install-timeout-seconds 600 --resume-from serial_wait --pool "$PVE_POOL"`
     - require final workflow `ok == true` and `result.template_vmid == TEMPLATE_VMID`
 10) Write and verify template-id artifact:
    - write `build/ubuntu-24-with-agent.vm-template.id` with exact content `$TEMPLATE_VMID` (single line)

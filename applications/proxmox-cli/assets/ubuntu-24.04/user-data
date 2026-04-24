@@ -14,9 +14,8 @@ autoinstall:
     geoip: false
   shutdown: poweroff
   early-commands:
-    - sh -c 'for f in /var/log/installer/subiquity-server-debug.log /var/log/installer/curtin-install.log /var/log/cloud-init.log /target/var/log/apt/term.log /target/var/log/apt/history.log /target/var/log/dpkg.log; do if [ -f "$f" ]; then echo "[early-log-proof] exists $f"; ls -l "$f"; else echo "[early-log-proof] missing $f"; fi; done >/dev/ttyS0 2>&1'
-    - sh -c 'tail -n 0 -F /var/log/installer/subiquity-server-debug.log /var/log/installer/curtin-install.log /var/log/cloud-init.log /target/var/log/apt/term.log /target/var/log/apt/history.log /target/var/log/dpkg.log >/dev/ttyS0 2>&1 &'
-    - sh -c 'while true; do echo "[install-heartbeat] $(date -Is)"; ps -eo pid,ppid,stat,etime,cmd | grep -E "curtin|in-target|apt|dpkg|grub|initramfs" | grep -v grep || true; sleep 30; done >/dev/ttyS0 2>&1 &'
+    - sh -c 'for f in /var/log/installer/subiquity-server-debug.log /var/log/installer/curtin-install.log /var/log/cloud-init.log; do if [ -f "$f" ]; then echo "[early-log-proof] exists $f"; ls -l "$f"; else echo "[early-log-proof] missing $f"; fi; done >/dev/ttyS0 2>&1'
+    - sh -c 'tail -n 0 -F /var/log/installer/subiquity-server-debug.log /var/log/installer/curtin-install.log /var/log/cloud-init.log >/dev/ttyS0 2>&1 & echo $! >/run/autoinstall-serial-tail.pid'
   identity:
     hostname: ubuntu-single-disk
     username: cloud
@@ -27,5 +26,6 @@ autoinstall:
   packages:
     - qemu-guest-agent
   late-commands:
+    - sh -c 'if [ -s /run/autoinstall-serial-tail.pid ]; then kill "$(cat /run/autoinstall-serial-tail.pid)" 2>/dev/null || true; fi'
     - curtin in-target --target=/target -- systemctl enable serial-getty@ttyS0.service
     - curtin in-target --target=/target -- systemctl enable qemu-guest-agent.service

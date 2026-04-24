@@ -62,7 +62,14 @@ Step B - Upload installer ISO (A53), split with progress markers:
 Step C - Provision template from uploaded artifact:
 19) Execute workflow:
     - `go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json workflow provision-template-from-artifact --node "$NODE" --target-vmid "$TARGET_VMID" --artifact-iso "$ARTIFACT_ISO" --install-timeout-seconds 3600 --resume-from none`
-20) Validate workflow result:
+20) If step 19 times out in serial wait, switch to resume windows (`--install-timeout-seconds 600 --resume-from serial_wait`) until success or non-timeout failure.
+    Before each resume attempt, do fail-fast inspection first:
+    - resolve `SERIAL_LOG_PATH` from latest workflow result (`result.serial_log_path`, fallback `build/serial-provision-template-$TARGET_VMID.log`)
+    - run `go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action review_install_tasks --node "$NODE" --vmid "$TARGET_VMID"`
+    - if any install task has `state` in `{error,failed}` or contains non-empty `error`, stop and report `installer_error_detected` (do not keep resuming)
+    - scan latest serial log segment; if fatal markers appear (`subiquity.*ERROR`, `curtin command .* failed`, `installation failed`, `Traceback`, `No space left on device`), stop and report `installer_error_detected`
+    - only run next resume attempt when checks above are clean
+21) Validate workflow result:
     - `workflow == "provision-template-from-artifact"`
     - `ok == true`
     - `result.template_vmid == TARGET_VMID`
