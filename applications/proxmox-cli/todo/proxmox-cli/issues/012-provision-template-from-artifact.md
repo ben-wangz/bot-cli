@@ -1,6 +1,6 @@
 # ISSUE-012 provision-template-from-artifact
 
-- status: draft
+- status: completed
 - priority: high
 - owner: ben.wangz
 
@@ -19,7 +19,7 @@
 
 ## Scope
 
-- command (planned): `proxmox-cli workflow provision-template-from-artifact`
+- command: `proxmox-cli workflow provision-template-from-artifact`
 - module: `applications/proxmox-cli/src/internal/cli`
 - output: workflow standard JSON (`workflow/ok/scope/request/result/diagnostics`)
 
@@ -132,3 +132,7 @@ autoinstall:
 - `result.steps[]`
 - `diagnostics.step_count`
 - `diagnostics.resumed_from`
+
+## Validation
+
+- e2e prompt: `applications/proxmox-cli/src/test/prompts/e2e/PROVISION-TEMPLATE-FROM-ARTIFACT.prompt.md`

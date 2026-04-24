@@ -1,6 +1,6 @@
 # ISSUE-010 bootstrap-bot-user-pool-acl
 
-- status: draft
+- status: completed
 - priority: high
 - owner: ben.wangz
 
@@ -10,7 +10,7 @@
 
 ## Scope
 
-- command (planned): `proxmox-cli workflow bootstrap-bot-user-pool-acl`
+- command: `proxmox-cli workflow bootstrap-bot-user-pool-acl`
 - module: `applications/proxmox-cli/src/internal/cli`
 - output: CLI workflow standard JSON payload (`workflow/ok/scope/request/result/diagnostics`)
 
@@ -83,3 +83,4 @@
 ## Notes
 
 - 该 workflow 为 root-assisted bootstrap；执行完成后应回到 user 凭据执行常规动作。
+- e2e prompt: `applications/proxmox-cli/src/test/prompts/e2e/BOOTSTRAP-BOT-USER-POOL-ACL.prompt.md`

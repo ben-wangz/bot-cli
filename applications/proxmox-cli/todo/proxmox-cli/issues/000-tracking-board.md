@@ -1,6 +1,6 @@
 # ISSUE-000 Tracking Board
 
-- status: in_progress
+- status: completed
 - priority: high
 - owner: ben.wangz
 
@@ -11,7 +11,7 @@
 ## Current Snapshot
 
 - last_updated: 2026-04-24
-- overall_progress: 6/8 issues completed
+- overall_progress: 8/8 issues completed
 - phase_action_coverage: 43/43 (ISSUE-002..006)
 - phase_prompt_coverage: 43/43 (ISSUE-002..006)
 
@@ -25,8 +25,8 @@
 | ISSUE-004 | 3 | completed | 8 actions / 8 prompts | ISSUE-003 |
 | ISSUE-005 | 4 | completed | 8 actions / 8 prompts | ISSUE-004 |
 | ISSUE-006 | 5 | completed | 5 actions / 5 prompts | ISSUE-005 |
-| ISSUE-010 | cross | draft | bootstrap user+pool+ACL workflow design | ISSUE-006 |
-| ISSUE-012 | cross | draft | provision-template-from-artifact workflow design | ISSUE-004 |
+| ISSUE-010 | cross | completed | bootstrap user+pool+ACL workflow design | ISSUE-006 |
+| ISSUE-012 | cross | completed | provision-template-from-artifact workflow design | ISSUE-004 |
 
 > 注：本看板覆盖口径已收敛为 Phase 1-5 issue（ISSUE-002..006）；workflow 类工作单独由 ISSUE-010 与 ISSUE-012 跟踪。
 
@@ -39,13 +39,7 @@
 
 ## Active Blockers
 
-- ISSUE-004 已完成：Phase 3 的 6 个 action / 6 条 prompt 已通过正向回归。
-- QGA 安装路径依赖已记录：当无 qga-ready 基础镜像时，仍需 Phase 4 串口路径保障来宾内安装与启用。
-- ISSUE-005 已完成：SSH 控制面 A44-A51 已实现并通过回归（8/8）。
-- A22 保持 guard 职责；seed/snippet 上传需独立 action 承担（待新 issue/action 编排）。
-- 存储上传实测：PVE upload API 当前仅接受 `iso|vztmpl|import`，不接受 `snippets`，因此 cloud-init snippet 自动落盘需依赖 Phase 5 root 路径。
-- Phase 5 范围已重审：root 仅用于一次性 user 授权 bootstrap；常规 VM 管理与回归不再依赖 root action。
-- ISSUE-006 已完成：pool+user+ACL 管理 5 个 action 与 5 条 prompt 已形成闭环。
+- none
 
 ## Dependencies
 
@@ -69,5 +63,5 @@
 
 - [x] Phase 1-5 action 覆盖完成（43/43）。
 - [x] Phase 1-5 prompt 覆盖完成并可执行（43/43）。
-- [ ] ISSUE-010（bootstrap-bot-user-pool-acl）workflow 闭环验证通过。
-- [ ] ISSUE-012（provision-template-from-artifact）workflow 闭环验证通过。
+- [x] ISSUE-010（bootstrap-bot-user-pool-acl）workflow 闭环验证通过。
+- [x] ISSUE-012（provision-template-from-artifact）workflow 闭环验证通过。
