@@ -7,6 +7,7 @@ Run workflow `bootstrap-bot-user-pool-acl` to create/reuse one bot user and one 
 - pool-scoped VM admin (`/pool/<poolid>` + `PVEAdmin`)
 - cluster/node read baseline for A01/A02 (`/` + `PVEAuditor`)
 - datastore operations for A22 and ISO upload chain (`/storage` + `PVEDatastoreAdmin`)
+- SDN bridge usage for vmbr-backed NIC create (`/sdn/zones/localnetwork` + `PVEAdmin`, includes `SDN.Use`)
 
 ## Prompt
 
@@ -21,16 +22,17 @@ Execution requirements:
    - `BOT_USERID="botcli-bootstrap@pve"`
    - `BOT_POOLID="botcli-bootstrap-pool"`
 5) Execute workflow:
-   - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope root --output json workflow bootstrap-bot-user-pool-acl --userid "$BOT_USERID" --poolid "$BOT_POOLID" --if-exists reuse --user-comment "bot bootstrap user" --pool-comment "bot bootstrap pool"`
+   - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope root --output json workflow bootstrap-bot-user-pool-acl --userid "$BOT_USERID" --poolid "$BOT_POOLID" --if-exists reuse --user-comment "bot bootstrap user" --pool-comment "bot bootstrap pool" --sdn-acl-path "/sdn/zones/localnetwork"`
 6) Validate workflow response:
    - top-level `workflow == "bootstrap-bot-user-pool-acl"`
    - top-level `ok == true`
    - `result.userid == BOT_USERID`
    - `result.poolid == BOT_POOLID`
-   - `result.grants` contains all required tuples:
-     - `/pool/botcli-bootstrap-pool` + `PVEAdmin`
-     - `/` + `PVEAuditor`
-     - `/storage` + `PVEDatastoreAdmin`
+    - `result.grants` contains all required tuples:
+      - `/pool/botcli-bootstrap-pool` + `PVEAdmin`
+      - `/` + `PVEAuditor`
+      - `/storage` + `PVEDatastoreAdmin`
+      - `/sdn/zones/localnetwork` + `PVEAdmin`
 7) Validate ACL binding by follow-up action:
    - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope root --output json action get_user_acl_binding --userid "$BOT_USERID"`
    - assert binding list contains the three path/role tuples above.

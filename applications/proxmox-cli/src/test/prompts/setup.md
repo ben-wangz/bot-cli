@@ -19,16 +19,17 @@ Execution requirements:
    - `BOT_PASSWORD="$(python3 -c 'import secrets,string; s=string.ascii_letters+string.digits; print("".join(secrets.choice(s) for _ in range(20)))')"`
 4) If `build/pve-user.env` exists, back it up to `build/pve-user.env.bak-${RUN_ID}`.
 5) Execute workflow:
-   - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope root --output json workflow bootstrap-bot-user-pool-acl --userid "$BOT_USERID" --poolid "$BOT_POOLID" --password "$BOT_PASSWORD" --if-exists fail --user-comment "regression bot user" --pool-comment "regression bot pool"`
+   - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope root --output json workflow bootstrap-bot-user-pool-acl --userid "$BOT_USERID" --poolid "$BOT_POOLID" --password "$BOT_PASSWORD" --if-exists fail --user-comment "regression bot user" --pool-comment "regression bot pool" --sdn-acl-path "/sdn/zones/localnetwork"`
 6) Validate workflow response:
    - `workflow == "bootstrap-bot-user-pool-acl"`
    - `ok == true`
    - `result.userid == BOT_USERID`
    - `result.poolid == BOT_POOLID`
-   - `result.grants` contains:
-     - `/pool/${BOT_POOLID}` + `PVEAdmin`
-     - `/` + `PVEAuditor`
-     - `/storage` + `PVEDatastoreAdmin`
+    - `result.grants` contains:
+      - `/pool/${BOT_POOLID}` + `PVEAdmin`
+      - `/` + `PVEAuditor`
+      - `/storage` + `PVEDatastoreAdmin`
+      - `/sdn/zones/localnetwork` + `PVEAdmin`
 7) Write `build/pve-user.env` with exactly these keys:
    - `PVE_USER=${BOT_USERID}`
    - `PVE_PASSWORD=${BOT_PASSWORD}`

@@ -63,13 +63,13 @@ Phase 1 implemented actions:
   list_tasks_by_vmid --node <node> --vmid <vmid> [--source active]
 
 Phase 2 implemented actions:
-  clone_template --node <node> --source-vmid <id> --target-vmid <id> [--name <name>] [--target <node>] [--full 0|1 default=0]
+  clone_template --node <node> --source-vmid <id> --target-vmid <id> [--name <name>] [--target <node>] [--full 0|1 default=0] [--pool <poolid>]
   migrate_vm --node <node> --vmid <id> --target <node>
   convert_vm_to_template --node <node> --vmid <id>
   update_vm_config --node <node> --vmid <id> --<config-key> <value>
   vm_power --node <node> --vmid <id> --mode <start|stop|shutdown|reboot|reset> [--desired-state running|stopped]
   set_vm_agent --node <node> --vmid <id> [--enabled 1|0]
-  create_vm --node <node> --vmid <id> --name <name> [--memory <mb>] [--cores <n>] [--if-exists fail|reuse]
+  create_vm --node <node> --vmid <id> --name <name> [--memory <mb>] [--cores <n>] [--if-exists fail|reuse] [--pool <poolid>]
   attach_cdrom_iso --node <node> --vmid <id> --iso <storage:iso/file.iso> [--slot ide2] [--media cdrom]
   set_net_boot_config --node <node> --vmid <id> --net0 <value> --boot <value>
   start_installer_and_console_ticket --node <node> --vmid <id>
@@ -84,8 +84,8 @@ Phase 3 implemented actions:
   dump_cloudinit --node <node> --vmid <id> [--type user|network|meta]
   storage_upload_guard --node <node> --storage <storage> [--content-type snippets]
   storage_upload_snippet --node <node> --storage <storage> --source-path <file> [--filename <name>]
-  storage_upload_iso --node <node> --storage <storage> --source-path <file.iso> [--filename <name.iso>] [--if-exists replace|skip] (hint: run storage_upload_guard first)
-  build_ubuntu_autoinstall_iso --source-iso <ubuntu.iso> --output-iso <custom.iso> [--kernel-cmdline <cmdline>] [--username cloud] [--password <plain>] [--password-hash <hash>] [--hostname <name>] [--work-dir build/autoinstall-iso-work/<id>]
+  storage_upload_iso --node <node> --storage <storage> --source-path <file.iso> [--filename <name.iso>] [--if-exists replace|skip] (waits for upload task completion; hint: run storage_upload_guard first)
+  build_ubuntu_autoinstall_iso --source-iso <ubuntu.iso> --output-iso <custom.iso> [--kernel-cmdline <cmdline>] [--work-dir build/autoinstall-iso-work/<id>]
   render_and_serve_seed --vmid <id> [--seed-dir build/seed] [--seed-name vm-<id>] [--host 127.0.0.1] [--port 8088]
 
 Phase 4 implemented actions:
@@ -145,11 +145,13 @@ Examples:
   proxmox-cli workflow ubuntu24-with-agent-template --node eva002 --target-vmid 1201
 
 Implemented workflows:
-  ubuntu24-with-agent-template --node <node> --target-vmid <id>
-  bootstrap-bot-user-pool-acl --userid <user@realm> --poolid <poolid> [--password <plain>] [--if-exists fail|reuse]
+  ubuntu24-with-agent-template --node <node> --target-vmid <id> [--pool <poolid>]
+  bootstrap-bot-user-pool-acl --userid <user@realm> --poolid <poolid> [--password <plain>] [--if-exists fail|reuse] [--sdn-acl-path </sdn/...>] [--sdn-role <role>]
+  provision-template-from-artifact --node <node> --target-vmid <id> --artifact-iso <storage:iso/file.iso> --install-timeout-seconds <n> [--resume-from none|serial_wait] [--pool <poolid>]
 
 ubuntu24-with-agent-template result:
   - reuse prebuilt installer ISO when available, otherwise build autoinstall ISO
+  - optionally pins create_vm into a target pool via --pool
   - create fresh VM from scratch, run unattended install, verify qga readiness
   - convert VM to template and write template VMID to build/ubuntu-24-with-agent.vm-template.id
   - prints each underlying action call to stderr for troubleshooting (sensitive args redacted)
@@ -157,7 +159,14 @@ ubuntu24-with-agent-template result:
 bootstrap-bot-user-pool-acl result:
   - creates or reuses user and pool with root-assisted bootstrap actions
   - grants ACLs: /pool/<poolid>=PVEAdmin, /=PVEAuditor, /storage=PVEDatastoreAdmin
+  - grants SDN ACL (default /sdn/zones/localnetwork with PVEAdmin for SDN.Use)
   - returns workflow-standard JSON result (no local env file mutation)
+
+provision-template-from-artifact result:
+  - consumes prebuilt + preuploaded ISO artifact only (no upload in workflow)
+  - optionally pins create_vm into a target pool via --pool
+  - enforces vmid-not-exists check and mandatory cdrom attach/detach path
+  - supports resume mode from serial wait step (--resume-from serial_wait, use with caution)
 `
 }
 

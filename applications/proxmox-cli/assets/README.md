@@ -4,10 +4,10 @@ This directory stores versioned, reviewable assets used by `proxmox-cli` workflo
 
 ## Stable seed assets
 
-- `single-disk-nocloud/user-data`
-- `single-disk-nocloud/meta-data`
+- `ubuntu-24.04/user-data`
+- `ubuntu-24.04/meta-data`
 
-These files are the canonical baseline for the single-disk shim NoCloud installer.
+These files are the canonical baseline for Ubuntu 24.04 autoinstall NoCloud media.
 
 ## build/ directory policy
 

@@ -68,13 +68,18 @@ func runCloneTemplate(ctx context.Context, client *pveapi.Client, req Request) (
 	}
 	setIfPresent(form, "name", req.Args["name"])
 	setIfPresent(form, "target", req.Args["target"])
+	setIfPresent(form, "pool", req.Args["pool"])
 	form.Set("full", full)
 	path := fmt.Sprintf("/nodes/%s/qemu/%d/clone", url.PathEscape(node), sourceVMID)
 	data, err := client.PostFormData(ctx, path, form)
 	if err != nil {
 		return nil, err
 	}
-	return writeResult(req, map[string]any{"node": node, "source_vmid": sourceVMID, "target_vmid": targetVMID, "full": full == "1"}, data), nil
+	request := map[string]any{"node": node, "source_vmid": sourceVMID, "target_vmid": targetVMID, "full": full == "1"}
+	if pool := strings.TrimSpace(req.Args["pool"]); pool != "" {
+		request["pool"] = pool
+	}
+	return writeResult(req, request, data), nil
 }
 
 func runMigrateVM(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
@@ -249,10 +254,13 @@ func runCreateVM(ctx context.Context, client *pveapi.Client, req Request) (map[s
 		if ifExists == "fail" {
 			return nil, apperr.New(apperr.CodeInvalidArgs, fmt.Sprintf("vm %d already exists on node %s", vmid, node))
 		}
-		request := map[string]any{"node": node, "vmid": vmid, "if_exists": ifExists}
-		result := map[string]any{"node": node, "vmid": vmid, "created": false, "reused": true}
-		if existsStatus != nil {
-			result["existing_status"] = existsStatus
+	request := map[string]any{"node": node, "vmid": vmid, "if_exists": ifExists}
+	if pool := strings.TrimSpace(req.Args["pool"]); pool != "" {
+		request["pool"] = pool
+	}
+	result := map[string]any{"node": node, "vmid": vmid, "created": false, "reused": true}
+	if existsStatus != nil {
+		result["existing_status"] = existsStatus
 		}
 		diagnostics := map[string]any{"wait_skipped": "vm already exists; reused existing vm", "if_exists": ifExists}
 		return buildResult(req, request, result, diagnostics), nil
@@ -268,6 +276,9 @@ func runCreateVM(ctx context.Context, client *pveapi.Client, req Request) (map[s
 		return nil, err
 	}
 	request := map[string]any{"node": node, "vmid": vmid, "if_exists": ifExists}
+	if pool := strings.TrimSpace(req.Args["pool"]); pool != "" {
+		request["pool"] = pool
+	}
 	result := map[string]any{"upid": asString(data), "created": true, "reused": false}
 	return buildResult(req, request, result, map[string]any{"if_exists": ifExists}), nil
 }

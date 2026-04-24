@@ -45,7 +45,7 @@
 
 ## Workflow Steps
 
-1. 优先复用预构建 installer ISO（`build/ubuntu-24.04.2-shim-nocloud-serial-poweroff.iso`）；不存在时再构建 autoinstall ISO（嵌入 NoCloud seed，含 qga 包安装与启用）。
+1. 优先复用预构建 installer ISO（`build/ubuntu-24.04.4-shim-nocloud-serial-poweroff.iso`）；不存在时再构建 autoinstall ISO（嵌入 NoCloud seed，含 qga 包安装与启用）。
 2. 上传 ISO 到节点存储（默认 `local`）。
 3. 创建目标 VM（默认 2C/4G/32G，`net0=virtio,bridge=vmbr0`）。
 4. 启用串口控制台与 VM agent 配置。

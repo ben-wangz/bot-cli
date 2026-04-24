@@ -99,12 +99,30 @@
 ## Boot Hints Example
 
 ```text
---install-boot-order "order=ide2;scsi0;net0"
+--install-boot-order "order=ide2"
 --runtime-boot-order "order=scsi0"
 --bootdisk scsi0
 ```
 
-含义：安装阶段优先从挂载 ISO 启动；安装后切换为系统盘启动。
+含义：安装阶段仅从挂载 ISO 启动；安装后切换为系统盘启动。
+
+## Long Wait Observability (Serial)
+
+当安装过程在 `subiquity/Install/install/configure_apt/cmd-in-target` 等步骤停留较久时，默认串口日志可见性不足。
+
+建议在 `applications/proxmox-cli/assets/ubuntu-24.04/user-data` 增加 `early-commands`，将 installer 内部日志实时转发到 `ttyS0`，便于被 `serial_ws_capture_to_file` 采集：
+
+```yaml
+autoinstall:
+  early-commands:
+    - sh -c 'for f in /var/log/installer/subiquity-server-debug.log /var/log/installer/curtin-install.log /var/log/cloud-init.log; do [ -f "$f" ] && tail -F "$f" >/dev/ttyS0 2>&1 & done'
+```
+
+运行策略建议：
+
+1. 首次执行 `--resume-from none` 可使用较短超时（如 `600s`）。
+2. 超时后检查 `serial_log_path` 定位当前安装阶段。
+3. 继续执行 `--resume-from serial_wait --install-timeout-seconds 600`，分段观察进度，避免一次长等待不可见。
 
 ## Output Contract
 

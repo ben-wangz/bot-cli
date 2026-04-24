@@ -3,7 +3,7 @@
 ## Preconditions
 
 - `build/pve-user.env` is loaded.
-- Source ISO exists at `build/ubuntu-24.04.2-live-server-amd64.iso`.
+- Source ISO exists at `build/ubuntu-24.04.4-live-server-amd64.iso`.
 
 ## Prompt
 
@@ -18,7 +18,7 @@ Setup:
    - `storage_upload_guard --node "$SHARED_NODE" --storage local --content-type iso`
 
 Command:
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action storage_upload_iso --node "$SHARED_NODE" --storage local --source-path build/ubuntu-24.04.2-live-server-amd64.iso --filename phase3-a53-upload.iso --if-exists skip
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action storage_upload_iso --node "$SHARED_NODE" --storage local --source-path build/ubuntu-24.04.4-live-server-amd64.iso --filename phase3-a53-upload.iso --if-exists skip
 
 Success criteria:
 - exit code = 0

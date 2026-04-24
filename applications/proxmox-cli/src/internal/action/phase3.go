@@ -359,10 +359,22 @@ func runStorageUploadISO(ctx context.Context, client *pveapi.Client, req Request
 	raw := strings.TrimSpace(asString(data))
 	volID := expectedVolID
 	uploadUPID := ""
+	var uploadTaskStatus map[string]any
 	if strings.HasPrefix(strings.ToUpper(raw), "UPID:") {
 		uploadUPID = raw
 	} else if strings.Contains(raw, ":") && strings.Contains(raw, "/") {
 		volID = raw
+	}
+	if uploadUPID != "" {
+		waitNode := strings.TrimSpace(parseUPIDNode(uploadUPID))
+		if waitNode == "" {
+			waitNode = node
+		}
+		status, waitErr := WaitTask(ctx, client, waitNode, uploadUPID, WaitOptions{Timeout: 20 * time.Minute, Interval: 2 * time.Second})
+		if waitErr != nil {
+			return nil, apperr.Wrap(apperr.CodeNetwork, "storage upload task did not complete successfully", waitErr)
+		}
+		uploadTaskStatus = status
 	}
 	result := map[string]any{
 		"node":        node,
@@ -375,6 +387,10 @@ func runStorageUploadISO(ctx context.Context, client *pveapi.Client, req Request
 	}
 	if uploadUPID != "" {
 		result["upload_upid"] = uploadUPID
+		if waitNode := strings.TrimSpace(parseUPIDNode(uploadUPID)); waitNode != "" {
+			result["upload_task_node"] = waitNode
+		}
+		result["upload_task"] = uploadTaskStatus
 	}
 	if filename != "" {
 		result["requested_filename"] = filename
@@ -382,6 +398,7 @@ func runStorageUploadISO(ctx context.Context, client *pveapi.Client, req Request
 	diagnostics := map[string]any{"if_exists": ifExists}
 	if uploadUPID != "" {
 		diagnostics["upload_task_upid"] = uploadUPID
+		diagnostics["upload_waited"] = true
 	}
 	return buildResult(req, map[string]any{"node": node, "storage": storage, "source-path": sourcePath, "if-exists": ifExists}, result, diagnostics), nil
 }
@@ -441,7 +458,7 @@ func runBuildUbuntuAutoinstallISO(req Request) (map[string]any, error) {
 		return nil, err
 	}
 	mounted = false
-	userDataPath, metaDataPath, err := prepareNoCloudFiles(req.Args, treeDir)
+	userDataPath, metaDataPath, err := prepareNoCloudFiles(treeDir)
 	if err != nil {
 		return nil, err
 	}
@@ -802,98 +819,46 @@ func writeSeedFile(seedPath string, filename string, content string) error {
 	return nil
 }
 
-func prepareNoCloudFiles(args map[string]string, treeDir string) (string, string, error) {
+func prepareNoCloudFiles(treeDir string) (string, string, error) {
 	noCloudDir := filepath.Join(treeDir, "nocloud")
 	if err := os.MkdirAll(noCloudDir, 0o755); err != nil {
 		return "", "", apperr.Wrap(apperr.CodeConfig, "failed to create nocloud directory", err)
 	}
 	userDataPath := filepath.Join(noCloudDir, "user-data")
 	metaDataPath := filepath.Join(noCloudDir, "meta-data")
-	providedUserData := strings.TrimSpace(args["user-data-path"])
-	providedMetaData := strings.TrimSpace(args["meta-data-path"])
-	if providedUserData != "" {
-		if err := copyFile(providedUserData, userDataPath); err != nil {
-			return "", "", err
-		}
-	} else {
-		userData, err := defaultUbuntuAutoinstallUserData(args)
-		if err != nil {
-			return "", "", err
-		}
-		if err := os.WriteFile(userDataPath, []byte(userData), 0o644); err != nil {
-			return "", "", apperr.Wrap(apperr.CodeConfig, "failed to write default user-data", err)
-		}
+	assetUserDataPath, assetMetaDataPath, err := resolveUbuntu2404AutoinstallAssets()
+	if err != nil {
+		return "", "", err
 	}
-	if providedMetaData != "" {
-		if err := copyFile(providedMetaData, metaDataPath); err != nil {
-			return "", "", err
-		}
-	} else {
-		hostname := strings.TrimSpace(args["hostname"])
-		if hostname == "" {
-			hostname = "ubuntu2404-auto"
-		}
-		metaData := fmt.Sprintf("instance-id: iid-%d\nlocal-hostname: %s\n", time.Now().UnixNano(), hostname)
-		if err := os.WriteFile(metaDataPath, []byte(metaData), 0o644); err != nil {
-			return "", "", apperr.Wrap(apperr.CodeConfig, "failed to write default meta-data", err)
-		}
+	if err := copyFile(assetUserDataPath, userDataPath); err != nil {
+		return "", "", err
+	}
+	if err := copyFile(assetMetaDataPath, metaDataPath); err != nil {
+		return "", "", err
 	}
 	return userDataPath, metaDataPath, nil
 }
 
-func defaultUbuntuAutoinstallUserData(args map[string]string) (string, error) {
-	hostname := strings.TrimSpace(args["hostname"])
-	if hostname == "" {
-		hostname = "ubuntu2404-auto"
-	}
-	username := strings.TrimSpace(args["username"])
-	if username == "" {
-		username = "cloud"
-	}
-	passwordHash := strings.TrimSpace(args["password-hash"])
-	if passwordHash == "" {
-		password := strings.TrimSpace(args["password"])
-		if password == "" {
-			return "", apperr.New(apperr.CodeInvalidArgs, "missing --password or --password-hash for default autoinstall user-data")
-		}
-		hashed, err := hashPasswordSHA512(password)
-		if err != nil {
-			return "", err
-		}
-		passwordHash = hashed
-	}
-	lateCmdConsole := "sed -i 's/^GRUB_CMDLINE_LINUX=.*/GRUB_CMDLINE_LINUX=\"console=tty1 console=ttyS0,115200n8\"/' /etc/default/grub"
-	lateCmdDefault := "sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"console=tty1 console=ttyS0,115200n8\"/' /etc/default/grub"
-	return strings.TrimSpace(fmt.Sprintf(`#cloud-config
-autoinstall:
-  version: 1
-  identity:
-    hostname: %s
-    username: %s
-    password: "%s"
-  ssh:
-    install-server: true
-  packages:
-    - qemu-guest-agent
-  late-commands:
-    - curtin in-target --target=/target -- sh -lc '%s'
-    - curtin in-target --target=/target -- sh -lc '%s'
-    - curtin in-target --target=/target -- systemctl enable serial-getty@ttyS0.service
-    - curtin in-target --target=/target -- systemctl enable qemu-guest-agent.service
-    - curtin in-target --target=/target -- update-grub
-`, hostname, username, passwordHash, lateCmdConsole, lateCmdDefault)), nil
-}
-
-func hashPasswordSHA512(password string) (string, error) {
-	output, err := runLocalCommand(context.Background(), "python3", "-c", "import crypt,sys; print(crypt.crypt(sys.argv[1], crypt.mksalt(crypt.METHOD_SHA512)))", password)
+func resolveUbuntu2404AutoinstallAssets() (string, string, error) {
+	workingDir, err := os.Getwd()
 	if err != nil {
-		return "", err
+		return "", "", apperr.Wrap(apperr.CodeConfig, "failed to resolve working directory", err)
 	}
-	hash := strings.TrimSpace(output)
-	if hash == "" {
-		return "", apperr.New(apperr.CodeInternal, "generated password hash is empty")
+	current := workingDir
+	for {
+		assetDir := filepath.Join(current, "applications", "proxmox-cli", "assets", "ubuntu-24.04")
+		userDataPath := filepath.Join(assetDir, "user-data")
+		metaDataPath := filepath.Join(assetDir, "meta-data")
+		if isRegularFile(userDataPath) && isRegularFile(metaDataPath) {
+			return userDataPath, metaDataPath, nil
+		}
+		parent := filepath.Dir(current)
+		if parent == current {
+			break
+		}
+		current = parent
 	}
-	return hash, nil
+	return "", "", apperr.New(apperr.CodeConfig, "required assets not found: applications/proxmox-cli/assets/ubuntu-24.04/{user-data,meta-data}")
 }
 
 func copyFile(sourcePath string, destPath string) error {
@@ -914,6 +879,14 @@ func copyFile(sourcePath string, destPath string) error {
 		return apperr.Wrap(apperr.CodeConfig, "failed to copy file", err)
 	}
 	return nil
+}
+
+func isRegularFile(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return !info.IsDir()
 }
 
 func patchUbuntuBootConfigs(treeDir string, kernelCmdline string) ([]string, error) {
