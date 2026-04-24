@@ -142,19 +142,10 @@ Usage:
 Examples:
   proxmox-cli workflow ubuntu24-serial-autoinstall
   proxmox-cli --dry-run workflow ubuntu24-serial-autoinstall --vmid 120
-  proxmox-cli workflow ubuntu24-with-agent-template --node eva002 --target-vmid 1201
 
 Implemented workflows:
-  ubuntu24-with-agent-template --node <node> --target-vmid <id> [--pool <poolid>]
   bootstrap-bot-user-pool-acl --userid <user@realm> --poolid <poolid> [--password <plain>] [--if-exists fail|reuse] [--sdn-acl-path </sdn/...>] [--sdn-role <role>]
   provision-template-from-artifact --node <node> --target-vmid <id> --artifact-iso <storage:iso/file.iso> --install-timeout-seconds <n> [--resume-from none|serial_wait] [--pool <poolid>]
-
-ubuntu24-with-agent-template result:
-  - reuse prebuilt installer ISO when available, otherwise build autoinstall ISO
-  - optionally pins create_vm into a target pool via --pool
-  - create fresh VM from scratch, run unattended install, verify qga readiness
-  - convert VM to template and write template VMID to build/ubuntu-24-with-agent.vm-template.id
-  - prints each underlying action call to stderr for troubleshooting (sensitive args redacted)
 
 bootstrap-bot-user-pool-acl result:
   - creates or reuses user and pool with root-assisted bootstrap actions
