@@ -57,7 +57,7 @@
 
 ## Bootstrap Workflow Design (New)
 
-- 已新增 workflow 设计文档：`todo/proxmox-cli/workflows/010-bootstrap-bot-user-pool-acl.md`。
+- 已新增 issue 设计文档：`todo/proxmox-cli/issues/010-bootstrap-bot-user-pool-acl.md`。
 - 设计目标：一次执行完成测试账号与最小补充权限初始化；workflow 仅返回标准 JSON 输出，不直接写 env 文件。
 - 设计步骤（action-first）：
   1. `create_pve_user_with_root`

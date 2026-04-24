@@ -11,6 +11,8 @@
 5. `004-phase-3-cloudinit-qga-actions.md`
 6. `005-phase-4-console-websocket.md`
 7. `006-phase-5-privilege-root-ops.md`
+8. `010-bootstrap-bot-user-pool-acl.md`
+9. `012-provision-template-from-artifact.md`
 
 ## Conventions
 

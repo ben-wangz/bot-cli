@@ -1,4 +1,4 @@
-# WORKFLOW-012 provision-template-from-artifact
+# ISSUE-012 provision-template-from-artifact
 
 - status: draft
 - priority: high

@@ -10,8 +10,8 @@
 
 ## Current Snapshot
 
-- last_updated: 2026-04-23
-- overall_progress: 5/6 issues completed
+- last_updated: 2026-04-24
+- overall_progress: 5/8 issues completed
 - action_coverage: 49/53
 - prompt_coverage: 52/53
 
@@ -25,6 +25,8 @@
 | ISSUE-004 | 3 | completed | 8 actions / 8 prompts | ISSUE-003 |
 | ISSUE-005 | 4 | completed | 8 actions / 8 prompts | ISSUE-004 |
 | ISSUE-006 | 5 | in_progress | 5 actions / 5 prompts | ISSUE-005 |
+| ISSUE-010 | cross | draft | bootstrap user+pool+ACL workflow design | ISSUE-006 |
+| ISSUE-012 | cross | draft | provision-template-from-artifact workflow design | ISSUE-004 |
 
 > 注：A17 包含 `agent_exec` 与 `agent_exec_status` 两个可执行动作，计入 2 条 prompt；新增 A52/A53 后总计为 53。
 
@@ -53,6 +55,8 @@
 4. `004-phase-3-cloudinit-qga-actions.md`
 5. `005-phase-4-console-websocket.md`
 6. `006-phase-5-privilege-root-ops.md`
+7. `010-bootstrap-bot-user-pool-acl.md`
+8. `012-provision-template-from-artifact.md`
 
 ## Working Rules
 
