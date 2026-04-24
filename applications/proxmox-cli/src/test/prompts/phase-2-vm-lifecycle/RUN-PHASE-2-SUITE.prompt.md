@@ -40,7 +40,7 @@ Run all Phase 2 action prompts under `applications/proxmox-cli/src/test/prompts/
 12) For `A08-migrate_vm`, choose a target node different from template node and clean up VM on its final host.
 13) For disposable clones, prefer linked clone (`full=0`, default) to minimize storage I/O.
 14) After all prompts finish (success or failure), run suite teardown once: stop and destroy `SHARED_VMID`, then remove shared input files.
-15) For `A08-migrate_vm`, use extended timeout (`--timeout 20m`); when timeout happens, include task `upid` and task log tail in diagnostics.
+15) For `A08-migrate_vm`, do not rely on one-shot `--wait`; start migrate task first, then poll `get_task_status` (30s interval, up to 4h) until `stopped/OK`. On timeout, include `upid` and latest status snapshot in diagnostics.
 
 ## Prompt Files to Execute
 

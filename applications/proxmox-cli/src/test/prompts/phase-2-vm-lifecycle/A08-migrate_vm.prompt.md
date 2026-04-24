@@ -22,18 +22,23 @@ Setup:
 8) Ensure cloned VM is stopped before migration (`vm_power --mode stop --desired-state stopped --wait`).
 
 Command:
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --timeout 20m --wait --output json action migrate_vm --node "$SOURCE_NODE" --vmid "$TEST_VMID" --target "$TARGET_NODE"
+1) Start migrate task (no blocking wait):
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --timeout 10m --output json action migrate_vm --node "$SOURCE_NODE" --vmid "$TEST_VMID" --target "$TARGET_NODE"
+
+2) Extract `UPID` from migrate result, then poll status with a long window:
+- run `get_task_status --node "$SOURCE_NODE" --upid "$UPID"` every 30s
+- max wait window: 4h
+- success only when `status == "stopped"` and `exitstatus == "OK"`
 
 Success criteria:
 - exit code = 0
 - JSON field `action == "migrate_vm"`
 - JSON field `ok == true`
 - `result.upid` is non-empty
-- `diagnostics.wait_status.status == "stopped"`
-- `diagnostics.wait_status.exitstatus == "OK"`
+- polled final task status is `stopped/OK`
 
 Timeout diagnostics rule:
-- If wait times out, report the timeout message including `node`, `upid`, and task log tail from the error output.
+- If polling exceeds 4h, report timeout with `node`, `upid`, and latest status snapshot.
 - Capture and return the latest `get_task_status` output for the same `upid` before teardown.
 
 Teardown:

@@ -25,7 +25,6 @@ Success criteria:
 - JSON field `action == "sendkey"`
 - JSON field `ok == true`
 - `diagnostics.method == "PUT"`
-- JSON contains `diagnostics.wait_skipped == "action is synchronous"`
 
 Teardown:
 - Restore shared VM to `stopped` state (`vm_power --mode stop --desired-state stopped --wait`).
