@@ -18,7 +18,7 @@ Setup:
 5) Allocate fresh `TEST_VMID` in-range via `get_next_vmid`.
 
 Command:
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --wait --output json action create_vm --node "$TEST_NODE" --vmid "$TEST_VMID" --name "p2-a23-$TEST_VMID" --memory 2048 --cores 2
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --wait --output json action create_vm --node "$TEST_NODE" --vmid "$TEST_VMID" --name "p2-a23-$TEST_VMID" --memory 2048 --cores 2 --pool "$PVE_POOL"
 
 Success criteria:
 - exit code = 0

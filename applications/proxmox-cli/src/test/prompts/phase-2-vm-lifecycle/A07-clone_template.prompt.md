@@ -18,7 +18,7 @@ Setup:
 5) Allocate fresh `TARGET_VMID` in-range via `get_next_vmid`.
 
 Command:
-go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --wait --output json action clone_template --node "$TEST_NODE" --source-vmid "$TEMPLATE_VMID" --target-vmid "$TARGET_VMID" --name "p2-a07-$TARGET_VMID"
+go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --wait --output json action clone_template --node "$TEST_NODE" --source-vmid "$TEMPLATE_VMID" --target-vmid "$TARGET_VMID" --name "p2-a07-$TARGET_VMID" --pool "$PVE_POOL"
 
 Success criteria:
 - exit code = 0

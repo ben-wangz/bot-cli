@@ -18,7 +18,7 @@ Setup:
 4) Resolve `SOURCE_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
 5) Resolve `TARGET_NODE` as a different online node (fail if none exists).
 6) Allocate fresh `TEST_VMID` in-range via `get_next_vmid`.
-7) Clone `TEMPLATE_VMID` to `TEST_VMID` on `SOURCE_NODE` (`clone_template --wait`).
+7) Clone `TEMPLATE_VMID` to `TEST_VMID` on `SOURCE_NODE` (`clone_template --wait --pool "$PVE_POOL"`).
 8) Ensure cloned VM is stopped before migration (`vm_power --mode stop --desired-state stopped --wait`).
 
 Command:

@@ -32,7 +32,7 @@ Run all Phase 2 action prompts under `applications/proxmox-cli/src/test/prompts/
 6) Set VMID policy env vars for this suite: `PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000` (or approved override).
 7) Do not execute bootstrap prompt in this suite. Require setup prompt (`../setup.md`) to have prepared `build/ubuntu-24-with-agent.vm-template.id`; if missing, stop and return `setup_template_id_missing`.
 8) Resolve `TEMPLATE_VMID` from `build/ubuntu-24-with-agent.vm-template.id` and resolve `SHARED_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
-9) Allocate one fresh in-range `SHARED_VMID` via `get_next_vmid`, then clone once: `clone_template --wait --full 0` from `TEMPLATE_VMID` to `SHARED_VMID` on `SHARED_NODE`.
+9) Allocate one fresh in-range `SHARED_VMID` via `get_next_vmid`, then clone once: `clone_template --wait --full 0 --pool "$PVE_POOL"` from `TEMPLATE_VMID` to `SHARED_VMID` on `SHARED_NODE`.
 10) Persist shared inputs for sub-agents:
    - `build/phase2-vm-lifecycle.shared-node`
    - `build/phase2-vm-lifecycle.shared-vmid`

@@ -16,7 +16,7 @@ Setup:
 3) Read `TEMPLATE_VMID` from `build/ubuntu-24-with-agent.vm-template.id`.
 4) Resolve `TEST_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
 5) Allocate fresh `TEST_VMID` in-range via `get_next_vmid`.
-6) Clone `TEMPLATE_VMID` to `TEST_VMID` on `TEST_NODE` (`clone_template --wait`).
+6) Clone `TEMPLATE_VMID` to `TEST_VMID` on `TEST_NODE` (`clone_template --wait --pool "$PVE_POOL"`).
 
 Command:
 go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --wait --output json action convert_vm_to_template --node "$TEST_NODE" --vmid "$TEST_VMID"
