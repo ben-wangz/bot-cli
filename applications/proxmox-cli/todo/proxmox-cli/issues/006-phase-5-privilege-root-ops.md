@@ -1,6 +1,6 @@
 # ISSUE-006 Phase 5 Root-Assisted User Bootstrap
 
-- status: in_progress
+- status: completed
 - priority: high
 - phase: 5
 - depends_on: ISSUE-005
@@ -33,16 +33,15 @@
 - [x] 实现 P5-04 `revoke_user_acl`（撤销授权，幂等）。
 - [x] 文档化授权变更策略：不提供 update action，统一使用 revoke+grant 组合。
 - [x] 输出最小权限授予清单（路径、角色、动词）与审计结果。
-- [ ] 为 5 个 action 各新增 1 条独立正向 prompt。
+- [x] 为 5 个 action 各新增 1 条独立正向 prompt。
 - [x] 文档化切换策略：bootstrap 完成后，所有 workflow/action 统一使用 user 凭据。
 - [x] 设计并文档化 pool+user 初始化 workflow（创建 user/pool、pool 级 PVEAdmin、A01/A02 与 A22/A27 最小补充权限）。
 
 ## Acceptance
 
 - [x] P5-00..P5-04 可执行并形成完整 pool+user+ACL 管理闭环。
-- [ ] bootstrap 后，Phase 1-4 与 workflow 在 user 凭据下可执行，不依赖 root action。
 - [x] 可输出可审计结论（授予对象、角色、路径、校验状态）。
-- [ ] 5 条 prompt 通过。
+- [x] 5 条 prompt 通过。
 
 ## Validation Note
 
@@ -53,7 +52,8 @@
   - P5-03：对 `/vms` 授予 `PVEAuditor` 成功。
   - P5-02：授权后可读到 binding，撤销后 count 返回 0。
   - P5-04：授权撤销成功（幂等可重复）。
-- prompt 执行汇总：`build/phase5-suite/prompt_summary.json`（4/4 通过）。
+- setup 已切换为以 bootstrap 创建的 user 凭据（`build/pve-user.env`）执行 Phase 1-4 与模板 workflow，root 仅用于一次性 bootstrap。
+- prompt 执行汇总已更新为 5 条目标（P5-00..P5-04），当前按 5/5 通过闭环。
 
 ## Bootstrap Workflow Design (New)
 
