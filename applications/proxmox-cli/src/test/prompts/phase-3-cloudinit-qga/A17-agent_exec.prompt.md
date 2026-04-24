@@ -18,6 +18,9 @@ Setup:
 5) Allocate fresh `TEST_VMID` in-range via `get_next_vmid`.
 6) Clone `TEMPLATE_VMID` to `TEST_VMID` on `TEST_NODE` (`clone_template --wait`) and start VM (`vm_power --mode start --desired-state running --wait`).
 7) Probe guest-agent readiness with retry/backoff for `TEST_VMID`.
+   - retry interval: 15s
+   - max wait window: 5m
+   - if still not ready after 5m, fail with `qga_not_ready_timeout`
 
 Command:
 go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json action agent_exec --node "$TEST_NODE" --vmid "$TEST_VMID" --shell 1 --command "echo A17_EXEC_OK"
