@@ -11,7 +11,6 @@
 5. `004-phase-3-cloudinit-qga-actions.md`
 6. `005-phase-4-console-websocket.md`
 7. `006-phase-5-privilege-root-ops.md`
-8. `008-e2e-workflow-and-prompt-coverage.md`
 
 ## Conventions
 
