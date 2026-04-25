@@ -81,7 +81,6 @@ Phase 3 implemented actions:
   agent_exec --node <node> --vmid <id> --command <command> [--shell 1|0] [--shell-bin /bin/sh] [--script <shell script>] [--input-data <stdin>] [--no-wait 1|0] [--timeout-seconds 30]
   agent_exec_status --node <node> --vmid <id> --pid <pid>
   storage_upload_guard --node <node> --storage <storage> [--content-type snippets]
-  storage_upload_snippet --node <node> --storage <storage> --source-path <file> [--filename <name>]
   storage_upload_iso --node <node> --storage <storage> --source-path <file.iso> [--filename <name.iso>] [--if-exists replace|skip] (waits for upload task completion; hint: run storage_upload_guard first)
   build_ubuntu_autoinstall_iso --source-iso <ubuntu.iso> --output-iso <custom.iso> [--kernel-cmdline <cmdline>] [--work-dir build/autoinstall-iso-work/<id>]
 
@@ -114,12 +113,9 @@ Phase 5 implemented actions:
   get_user_acl_binding --userid <user@realm> [--path <acl-path>] [--role <role>]
   grant_user_acl --userid <user@realm> --path <acl-path> --role <role> [--propagate 1|0]
   revoke_user_acl --userid <user@realm> --path <acl-path> --role <role>
-  node_termproxy_shell_exec --node <node> [--cmd login] [--cmd-opt <csv>] [--cmd-opts <nul-terminated>] [--script <multi-line>] [--expect <text>] [--timeout-seconds 60]
-
 Phase 5 scope note:
   - Recommended direction is root-assisted bootstrap only (create pool/user + get/grant/revoke ACL).
   - ACL changes should use revoke+grant composition; no dedicated update action is required.
-  - node_termproxy_shell_exec remains available as legacy compatibility path.
 
 Phase roadmap:
   Phase 1: read/task actions

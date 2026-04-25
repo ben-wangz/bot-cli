@@ -60,7 +60,6 @@
   - `agent_network_get_interfaces`
   - `agent_exec`
   - `agent_exec_status`
-  - `storage_upload_snippet`（若 v0.1 范围仍保留）
 
 ### 3.3 Serial and websocket chain
 

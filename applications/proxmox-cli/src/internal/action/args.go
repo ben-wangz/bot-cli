@@ -168,7 +168,7 @@ func IsPhase2Action(name string) bool {
 
 func IsPhase3Action(name string) bool {
 	switch name {
-	case "agent_network_get_interfaces", "agent_exec", "agent_exec_status", "storage_upload_guard", "storage_upload_snippet", "storage_upload_iso", "build_ubuntu_autoinstall_iso":
+	case "agent_network_get_interfaces", "agent_exec", "agent_exec_status", "storage_upload_guard", "storage_upload_iso", "build_ubuntu_autoinstall_iso":
 		return true
 	default:
 		return false
@@ -187,7 +187,7 @@ func IsPhase4Action(name string) bool {
 
 func IsPhase5Action(name string) bool {
 	switch name {
-	case "node_termproxy_shell_exec", "create_pve_user_with_root", "get_user_acl_binding", "grant_user_acl", "revoke_user_acl":
+	case "create_pve_user_with_root", "get_user_acl_binding", "grant_user_acl", "revoke_user_acl":
 		return true
 	case "create_pool_with_root":
 		return true

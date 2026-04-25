@@ -1,6 +1,6 @@
 # proxmox-cli v0.1 清理候选清单
 
-- 状态: draft
+- 状态: completed
 - 优先级: medium
 - 关联计划: `development-plan-v0.1.md`（M4）
 
@@ -10,7 +10,7 @@
 2. 未被回归入口引用，或仅为历史兼容说明。
 3. 删除后可由现有能力替代，且不会破坏当前回归。
 
-## 2. 首批候选
+## 2. 首批候选（M4 执行结果）
 
 ### C1 `node_termproxy_shell_exec`
 
@@ -19,8 +19,8 @@
   - 现有主路径由 `provision-template-from-artifact` + SSH/QGA action 覆盖。
 - 风险
   - 可能仍被少量手工排障脚本使用。
-- 建议
-  - v0.1 先标记 deprecated（help 文案 + 文档），v0.2 再删除实现。
+- 结论
+  - 已删除（v0.1 M4）。
 
 ### C2 `storage_upload_snippet`
 
@@ -29,14 +29,16 @@
   - 目前两条 workflow 均不依赖该 action。
 - 风险
   - 若后续引入 root 落盘路径，可能再次需要。
-- 建议
-  - M4 做使用面审计（代码调用/文档引用/prompt 覆盖）后决定保留或删除。
+- 结论
+  - 已删除（v0.1 M4）。
 
-## 3. 审计任务
+## 3. 审计记录
 
-1. 枚举候选 action 的调用点、help 暴露、测试覆盖。
-2. 输出“删除影响面”报告（CLI 行为变化、文档变化、测试变化）。
-3. 为每个删除动作提供替代路径或迁移说明。
+1. 已完成调用点、help、prompt 引用审计。
+2. 已完成代码/文档/prompt 同步删除。
+3. 替代路径：
+   - `node_termproxy_shell_exec` -> 使用 Phase 4 串口动作与 SSH 控制面动作。
+   - `storage_upload_snippet` -> 使用 `storage_upload_guard` + `storage_upload_iso` 主链路。
 
 ## 4. 退出标准
 

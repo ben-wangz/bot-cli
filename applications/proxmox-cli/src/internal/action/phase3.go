@@ -26,8 +26,6 @@ func ExecutePhase3(ctx context.Context, client *pveapi.Client, req Request) (map
 		return runAgentExecStatus(ctx, client, req)
 	case "storage_upload_guard":
 		return runStorageUploadGuard(ctx, client, req)
-	case "storage_upload_snippet":
-		return runStorageUploadSnippet(ctx, client, req)
 	case "storage_upload_iso":
 		return runStorageUploadISO(ctx, client, req)
 	case "build_ubuntu_autoinstall_iso":
@@ -212,53 +210,6 @@ func runStorageUploadGuard(ctx context.Context, client *pveapi.Client, req Reque
 		diagnostics["guard"] = "blocked"
 	}
 	return buildResult(req, map[string]any{"node": node, "storage": storage, "content-type": contentType}, result, diagnostics), nil
-}
-
-func runStorageUploadSnippet(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
-	node, err := RequiredNode(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	storage, err := RequiredString(req.Args, "storage")
-	if err != nil {
-		return nil, err
-	}
-	sourcePath, err := RequiredString(req.Args, "source-path")
-	if err != nil {
-		return nil, err
-	}
-	if _, statErr := os.Stat(sourcePath); statErr != nil {
-		return nil, apperr.Wrap(apperr.CodeConfig, "source-path is not readable", statErr)
-	}
-	filename := strings.TrimSpace(req.Args["filename"])
-	if filename == "" {
-		filename = filepath.Base(sourcePath)
-	}
-	config, err := getStorageConfig(ctx, client, node, storage)
-	if err != nil {
-		return nil, err
-	}
-	supported := splitCSV(asString(config["content"]))
-	if !containsString(supported, "snippets") {
-		return nil, apperr.New(apperr.CodeInvalidArgs, "target storage does not allow snippets; run storage_upload_guard first")
-	}
-	path := fmt.Sprintf("/nodes/%s/storage/%s/upload", url.PathEscape(node), url.PathEscape(storage))
-	fields := map[string]string{
-		"content": "snippets",
-	}
-	data, err := client.PostMultipartFile(ctx, path, fields, "filename", sourcePath, filename)
-	if err != nil {
-		return nil, err
-	}
-	result := map[string]any{
-		"node":       node,
-		"storage":    storage,
-		"filename":   filename,
-		"volid":      asString(data),
-		"content":    "snippets",
-		"sourcePath": sourcePath,
-	}
-	return buildResult(req, map[string]any{"node": node, "storage": storage, "source-path": sourcePath, "filename": filename}, result, map[string]any{}), nil
 }
 
 func runStorageUploadISO(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
