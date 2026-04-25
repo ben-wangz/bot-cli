@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Provide one stable setup prompt for regression runs. This setup uses root bootstrap credentials to create a fresh bot user + pool, grants required ACLs, writes `build/pve-user.env`, and prepares `build/ubuntu-24-with-agent.vm-template.id` via the artifact provisioning chain for subsequent action suites.
+Provide one stable setup prompt for regression runs. This setup uses root bootstrap credentials to create a fresh bot user + pool, grants required ACLs, writes `build/pve-user.env`, and prepares `build/ubuntu-24-with-agent.vm-template.id` via the artifact provisioning chain for subsequent e2e and composed suites.
 
 ## Prompt
 

@@ -7,7 +7,7 @@ Run virtual-workflow prompt chains to cover actions that are not directly exerci
 ## Required Execution Mode
 
 - If sub-agents are supported, use sub-agents.
-- Spawn one sub-agent per composed prompt file (C01..C05).
+- Spawn one sub-agent per composed prompt file (C00..C05).
 - Sub-agent concurrency must be <= 2.
 - VM-writing chains must run sequentially (effective write concurrency = 1).
 
@@ -23,6 +23,7 @@ Run virtual-workflow prompt chains to cover actions that are not directly exerci
 
 ## Prompt Files to Execute
 
+- `C00-read-task-chain.prompt.md`
 - `C01-vm-lifecycle-chain.prompt.md`
 - `C02-qga-cloudinit-chain.prompt.md`
 - `C03-serial-websocket-chain.prompt.md`
@@ -39,7 +40,7 @@ Return one JSON object:
   "mode": "sub-agent",
   "success": true,
   "summary": {
-    "passed": 5,
+    "passed": 6,
     "failed": 0
   },
   "results": [

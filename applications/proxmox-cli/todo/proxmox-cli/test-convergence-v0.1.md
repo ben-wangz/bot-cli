@@ -1,6 +1,6 @@
 # proxmox-cli v0.1 测试收敛方案
 
-- 状态: draft
+- 状态: completed
 - 优先级: high
 - 关联计划: `development-plan-v0.1.md`（M2/M3）
 
@@ -8,7 +8,7 @@
 
 1. 已被 e2e workflow 稳定覆盖的 action，不再保留重复单 action prompt。
 2. 未被 e2e workflow 覆盖的 action，优先收敛到“虚拟 workflow”组合 prompt。
-3. 保留少量必要单 action prompt，仅用于无法稳定组合验证的能力。
+3. 单 action prompt 全量下线，统一由 e2e + 虚拟 workflow 承担覆盖。
 
 ## 2. e2e workflow 覆盖清单（可删除重复 action prompt）
 
@@ -42,6 +42,16 @@
   - `get_vm_config`
 
 ## 3. 虚拟 workflow 组合建议（不新增产品 workflow）
+
+### 3.0 Read and task chain
+
+- 目标覆盖
+  - `list_nodes`
+  - `list_vms_by_node`
+  - `get_effective_permissions`
+  - `get_next_vmid`
+  - `list_tasks_by_vmid`
+  - `get_task_status`
 
 ### 3.1 VM lifecycle chain
 
@@ -90,14 +100,14 @@
 - 说明
   - 与 bootstrap workflow 组合验证授权增删闭环。
 
-## 4. 待删除候选（按 M2 执行）
+## 4. 删除执行结果
 
-1. 与 2.1 重复的 Phase 5 单 action prompt。
-2. 与 2.2 重复的 Phase 1/2/3 单 action prompt。
-3. 删除前先确认 README 顺序与 suite runner 不再引用。
+1. Phase 1-5 单 action prompt 与 RUN-PHASE 套件已删除。
+2. README 回归入口已切换为 `setup -> e2e -> composed-v0.1`。
+3. 覆盖口径收敛为 workflow 与虚拟 workflow。
 
 ## 5. 验收标准
 
 1. Prompt 资产数量下降，且覆盖声明无缺口。
-2. 回归入口仍为 README 的 setup -> suites -> e2e 顺序。
+2. 回归入口为 README 的 `setup -> e2e -> composed-v0.1` 顺序。
 3. 任一 action 至少有一种有效覆盖路径（workflow 或虚拟 workflow）。
