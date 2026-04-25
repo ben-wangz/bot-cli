@@ -17,7 +17,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: build/forgekit/go.mod
+          go-version-file: applications/proxmox-cli/src/go.mod
 
       - name: Setup forgekit
         id: forgekit
