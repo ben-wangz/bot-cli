@@ -1,0 +1,30 @@
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: build/forgekit/go.mod
+
+      - name: Setup forgekit
+        id: forgekit
+        run: |
+          FORGEKIT_BIN=$(bash "${GITHUB_WORKSPACE}/setup/forgekit.sh")
+          echo "bin=${FORGEKIT_BIN}" >> "$GITHUB_OUTPUT"
+
+      - name: Run forgekit lint
+        run: |
+          "${{ steps.forgekit.outputs.bin }}" --project-root "${GITHUB_WORKSPACE}" lint

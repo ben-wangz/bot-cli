@@ -65,6 +65,9 @@ FORGEKIT_BIN=$(bash "${REPO_ROOT}/setup/forgekit.sh")
 "${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version bump proxmox-cli patch
 "${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version bump proxmox-cli minor
 "${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version bump proxmox-cli major
+
+# Run repository lint checks (uses lint.yaml)
+"${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" lint
 ```
 
 ### GitHub release tags

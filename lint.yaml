@@ -1,0 +1,20 @@
+commands:
+  - name: "Go formatting check"
+    cmd: "sh"
+    args:
+      - "-c"
+      - "test -z \"$(gofmt -l .)\""
+
+  - name: "Go tests (proxmox-cli)"
+    cmd: "sh"
+    args:
+      - "-c"
+      - "cd applications/proxmox-cli/src && go test ./..."
+
+include:
+  - "*.go"
+
+exclude:
+  - "**/vendor/**"
+  - "**/build/**"
+  - "**/dist/**"
