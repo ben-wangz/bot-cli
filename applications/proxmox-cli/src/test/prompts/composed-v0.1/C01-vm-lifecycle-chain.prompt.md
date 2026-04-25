@@ -6,7 +6,6 @@ Use one disposable VM lifecycle chain to cover:
 
 - `clone_template`
 - `update_vm_config`
-- `start_installer_and_console_ticket`
 - `review_install_tasks`
 - `sendkey`
 - `migrate_vm`
@@ -25,10 +24,9 @@ Setup:
 Chain:
 1) `clone_template --wait --full 0 --source-vmid TEMPLATE_VMID --target-vmid TEST_VMID`.
 2) `update_vm_config` with safe update (e.g., description/name).
-3) `start_installer_and_console_ticket`.
-4) `review_install_tasks`.
-5) `sendkey --key ret`.
-6) `migrate_vm --wait` to target node.
+3) `review_install_tasks`.
+4) `sendkey --key ret`.
+5) `migrate_vm --wait` to target node.
 
 Validation:
 - Every action returns `ok == true`.

@@ -40,4 +40,4 @@
 1. 仓库根 `version-control.yaml` 已声明 `proxmox-cli` binary 映射。
 2. 版本文件已迁移到 `applications/proxmox-cli/VERSION`。
 3. 兼容目录 `applications/proxmox-cli/container/` 已移除。
-4. 已验证：`go run ./cmd/forgekit --project-root /root/code/github/bot-cli version get proxmox-cli` 返回 `0.1.0`。
+4. 已验证：`FORGEKIT_BIN=$(bash /root/code/github/bot-cli/setup/forgekit.sh) && ${FORGEKIT_BIN} --project-root /root/code/github/bot-cli version get proxmox-cli` 返回 `0.1.0`。

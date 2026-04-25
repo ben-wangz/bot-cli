@@ -31,8 +31,6 @@ func ExecutePhase2(ctx context.Context, client *pveapi.Client, req Request) (map
 		return runAttachCDROMISO(ctx, client, req)
 	case "set_net_boot_config":
 		return runSetNetBootConfig(ctx, client, req)
-	case "start_installer_and_console_ticket":
-		return runStartInstallerAndConsoleTicket(ctx, client, req)
 	case "enable_serial_console":
 		return runEnableSerialConsole(ctx, client, req)
 	case "review_install_tasks":
@@ -350,39 +348,6 @@ func runSetNetBootConfig(ctx context.Context, client *pveapi.Client, req Request
 		return nil, err
 	}
 	return writeResult(req, map[string]any{"node": node, "vmid": vmid, "net0": net0, "boot": boot}, data), nil
-}
-
-func runStartInstallerAndConsoleTicket(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
-	node, err := RequiredNode(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	vmid, err := RequiredOperationVMID(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	startPath := fmt.Sprintf("/nodes/%s/qemu/%d/status/start", url.PathEscape(node), vmid)
-	startData, err := client.PostFormData(ctx, startPath, url.Values{})
-	if err != nil {
-		return nil, err
-	}
-	vncPath := fmt.Sprintf("/nodes/%s/qemu/%d/vncproxy", url.PathEscape(node), vmid)
-	vncData, vncErr := client.PostFormData(ctx, vncPath, url.Values{})
-	diagnostics := map[string]any{}
-	if vncErr != nil {
-		diagnostics["vncproxy_warning"] = vncErr.Error()
-	}
-	return map[string]any{
-		"action":  req.Name,
-		"ok":      true,
-		"scope":   req.Scope,
-		"request": map[string]any{"node": node, "vmid": vmid},
-		"result": map[string]any{
-			"upid":       asString(startData),
-			"vnc_ticket": vncData,
-		},
-		"diagnostics": diagnostics,
-	}, nil
 }
 
 func runEnableSerialConsole(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {

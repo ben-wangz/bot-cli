@@ -7,11 +7,9 @@ PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
 TARGET_DIR="${PROJECT_ROOT}/build/bin"
 TARGET_BIN="${TARGET_DIR}/forgekit"
 
-DEFAULT_MIN_VERSION="${FORGEKIT_MIN_VERSION:-0.3.1}"
-DEFAULT_BEST_VERSION="${FORGEKIT_BEST_VERSION:-0.3.1}"
+DEFAULT_MIN_VERSION="${FORGEKIT_MIN_VERSION:-0.4.0}"
+DEFAULT_BEST_VERSION="${FORGEKIT_BEST_VERSION:-0.4.0}"
 FORGEKIT_REPO="${FORGEKIT_REPO:-ben-wangz/forgekit}"
-FORGEKIT_SOURCE_DIR="${FORGEKIT_SOURCE_DIR:-${PROJECT_ROOT}/build/forgekit}"
-GO_SETUP_SCRIPT="${SCRIPT_DIR}/go.sh"
 
 function usage() {
     cat <<'EOF'
@@ -20,15 +18,14 @@ Usage: setup/forgekit.sh [min-version] [best-version]
 Ensures a usable forgekit binary is available for this repository.
 
 Arguments:
-  min-version   Minimum acceptable forgekit version (default: FORGEKIT_MIN_VERSION or 0.3.1)
+  min-version   Minimum acceptable forgekit version (default: FORGEKIT_MIN_VERSION or 0.4.0)
   best-version  Preferred forgekit version to download when install/upgrade is needed
-                (default: FORGEKIT_BEST_VERSION or 0.3.1)
+                (default: FORGEKIT_BEST_VERSION or 0.4.0)
 
 Environment:
   FORGEKIT_MIN_VERSION      Default min-version
   FORGEKIT_BEST_VERSION     Default best-version
   FORGEKIT_REPO             GitHub repo in owner/name form (default: ben-wangz/forgekit)
-  FORGEKIT_SOURCE_DIR       Local forgekit source dir (default: <repo>/build/forgekit)
   FORGEKIT_DOWNLOAD_BASE    Override base URL, e.g. https://files.m.daocloud.io/github.com
 
 Output:
@@ -136,41 +133,6 @@ function download_with_curl() {
     local url="$1"
     local output_path="$2"
     curl -fsSL --retry 3 --connect-timeout 10 --max-time 120 -o "$output_path" "$url"
-}
-
-function ensure_go_binary() {
-    if [[ ! -f "$GO_SETUP_SCRIPT" ]]; then
-        echo "Error: go setup script not found: ${GO_SETUP_SCRIPT}" >&2
-        return 1
-    fi
-
-    local go_bin
-    if ! go_bin="$(bash "$GO_SETUP_SCRIPT")"; then
-        echo "Error: failed to setup Go via ${GO_SETUP_SCRIPT}" >&2
-        return 1
-    fi
-
-    if [[ ! -x "$go_bin" ]]; then
-        echo "Error: Go binary is not executable: ${go_bin}" >&2
-        return 1
-    fi
-
-    export PATH="$(dirname "$go_bin"):${PATH}"
-    printf '%s\n' "$go_bin"
-}
-
-function install_from_source() {
-    local source_dir="$1"
-
-    if [[ ! -d "$source_dir" || ! -f "${source_dir}/go.mod" ]]; then
-        return 1
-    fi
-
-    local go_bin
-    go_bin="$(ensure_go_binary)"
-
-    mkdir -p "$TARGET_DIR"
-    (cd "$source_dir" && "$go_bin" build -o "$TARGET_BIN" ./cmd/forgekit)
 }
 
 function install_release_binary() {
@@ -283,27 +245,6 @@ function main() {
             printf '%s\n' "$TARGET_BIN"
             exit 0
         fi
-    fi
-
-    if [[ -d "$FORGEKIT_SOURCE_DIR" ]]; then
-        if ! install_from_source "$FORGEKIT_SOURCE_DIR"; then
-            echo "Error: failed to build forgekit from source: ${FORGEKIT_SOURCE_DIR}" >&2
-            exit 1
-        fi
-
-        local source_version
-        source_version="$(read_forgekit_version "$TARGET_BIN")" || {
-            echo "Error: Failed to read source-built forgekit version" >&2
-            exit 1
-        }
-
-        if ! version_ge "$source_version" "$min_version"; then
-            echo "Error: Source-built forgekit version (${source_version}) is lower than min-version (${min_version})" >&2
-            exit 1
-        fi
-
-        printf '%s\n' "$TARGET_BIN"
-        exit 0
     fi
 
     install_release_binary "$best_version"

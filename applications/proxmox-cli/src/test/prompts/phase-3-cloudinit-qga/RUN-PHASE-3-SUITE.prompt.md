@@ -7,16 +7,14 @@ Run all Phase 3 action prompts under `applications/proxmox-cli/src/test/prompts/
 ## Required Execution Mode
 
 - If sub-agents are supported, you **must** use sub-agents.
-- Spawn one sub-agent per action prompt file (A15, A17-exec, A17-status, A20, A27).
+- Spawn one sub-agent per action prompt file (A15, A17-exec, A17-status).
 - Sub-agent concurrency must be <= 2.
 - Each sub-agent executes exactly one prompt file and returns the result in the required schema.
-- Prompts are split into three execution classes:
+- Prompts are split into two execution classes:
   - Independent-VM prompts: A17-agent_exec, A17-agent_exec_status.
-  - Shared-VM prompts: A15-agent_network_get_interfaces, A20-dump_cloudinit.
-  - No-VM prompts: A27-render_and_serve_seed.
+  - Shared-VM prompts: A15-agent_network_get_interfaces.
 - Shared-VM prompts must run sequentially (shared VM write concurrency = 1).
 - Independent-VM prompts may run concurrently up to the suite concurrency limit when infra allows.
-- No-VM prompts may run concurrently.
 - A prompt must never reuse a VMID produced by another prompt, except the suite-level shared VM artifacts explicitly defined below.
 
 ## Fallback Rule
@@ -38,9 +36,8 @@ Run all Phase 3 action prompts under `applications/proxmox-cli/src/test/prompts/
    - `build/phase3-cloudinit-qga.shared-node`
    - `build/phase3-cloudinit-qga.shared-vmid`
 11) Independent-VM prompts (A17*) must still resolve their own `TEST_VMID` and self-destroy assets inside each prompt run.
-12) No-VM prompts (A27) must not create/stop/destroy VMs.
-13) For disposable clones, prefer linked clone (`full=0`, default) to minimize storage I/O.
-14) After all prompts finish (success or failure), run suite teardown once: stop and destroy `SHARED_VMID`, then remove shared input files.
+12) For disposable clones, prefer linked clone (`full=0`, default) to minimize storage I/O.
+13) After all prompts finish (success or failure), run suite teardown once: stop and destroy `SHARED_VMID`, then remove shared input files.
 
 ## Prompt Files to Execute
 
@@ -49,10 +46,6 @@ Run all Phase 3 action prompts under `applications/proxmox-cli/src/test/prompts/
   - `A17-agent_exec_status.prompt.md`
 - Shared-VM prompts:
   - `A15-agent_network_get_interfaces.prompt.md`
-  - `A20-dump_cloudinit.prompt.md`
-- No-VM prompts:
-  - `A27-render_and_serve_seed.prompt.md`
-
 ## Final Output Format
 
 Return one JSON object:
@@ -63,7 +56,7 @@ Return one JSON object:
   "mode": "sub-agent",
   "success": true,
   "summary": {
-    "passed": 5,
+    "passed": 3,
     "failed": 0
   },
   "results": [

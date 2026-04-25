@@ -56,14 +56,15 @@ FORGEKIT_BIN=$(bash "${REPO_ROOT}/setup/forgekit.sh")
 
 ```bash
 REPO_ROOT="$(pwd)"
+FORGEKIT_BIN=$(bash "${REPO_ROOT}/setup/forgekit.sh")
 
 # Get current semver
-forgekit --project-root "${REPO_ROOT}" version get proxmox-cli
+"${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version get proxmox-cli
 
 # Bump version
-forgekit --project-root "${REPO_ROOT}" version bump proxmox-cli patch
-forgekit --project-root "${REPO_ROOT}" version bump proxmox-cli minor
-forgekit --project-root "${REPO_ROOT}" version bump proxmox-cli major
+"${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version bump proxmox-cli patch
+"${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version bump proxmox-cli minor
+"${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version bump proxmox-cli major
 ```
 
 ## Core Conventions (Planned Baseline)

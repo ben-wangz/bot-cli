@@ -7,12 +7,12 @@ Run all Phase 2 action prompts under `applications/proxmox-cli/src/test/prompts/
 ## Required Execution Mode
 
 - If sub-agents are supported, you **must** use sub-agents.
-- Spawn one sub-agent per action prompt file (A07, A08, A10, A26, A30, A31).
+- Spawn one sub-agent per action prompt file (A07, A08, A10, A30, A31).
 - Sub-agent concurrency must be <= 2.
 - Each sub-agent executes exactly one prompt file and returns the result in the required schema.
 - Prompts are split into two execution classes:
   - Independent-VM prompts: A07, A08 (each prompt provisions and destroys its own VM assets).
-  - Shared-VM prompts: A10, A26, A30, A31 (consume one suite-level shared VM).
+  - Shared-VM prompts: A10, A30, A31 (consume one suite-level shared VM).
 - Shared-VM prompts must run sequentially (shared VM write concurrency = 1).
 - Independent-VM prompts may run concurrently up to the suite concurrency limit when infra allows.
 - A prompt must never reuse a VMID produced by another prompt, except the suite-level shared VM artifacts explicitly defined below.
@@ -49,7 +49,6 @@ Run all Phase 2 action prompts under `applications/proxmox-cli/src/test/prompts/
   - `A08-migrate_vm.prompt.md`
 - Shared-VM prompts:
   - `A10-update_vm_config.prompt.md`
-  - `A26-start_installer_and_console_ticket.prompt.md`
   - `A30-review_install_tasks.prompt.md`
   - `A31-sendkey.prompt.md`
 
@@ -63,7 +62,7 @@ Return one JSON object:
   "mode": "sub-agent",
   "success": true,
   "summary": {
-    "passed": 6,
+    "passed": 5,
     "failed": 0
   },
   "results": [

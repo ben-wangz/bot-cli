@@ -159,7 +159,7 @@ func IsPhase2Action(name string) bool {
 	switch name {
 	case "clone_template", "migrate_vm", "convert_vm_to_template", "update_vm_config", "vm_power",
 		"set_vm_agent", "create_vm", "attach_cdrom_iso", "set_net_boot_config",
-		"start_installer_and_console_ticket", "enable_serial_console", "review_install_tasks", "sendkey":
+		"enable_serial_console", "review_install_tasks", "sendkey":
 		return true
 	default:
 		return false
@@ -168,7 +168,7 @@ func IsPhase2Action(name string) bool {
 
 func IsPhase3Action(name string) bool {
 	switch name {
-	case "agent_network_get_interfaces", "agent_exec", "agent_exec_status", "dump_cloudinit", "storage_upload_guard", "storage_upload_snippet", "storage_upload_iso", "build_ubuntu_autoinstall_iso", "render_and_serve_seed":
+	case "agent_network_get_interfaces", "agent_exec", "agent_exec_status", "storage_upload_guard", "storage_upload_snippet", "storage_upload_iso", "build_ubuntu_autoinstall_iso":
 		return true
 	default:
 		return false
@@ -198,7 +198,7 @@ func IsPhase5Action(name string) bool {
 
 func IsActionAsync(name string) bool {
 	switch name {
-	case "clone_template", "migrate_vm", "convert_vm_to_template", "vm_power", "create_vm", "start_installer_and_console_ticket":
+	case "clone_template", "migrate_vm", "convert_vm_to_template", "vm_power", "create_vm":
 		return true
 	default:
 		return false

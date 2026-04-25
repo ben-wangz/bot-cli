@@ -29,8 +29,9 @@ Version is managed via `forgekit` binary mapping.
 
 Common commands:
 
-- `forgekit --project-root /root/code/github/bot-cli version get proxmox-cli`
-- `forgekit --project-root /root/code/github/bot-cli version bump proxmox-cli patch`
+- `FORGEKIT_BIN=$(bash /root/code/github/bot-cli/setup/forgekit.sh)`
+- `${FORGEKIT_BIN} --project-root /root/code/github/bot-cli version get proxmox-cli`
+- `${FORGEKIT_BIN} --project-root /root/code/github/bot-cli version bump proxmox-cli patch`
 
 ## Build
 

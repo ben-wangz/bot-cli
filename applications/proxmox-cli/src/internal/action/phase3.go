@@ -24,8 +24,6 @@ func ExecutePhase3(ctx context.Context, client *pveapi.Client, req Request) (map
 		return runAgentExec(ctx, client, req)
 	case "agent_exec_status":
 		return runAgentExecStatus(ctx, client, req)
-	case "dump_cloudinit":
-		return runDumpCloudinit(ctx, client, req)
 	case "storage_upload_guard":
 		return runStorageUploadGuard(ctx, client, req)
 	case "storage_upload_snippet":
@@ -34,8 +32,6 @@ func ExecutePhase3(ctx context.Context, client *pveapi.Client, req Request) (map
 		return runStorageUploadISO(ctx, client, req)
 	case "build_ubuntu_autoinstall_iso":
 		return runBuildUbuntuAutoinstallISO(req)
-	case "render_and_serve_seed":
-		return runRenderAndServeSeed(req)
 	default:
 		return nil, apperr.New(apperr.CodeInvalidArgs, "unsupported action in phase 3: "+req.Name)
 	}
@@ -178,34 +174,6 @@ func runAgentExecStatus(ctx context.Context, client *pveapi.Client, req Request)
 		return nil, err
 	}
 	return buildResult(req, map[string]any{"node": node, "vmid": vmid, "pid": pid}, status, map[string]any{"exited": toBool(status["exited"]), "exitcode": status["exitcode"]}), nil
-}
-
-func runDumpCloudinit(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
-	node, err := RequiredNode(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	vmid, err := RequiredOperationVMID(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	typeName := strings.TrimSpace(req.Args["type"])
-	if typeName == "" {
-		typeName = "user"
-	}
-	if !isOneOf(typeName, "user", "network", "meta") {
-		return nil, apperr.New(apperr.CodeInvalidArgs, "type must be one of user|network|meta")
-	}
-	query := url.Values{}
-	query.Set("type", typeName)
-	path := fmt.Sprintf("/nodes/%s/qemu/%d/cloudinit/dump", url.PathEscape(node), vmid)
-	data, err := client.GetData(ctx, path, query)
-	if err != nil {
-		return nil, err
-	}
-	content := asString(data)
-	result := map[string]any{"type": typeName, "content": content}
-	return buildResult(req, map[string]any{"node": node, "vmid": vmid, "type": typeName}, result, map[string]any{"content_length": len(content)}), nil
 }
 
 func runStorageUploadGuard(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
@@ -491,84 +459,6 @@ func runBuildUbuntuAutoinstallISO(req Request) (map[string]any, error) {
 		"mkisofs_args":          mkisofsArgs,
 	}
 	return buildResult(req, map[string]any{"source-iso": sourceISO, "output-iso": absoluteOutputISO}, result, map[string]any{"modified_file_count": len(modified)}), nil
-}
-
-func runRenderAndServeSeed(req Request) (map[string]any, error) {
-	vmid, err := RequiredOperationVMID(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	seedDir := strings.TrimSpace(req.Args["seed-dir"])
-	if seedDir == "" {
-		seedDir = "build/seed"
-	}
-	seedName := strings.TrimSpace(req.Args["seed-name"])
-	if seedName == "" {
-		seedName = fmt.Sprintf("vm-%d", vmid)
-	}
-	hostname := strings.TrimSpace(req.Args["hostname"])
-	if hostname == "" {
-		hostname = seedName
-	}
-	host := strings.TrimSpace(req.Args["host"])
-	if host == "" {
-		host = "127.0.0.1"
-	}
-	port := 8088
-	if strings.TrimSpace(req.Args["port"]) != "" {
-		parsedPort, parseErr := RequiredInt(req.Args, "port")
-		if parseErr != nil {
-			return nil, parseErr
-		}
-		if parsedPort > 65535 {
-			return nil, apperr.New(apperr.CodeInvalidArgs, "port must be <= 65535")
-		}
-		port = parsedPort
-	}
-	absSeedDir, err := filepath.Abs(seedDir)
-	if err != nil {
-		return nil, apperr.Wrap(apperr.CodeConfig, "failed to resolve seed-dir", err)
-	}
-	seedPath := filepath.Join(absSeedDir, seedName)
-	if err := os.MkdirAll(seedPath, 0o755); err != nil {
-		return nil, apperr.Wrap(apperr.CodeConfig, "failed to create seed directory", err)
-	}
-	metaData := strings.TrimSpace(req.Args["meta-data"])
-	if metaData == "" {
-		metaData = fmt.Sprintf("instance-id: iid-%s\nlocal-hostname: %s\n", seedName, hostname)
-	}
-	userData := strings.TrimSpace(req.Args["user-data"])
-	if userData == "" {
-		userData = fmt.Sprintf("#cloud-config\nhostname: %s\nmanage_etc_hosts: true\n", hostname)
-	}
-	networkConfig := strings.TrimSpace(req.Args["network-config"])
-	if networkConfig == "" {
-		networkConfig = "version: 2\nethernets:\n  ens18:\n    dhcp4: true\n"
-	}
-	if err := writeSeedFile(seedPath, "meta-data", metaData); err != nil {
-		return nil, err
-	}
-	if err := writeSeedFile(seedPath, "user-data", userData); err != nil {
-		return nil, err
-	}
-	if err := writeSeedFile(seedPath, "network-config", networkConfig); err != nil {
-		return nil, err
-	}
-	seedURL := fmt.Sprintf("http://%s:%d/%s/", host, port, url.PathEscape(seedName))
-	serveCommand := fmt.Sprintf("python3 -m http.server %d --bind %s --directory %s", port, host, absSeedDir)
-	result := map[string]any{
-		"seed_path":     seedPath,
-		"seed_url":      seedURL,
-		"serve_address": fmt.Sprintf("%s:%d", host, port),
-		"files": map[string]any{
-			"meta-data":      filepath.Join(seedPath, "meta-data"),
-			"user-data":      filepath.Join(seedPath, "user-data"),
-			"network-config": filepath.Join(seedPath, "network-config"),
-		},
-		"serve_command": serveCommand,
-	}
-	diagnostics := map[string]any{"served": false, "note": "seed files rendered; start local static server with serve_command"}
-	return buildResult(req, map[string]any{"vmid": vmid, "seed-dir": seedDir, "seed-name": seedName}, result, diagnostics), nil
 }
 
 func getAgentExecStatus(ctx context.Context, client *pveapi.Client, node string, vmid int, pid string) (map[string]any, error) {

@@ -48,7 +48,6 @@
 - 目标覆盖
   - `clone_template`
   - `update_vm_config`
-  - `start_installer_and_console_ticket`
   - `review_install_tasks`
   - `sendkey`
   - `migrate_vm`
@@ -58,8 +57,6 @@
 ### 3.2 QGA and cloud-init chain
 
 - 目标覆盖
-  - `render_and_serve_seed`
-  - `dump_cloudinit`
   - `agent_network_get_interfaces`
   - `agent_exec`
   - `agent_exec_status`
