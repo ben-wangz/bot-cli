@@ -25,7 +25,7 @@
 - [x] 实现基础 HTTP client（timeout/tls/header）。
 - [x] 实现统一输出和统一错误码。
 - [x] 实现 secret redaction（password/token/cookie/ticket）。
-- [x] 建立 `applications/proxmox-cli/src/test/prompts/` 目录结构。
+- [x] 建立 `applications/proxmox-cli/tests/prompts/` 目录结构。
 
 ## Acceptance
 

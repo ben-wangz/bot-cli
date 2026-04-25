@@ -284,7 +284,7 @@ applications/proxmox-cli/
 
 ### 8.3.2 交付要求
 
-1. 在 `applications/proxmox-cli/src/test/prompts/` 下为 A01-A43 生成 43 条 prompt 文件。
+1. 在 `applications/proxmox-cli/tests/prompts/` 下为 A01-A43 生成 43 条 prompt 文件。
 2. 文件命名建议：`A01-list_nodes.prompt.md` ... `A43-cleanup_obsolete_artifact.prompt.md`。
 3. 每个 action 仅保留 1 条独立正向测试用例，不做多套参数预设。
 4. 每条 prompt 固定包含：前置条件、命令、成功判定、输出模板。

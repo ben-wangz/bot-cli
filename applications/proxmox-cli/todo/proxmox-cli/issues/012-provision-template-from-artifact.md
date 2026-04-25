@@ -135,4 +135,4 @@ autoinstall:
 
 ## Validation
 
-- e2e prompt: `applications/proxmox-cli/src/test/prompts/e2e/PROVISION-TEMPLATE-FROM-ARTIFACT.prompt.md`
+- e2e prompt: `applications/proxmox-cli/tests/prompts/workflows/PROVISION-TEMPLATE-FROM-ARTIFACT.prompt.md`

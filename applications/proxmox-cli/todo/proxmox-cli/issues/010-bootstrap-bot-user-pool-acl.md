@@ -83,4 +83,4 @@
 ## Notes
 
 - 该 workflow 为 root-assisted bootstrap；执行完成后应回到 user 凭据执行常规动作。
-- e2e prompt: `applications/proxmox-cli/src/test/prompts/e2e/BOOTSTRAP-BOT-USER-POOL-ACL.prompt.md`
+- e2e prompt: `applications/proxmox-cli/tests/prompts/workflows/BOOTSTRAP-BOT-USER-POOL-ACL.prompt.md`

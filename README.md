@@ -80,6 +80,8 @@ On tag push, the release workflow validates:
 - app is listed in `version-control.yaml` binaries
 - tag version equals `applications/<application>/VERSION`
 
+For `proxmox-cli`, release tagging also requires a green prompt regression run as defined in `applications/proxmox-cli/tests/prompts/RELEASE-REGRESSION-GATE.md`.
+
 ## Core Conventions (Planned Baseline)
 
 Each CLI in this repo should follow these conventions unless explicitly overridden:

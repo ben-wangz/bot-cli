@@ -17,7 +17,7 @@ Execution requirements:
 1) Work from repository root.
 2) Load env vars from `build/pve-user.env`.
 3) Use source dir `applications/proxmox-cli/src`.
-4) Execute script `applications/proxmox-cli/src/test/prompts/e2e/run-provision-template-from-artifact.sh` by absolute path from any current working directory.
+4) Execute script `applications/proxmox-cli/tests/prompts/workflows/run-provision-template-from-artifact.sh` by absolute path from any current working directory.
 5) Persist all progress logs to a file under `build/logs/`.
 6) Use API base `${PVE_API_BASE_URL%/}/api2/json` and always include `--insecure-tls --output json`.
 7) Set VMID policy bounds explicitly:
