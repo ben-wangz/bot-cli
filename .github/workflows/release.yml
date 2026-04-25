@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve app and version from tag
+        id: meta
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          python3 <<'PY'
+          import os
+          import pathlib
+          import re
+          import sys
+
+          tag = os.environ["TAG_NAME"].strip()
+          match = re.fullmatch(r"([a-z0-9][a-z0-9-]*)-v([0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?)", tag)
+          if not match:
+              print(
+                  "Invalid tag format. Expected <app>-v<semver>, for example proxmox-cli-v0.1.0",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          app_name, version = match.groups()
+          app_dir = pathlib.Path("applications") / app_name
+          version_file = app_dir / "VERSION"
+          go_mod_file = app_dir / "src" / "go.mod"
+          cmd_dir = app_dir / "src" / "cmd" / app_name
+
+          if not app_dir.is_dir():
+              print(f"Unknown application directory: {app_dir}", file=sys.stderr)
+              sys.exit(1)
+          if not version_file.is_file():
+              print(f"Missing VERSION file: {version_file}", file=sys.stderr)
+              sys.exit(1)
+          if not go_mod_file.is_file():
+              print(f"Missing go.mod file: {go_mod_file}", file=sys.stderr)
+              sys.exit(1)
+          if not cmd_dir.is_dir():
+              print(f"Missing command entrypoint directory: {cmd_dir}", file=sys.stderr)
+              sys.exit(1)
+
+          version_text = version_file.read_text(encoding="utf-8").strip()
+          if version_text != version:
+              print(
+                  f"VERSION mismatch: {version_file}={version_text}, tag={tag}",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          vc = pathlib.Path("version-control.yaml")
+          if not vc.is_file():
+              print("Missing version-control.yaml", file=sys.stderr)
+              sys.exit(1)
+          vc_text = vc.read_text(encoding="utf-8")
+          if f"- name: {app_name}" not in vc_text:
+              print(
+                  f"Application {app_name} is not declared in version-control.yaml binaries",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          output_path = pathlib.Path(os.environ["GITHUB_OUTPUT"])
+          with output_path.open("a", encoding="utf-8") as f:
+              f.write(f"app={app_name}\n")
+              f.write(f"version={version}\n")
+              f.write(f"app_dir={app_dir.as_posix()}\n")
+              f.write(f"go_mod={go_mod_file.as_posix()}\n")
+              f.write(f"cmd_dir={cmd_dir.as_posix()}\n")
+          PY
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ steps.meta.outputs.go_mod }}
+
+      - name: Build multi-platform binaries
+        env:
+          APP_NAME: ${{ steps.meta.outputs.app }}
+          CMD_DIR: ${{ steps.meta.outputs.cmd_dir }}
+        run: |
+          mkdir -p dist
+          targets=(
+            "linux amd64"
+            "linux arm64"
+            "darwin amd64"
+            "darwin arm64"
+          )
+
+          for target in "${targets[@]}"; do
+            IFS=' ' read -r goos goarch <<< "$target"
+            output="dist/${APP_NAME}_${goos}_${goarch}"
+            echo "Building ${output}"
+
+            CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" \
+              go build -trimpath -ldflags "-s -w" \
+              -o "$output" "./${CMD_DIR}"
+          done
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum * > checksums.txt
+
+      - name: Upload release artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.meta.outputs.app }} v${{ steps.meta.outputs.version }}
+          files: |
+            dist/*

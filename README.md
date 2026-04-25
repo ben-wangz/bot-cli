@@ -67,6 +67,19 @@ FORGEKIT_BIN=$(bash "${REPO_ROOT}/setup/forgekit.sh")
 "${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version bump proxmox-cli major
 ```
 
+### GitHub release tags
+
+This repository publishes per-application GitHub Releases from prefixed tags:
+
+- format: `<application>-v<semver>`
+- example: `proxmox-cli-v0.1.0`
+
+On tag push, the release workflow validates:
+
+- app exists under `applications/<application>`
+- app is listed in `version-control.yaml` binaries
+- tag version equals `applications/<application>/VERSION`
+
 ## Core Conventions (Planned Baseline)
 
 Each CLI in this repo should follow these conventions unless explicitly overridden:
