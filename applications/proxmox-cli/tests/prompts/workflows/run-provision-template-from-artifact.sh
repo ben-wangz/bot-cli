@@ -2,7 +2,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../../../../" && pwd)"
+REPO_ROOT="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel 2>/dev/null || true)"
+if [[ -z "${REPO_ROOT}" ]]; then
+  REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../../../" && pwd)"
+fi
 SRC_DIR="${REPO_ROOT}/applications/proxmox-cli/src"
 ENV_FILE="${REPO_ROOT}/build/pve-user.env"
 LOG_DIR="${REPO_ROOT}/build/logs"
