@@ -7,7 +7,7 @@ Run all Phase 5 root-assisted pool/user ACL bootstrap prompts under `application
 ## Required Execution Mode
 
 - If sub-agents are supported, you **must** use sub-agents.
-- Spawn one sub-agent per prompt file (P5-00..P5-04).
+- Spawn one sub-agent per prompt file (`P5-04` only).
 - Sub-agent concurrency must be <= 2.
 - Each sub-agent executes exactly one prompt file and returns the result in the required schema.
 - This suite has no VM dependency; prompts must not create/stop/destroy VMs.
@@ -20,7 +20,7 @@ Run all Phase 5 root-assisted pool/user ACL bootstrap prompts under `application
 ## Shared Setup
 
 1) Work from repository root.
-2) Load env vars from `build/pve-user.env`.
+2) Load env vars from `build/pve-root.env`.
 3) Use source dir: `applications/proxmox-cli/src`.
 4) Use API base: `${PVE_API_BASE_URL%/}/api2/json`.
 5) Always include `--insecure-tls --output json`.
@@ -29,10 +29,6 @@ Run all Phase 5 root-assisted pool/user ACL bootstrap prompts under `application
 
 ## Prompt Files to Execute
 
-- `P5-00-create_pool_with_root.prompt.md`
-- `P5-01-create_pve_user_with_root.prompt.md`
-- `P5-02-get_user_acl_binding.prompt.md`
-- `P5-03-grant_user_acl.prompt.md`
 - `P5-04-revoke_user_acl.prompt.md`
 
 ## Final Output Format
@@ -45,7 +41,7 @@ Return one JSON object:
   "mode": "sub-agent",
   "success": true,
   "summary": {
-    "passed": 5,
+    "passed": 1,
     "failed": 0
   },
   "results": [

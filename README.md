@@ -34,25 +34,22 @@ Current app scaffold:
 
 This project uses `forgekit` for version management.
 
-### Why it still works without container/chart
+### Binary mapping
 
-`forgekit version` can manage module versions through `VERSION` files even when no Helm chart is present. Its default module path convention is:
+`forgekit version` can manage standalone binaries through `version-control.yaml`.
 
-- `<module>/container/VERSION`
+For `proxmox-cli`:
 
-So for `proxmox-cli`, the module is managed as:
-
-- module: `applications/proxmox-cli`
-- version file: `applications/proxmox-cli/container/VERSION`
-
-The `container/` directory is used here as a forgekit-compatible version metadata path; it does not imply this project publishes container images.
+- binary name: `proxmox-cli`
+- binary path: `applications/proxmox-cli`
+- version file: `applications/proxmox-cli/VERSION`
 
 ### Bootstrap forgekit binary
 
 ```bash
 REPO_ROOT="$(pwd)"
 FORGEKIT_BIN=$(bash "${REPO_ROOT}/setup/forgekit.sh")
-"${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version get applications/proxmox-cli
+"${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version get proxmox-cli
 ```
 
 ### Common commands
@@ -61,12 +58,12 @@ FORGEKIT_BIN=$(bash "${REPO_ROOT}/setup/forgekit.sh")
 REPO_ROOT="$(pwd)"
 
 # Get current semver
-forgekit --project-root "${REPO_ROOT}" version get applications/proxmox-cli
+forgekit --project-root "${REPO_ROOT}" version get proxmox-cli
 
 # Bump version
-forgekit --project-root "${REPO_ROOT}" version bump applications/proxmox-cli patch
-forgekit --project-root "${REPO_ROOT}" version bump applications/proxmox-cli minor
-forgekit --project-root "${REPO_ROOT}" version bump applications/proxmox-cli major
+forgekit --project-root "${REPO_ROOT}" version bump proxmox-cli patch
+forgekit --project-root "${REPO_ROOT}" version bump proxmox-cli minor
+forgekit --project-root "${REPO_ROOT}" version bump proxmox-cli major
 ```
 
 ## Core Conventions (Planned Baseline)

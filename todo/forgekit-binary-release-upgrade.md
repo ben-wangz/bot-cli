@@ -1,6 +1,6 @@
 # TODO: 先增强 forgekit 的 binary release 支持，再升级本项目版本管理
 
-- 状态: pending
+- 状态: completed
 - 优先级: high
 - 创建日期: 2026-04-17
 
@@ -34,3 +34,10 @@
 - 可通过 forgekit 直接对本项目的 binary 模块执行 `version get/bump`。
 - 本项目不再依赖 `container/VERSION` 兼容路径。
 - 迁移后版本管理路径清晰、无冗余目录约束。
+
+## 完成记录（2026-04-25）
+
+1. 仓库根 `version-control.yaml` 已声明 `proxmox-cli` binary 映射。
+2. 版本文件已迁移到 `applications/proxmox-cli/VERSION`。
+3. 兼容目录 `applications/proxmox-cli/container/` 已移除。
+4. 已验证：`go run ./cmd/forgekit --project-root /root/code/github/bot-cli version get proxmox-cli` 返回 `0.1.0`。

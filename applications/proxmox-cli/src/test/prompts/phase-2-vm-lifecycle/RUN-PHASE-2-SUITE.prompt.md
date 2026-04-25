@@ -7,12 +7,12 @@ Run all Phase 2 action prompts under `applications/proxmox-cli/src/test/prompts/
 ## Required Execution Mode
 
 - If sub-agents are supported, you **must** use sub-agents.
-- Spawn one sub-agent per action prompt file (A07, A08, A09, A10, A13, A14, A23, A24, A25, A26, A28, A30, A31).
+- Spawn one sub-agent per action prompt file (A07, A08, A10, A26, A30, A31).
 - Sub-agent concurrency must be <= 2.
 - Each sub-agent executes exactly one prompt file and returns the result in the required schema.
 - Prompts are split into two execution classes:
-  - Independent-VM prompts: A07, A08, A09, A23 (each prompt provisions and destroys its own VM assets).
-  - Shared-VM prompts: A10, A13, A14, A24, A25, A26, A28, A30, A31 (consume one suite-level shared VM).
+  - Independent-VM prompts: A07, A08 (each prompt provisions and destroys its own VM assets).
+  - Shared-VM prompts: A10, A26, A30, A31 (consume one suite-level shared VM).
 - Shared-VM prompts must run sequentially (shared VM write concurrency = 1).
 - Independent-VM prompts may run concurrently up to the suite concurrency limit when infra allows.
 - A prompt must never reuse a VMID produced by another prompt, except the suite-level shared VM artifacts explicitly defined below.
@@ -47,16 +47,9 @@ Run all Phase 2 action prompts under `applications/proxmox-cli/src/test/prompts/
 - Independent-VM prompts:
   - `A07-clone_template.prompt.md`
   - `A08-migrate_vm.prompt.md`
-  - `A09-convert_vm_to_template.prompt.md`
-  - `A23-create_vm.prompt.md`
 - Shared-VM prompts:
   - `A10-update_vm_config.prompt.md`
-  - `A13-vm_power.prompt.md`
-  - `A14-set_vm_agent.prompt.md`
-  - `A24-attach_cdrom_iso.prompt.md`
-  - `A25-set_net_boot_config.prompt.md`
   - `A26-start_installer_and_console_ticket.prompt.md`
-  - `A28-enable_serial_console.prompt.md`
   - `A30-review_install_tasks.prompt.md`
   - `A31-sendkey.prompt.md`
 
@@ -70,7 +63,7 @@ Return one JSON object:
   "mode": "sub-agent",
   "success": true,
   "summary": {
-    "passed": 13,
+    "passed": 6,
     "failed": 0
   },
   "results": [

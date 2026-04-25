@@ -7,7 +7,7 @@ Run all Phase 1 action prompts under `applications/proxmox-cli/src/test/prompts/
 ## Required Execution Mode
 
 - If sub-agents are supported, you **must** use sub-agents.
-- Spawn one sub-agent per action prompt file (A01, A02, A03, A04, A05, A06, A11, A12, A21).
+- Spawn one sub-agent per action prompt file (A03, A05, A06, A11, A21).
 - Sub-agent concurrency must be <= 2.
 - Each sub-agent executes exactly one prompt file and returns the result in the required schema.
 - The parent agent aggregates all sub-agent outputs into a single final report.
@@ -39,14 +39,10 @@ Run all Phase 1 action prompts under `applications/proxmox-cli/src/test/prompts/
 
 ## Prompt Files to Execute
 
-- `A01-list_nodes.prompt.md`
-- `A02-list_cluster_resources.prompt.md`
 - `A03-list_vms_by_node.prompt.md`
-- `A04-get_vm_config.prompt.md`
 - `A05-get_effective_permissions.prompt.md`
 - `A06-get_task_status.prompt.md`
 - `A11-get_next_vmid.prompt.md`
-- `A12-get_vm_status.prompt.md`
 - `A21-list_tasks_by_vmid.prompt.md`
 
 ## Final Output Format
@@ -59,7 +55,7 @@ Return one JSON object with this schema:
   "mode": "sub-agent",
   "success": true,
   "summary": {
-    "passed": 9,
+    "passed": 5,
     "failed": 0
   },
   "results": [

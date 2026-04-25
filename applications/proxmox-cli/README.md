@@ -21,12 +21,16 @@ Agent-facing CLI for Proxmox-related operations.
 
 ## Versioning
 
-Version is managed via `forgekit` in module mode.
+Version is managed via `forgekit` binary mapping.
 
-- Module name: `applications/proxmox-cli`
-- Version file: `applications/proxmox-cli/container/VERSION`
+- Binary name: `proxmox-cli`
+- Version file: `applications/proxmox-cli/VERSION`
+- Mapping file: `version-control.yaml`
 
-The `container/` directory here is used as a compatibility path for `forgekit version` conventions. It does not imply this project builds container images for this module.
+Common commands:
+
+- `forgekit --project-root /root/code/github/bot-cli version get proxmox-cli`
+- `forgekit --project-root /root/code/github/bot-cli version bump proxmox-cli patch`
 
 ## Build
 
