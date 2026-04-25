@@ -252,13 +252,13 @@ func runCreateVM(ctx context.Context, client *pveapi.Client, req Request) (map[s
 		if ifExists == "fail" {
 			return nil, apperr.New(apperr.CodeInvalidArgs, fmt.Sprintf("vm %d already exists on node %s", vmid, node))
 		}
-	request := map[string]any{"node": node, "vmid": vmid, "if_exists": ifExists}
-	if pool := strings.TrimSpace(req.Args["pool"]); pool != "" {
-		request["pool"] = pool
-	}
-	result := map[string]any{"node": node, "vmid": vmid, "created": false, "reused": true}
-	if existsStatus != nil {
-		result["existing_status"] = existsStatus
+		request := map[string]any{"node": node, "vmid": vmid, "if_exists": ifExists}
+		if pool := strings.TrimSpace(req.Args["pool"]); pool != "" {
+			request["pool"] = pool
+		}
+		result := map[string]any{"node": node, "vmid": vmid, "created": false, "reused": true}
+		if existsStatus != nil {
+			result["existing_status"] = existsStatus
 		}
 		diagnostics := map[string]any{"wait_skipped": "vm already exists; reused existing vm", "if_exists": ifExists}
 		return buildResult(req, request, result, diagnostics), nil

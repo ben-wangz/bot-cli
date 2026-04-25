@@ -214,14 +214,14 @@ func runWorkflowProvisionTemplateFromArtifact(rt commandRuntime, args map[string
 }
 
 type provisionTemplateConfig struct {
-	TemplateName      string
-	MemoryMB          int
-	Cores             int
-	DiskSizeGB        int
-	Net0              string
-	InstallBootOrder  string
-	RuntimeBootOrder  string
-	BootDisk          string
+	TemplateName     string
+	MemoryMB         int
+	Cores            int
+	DiskSizeGB       int
+	Net0             string
+	InstallBootOrder string
+	RuntimeBootOrder string
+	BootDisk         string
 }
 
 func resolveProvisionTemplateConfig(args map[string]string, targetVMID int) (provisionTemplateConfig, error) {
