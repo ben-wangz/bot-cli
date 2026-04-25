@@ -15,7 +15,7 @@
 ### C1 `node_termproxy_shell_exec`
 
 - 证据
-  - 在 ISSUE-006 中已标记为“历史实现保留，不纳入后续验收目标”。
+  - ISSUE-006 明确 root shell 路径不在主链路验收范围内，并在 v0.1 M4 完成实现删除。
   - 现有主路径由 `provision-template-from-artifact` + SSH/QGA action 覆盖。
 - 风险
   - 可能仍被少量手工排障脚本使用。

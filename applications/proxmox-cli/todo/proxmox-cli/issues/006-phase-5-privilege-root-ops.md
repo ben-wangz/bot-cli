@@ -46,7 +46,7 @@
 ## Validation Note
 
 - 重新审查结论：VM 管理主路径不再需要 root 会话 shell 能力；root 仅用于用户授权 bootstrap。
-- 既有 `node_termproxy_shell_exec` 能力作为历史实现保留，不纳入后续验收目标。
+- `node_termproxy_shell_exec` 已在 v0.1 M4 删除，不纳入后续验收目标。
 - 2026-04-23 root 实测（`build/phase5-suite/`）：
   - P5-01：`botcli-phase5@pve` 创建/复用成功（幂等）。
   - P5-03：对 `/vms` 授予 `PVEAuditor` 成功。

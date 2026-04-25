@@ -9,7 +9,7 @@ Agent-facing CLI for Proxmox-related operations.
 - Root scope is reserved for one-time bootstrap tasks (for example, creating/assigning a least-privilege user), then execution should return to user scope.
 - Phase 5 planning is limited to root-assisted pool/user ACL bootstrap (create pool/user, get ACL binding, grant ACL, revoke ACL).
 - ACL "change" operations are modeled as `revoke + grant`; no standalone update action is required.
-- Historical root-shell action support remains in code for compatibility, but is not part of the recommended main path.
+- Historical root-shell action path is removed in v0.1 M4 cleanup; keep using Phase 4 serial/websocket and SSH/QGA actions on the main path.
 
 ## Code Layout
 
