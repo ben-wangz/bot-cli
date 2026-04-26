@@ -1,6 +1,6 @@
 # proxmox-cli 重构计划（Post-MVP，需求不变）
 
-- 状态: active
+- 状态: completed
 - 优先级: high
 - 创建日期: 2026-04-26
 - 目标版本: v0.2（内部重构版本，不引入新需求）
