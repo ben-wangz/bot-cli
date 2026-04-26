@@ -80,11 +80,11 @@ M2 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 1. 将 workflow 入口与 orchestration 逻辑从 phase 语义中解耦。
 2. 统一 workflow 共享步骤（输入校验、诊断、重试/恢复语义）。
-3. 清理 phase 残留命名与桥接代码。
+3. 清理 phase/action 残留命名与桥接代码。
 
 产出：稳定的 workflow 编排层与共享执行骨架。
 
-M3 执行状态：active，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m3-workflow-orchestration.md`。
+M3 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m3-workflow-orchestration.md`。
 
 ### M4: wait 框架统一
 
@@ -137,6 +137,6 @@ M3 目标新增：
 
 ## 8. 立即可执行的下一步
 
-1. 启动 M3：将 `internal/cli/workflow.go` 的编排职责迁移到 `internal/workflow/`。
-2. 统一 workflow step 执行骨架（输入校验、诊断、错误包装、恢复点）。
-3. 在 M3 完成后进入 M4，推进 wait 框架在 workflow 链路的收敛。
+1. 启动 M4：盘点 capability/workflow 现有 wait 逻辑与参数差异。
+2. 抽象统一 wait 组件并优先迁移 workflow 高频链路。
+3. 补齐 workflow 回归验证，并将验收结论回填到 M3 文档。
