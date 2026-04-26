@@ -54,7 +54,7 @@
 
 产出：`旧->新` 映射文档 + 风险点列表。
 
-M0 执行结果：已完成，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m0-baseline-mapping.md`。
+M0 执行结果：已完成。
 
 ### M1: 目标结构定稿（目录与包边界）
 
@@ -64,7 +64,7 @@ M0 执行结果：已完成，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：结构草图 + 包职责说明 + 迁移守则。
 
-M1 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m1-target-structure.md`。
+M1 执行状态：completed。
 
 ### M2: 无行为变化的“搬迁优先”重构
 
@@ -74,7 +74,7 @@ M1 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：分批 commit（每批可独立回滚）。
 
-M2 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m2-capability-migration.md`。
+M2 执行状态：completed。
 
 ### M3: workflow 编排层收敛
 
@@ -84,7 +84,7 @@ M2 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：稳定的 workflow 编排层与共享执行骨架。
 
-M3 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m3-workflow-orchestration.md`。
+M3 执行状态：completed。
 
 ### M4: wait 框架统一
 
@@ -95,7 +95,7 @@ M3 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：统一 wait 框架 + 首批迁移清单 + 兼容性验证结果。
 
-M4 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m4-wait-unification.md`。
+M4 执行状态：completed。
 
 ### M5: lint 强化（Go 文件行数 <= 250）
 
@@ -105,7 +105,7 @@ M4 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：可执行 lint 规则 + 首轮超限文件治理。
 
-M5 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m5-lint-line-limit.md`。
+M5 执行状态：completed。
 
 ### M6: 文档与收尾
 
@@ -117,7 +117,7 @@ M5 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：文档闭环 + 重构总结。
 
-M6 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m6-docs-wrapup.md`。
+M6 执行状态：completed。
 
 ## 6. 当前目录现状与后续目标
 

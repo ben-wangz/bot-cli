@@ -17,7 +17,7 @@
 ## Current Planning Entry
 
 - Post-MVP refactor execution uses capability/workflow wording.
-- Active milestone documents live under `applications/proxmox-cli/todo/proxmox-cli/refactor-*.md`.
+- Post-MVP refactor milestones are closed; refer to `applications/proxmox-cli/todo/proxmox-cli/refactor-plan-post-mvp.md` for final status.
 
 ## Conventions
 
