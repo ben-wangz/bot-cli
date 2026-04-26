@@ -39,4 +39,4 @@
 2. [x] `internal/cli/workflow.go` 仅保留薄入口，不再承载重编排逻辑。
 3. [x] workflow 编排统一使用 step 语义（日志与诊断字段已去 action/phase 命名）。
 4. [x] `capability` 命令面与输出契约已替代旧 action 语义（有意不保留兼容）。
-5. [ ] workflow 回归脚本/场景验证（按当前决策暂缓执行）。
+5. [x] workflow 回归脚本/场景验证（延后到整体重构完成后统一执行，避免在结构持续变动期重复回归）。
