@@ -1,32 +1,43 @@
-# proxmox-cli 重构 M2：按能力域搬迁
+# proxmox-cli 重构 M2：能力域搬迁与目录收敛
 
 - 状态: completed
 - 日期: 2026-04-26
 - 依赖: `refactor-m1-target-structure.md`
 
-## 本轮迁移（第一批 + 第二批 + 第三批 + 第四批）
+## 目标
 
-目标：先搬迁低风险域，保持行为不变。
+在不改变 CLI 契约与业务语义的前提下，完成从 phase/action 历史组织到能力域组织的搬迁，并把高耦合大文件进一步拆分到稳定目录。
 
-已完成：
+## 已完成项
 
-1. `inventory/task` 相关 action 从 `phase1.go` 拆到 `domain_inventory.go`。
-2. `access` 相关 action 从 `phase5_acl.go` 拆到 `domain_access.go`。
-3. `vm` 相关 action 从 `phase2.go` 拆到 `domain_vm.go`。
-4. `guest` 相关 action 从 `phase3.go` 拆到 `domain_guest.go`。
-5. `storage` 相关 action 从 `phase3.go` 拆到 `domain_storage.go`。
-6. `console` 相关 action 从 `phase4.go` 拆到 `domain_console.go`。
-7. `ssh` 相关 action 从 `phase4_ssh.go` 拆到 `domain_ssh.go`。
-8. registry 分发与 action 名称不变，输出契约保持不变。
-9. phase 兼容层历史辅助函数已抽离到稳定 helper 文件（`result_helpers.go`、`action_helpers_common.go`、`guest_storage_helpers.go`、`console_helpers.go`、`ssh_helpers.go`、`access_helpers.go`）。
+1. action 执行核心迁移到能力域目录：`internal/capability/`，并保留 registry 分发模型。
+2. phase dispatcher 与 phase 入口历史文件已清理，`internal` 主目录不再以 phase 组织。
+3. wait 与策略横切能力独立：
+   - `internal/taskwait/`
+   - `internal/policy/`
+4. capability 内完成二级目录化：
+   - `internal/capability/vm/`
+   - `internal/capability/console/`
+   - `internal/capability/ssh/`
+   - `internal/capability/storage/`
+5. root capability 包收敛为桥接与注册：
+   - `internal/capability/registry.go`
+   - `internal/capability/*_bridge.go`
+6. 保持 action 名称与输出契约不变（`ok/action/scope/request/result/diagnostics`）。
+7. VNC action 已从运行时移除（`start_vnc_proxy`、`connect_vnc_websocket`），并同步清理相关 prompt/doc 残留。
 
-## 变更说明
+## 验证
 
-1. 当前仅做代码位置迁移，不改 API 语义、不改参数。
-2. `phase1.go`、`phase2.go`、`phase3.go`、`phase4.go`、`phase4_ssh.go` 与 `phase5_acl.go` 仍保留必要桥接/辅助逻辑，作为过渡层。
-3. 编译验证已通过（`go build ./...`）。
+1. 构建验证通过：`go build ./...`。
+2. registry 分发稳定，CLI 入口无需变更外部调用方式。
 
-## 下一批建议（M2 收尾）
+## 备注
 
-1. 进入 M3：workflow 编排层收敛。
-2. 在 M3 中移除剩余 phase dispatcher 兼容层（若确认无历史入口依赖）。
+1. 本阶段以“搬迁优先、行为不变”为原则，不引入新需求。
+2. workflow 编排层仍位于 `internal/cli/workflow.go`，留给 M3 收敛。
+
+## M2 -> M3 交接建议
+
+1. 新建 `internal/workflow/`，将编排逻辑从 CLI 剥离。
+2. 统一 workflow step 执行骨架（参数校验、诊断、错误包装、恢复点）。
+3. 清理 workflow 中残留 phase 语义命名。

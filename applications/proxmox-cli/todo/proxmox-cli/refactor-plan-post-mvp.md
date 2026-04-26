@@ -84,6 +84,8 @@ M2 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：稳定的 workflow 编排层与共享执行骨架。
 
+M3 执行状态：active，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m3-workflow-orchestration.md`。
+
 ### M4: wait 框架统一
 
 1. 盘点所有 action/workflow 中的 wait 逻辑与参数（interval、timeout、最大轮询次数、恢复点）。
@@ -109,15 +111,18 @@ M2 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：文档闭环 + 重构总结。
 
-## 6. 新目录建议（草案）
+## 6. 当前目录现状与后续目标
 
-以下仅为讨论草案，后续可优化命名：
+当前已落地：
 
-1. `internal/domain/<capability>/...`：按能力域承载核心逻辑。
-2. `internal/workflow/...`：workflow 编排与共享步骤。
-3. `internal/cli/...`：命令解析与参数绑定。
-4. `internal/platform/...`：PVE API 适配、SSH/WS 等基础设施封装。
-5. `internal/shared/...`：通用错误、输出模型、校验工具。
+1. `internal/capability/...`：能力域实现与分发注册（含 `vm/`、`console/`、`ssh/`、`storage/` 子目录）。
+2. `internal/taskwait/...`：统一任务等待能力（初版）。
+3. `internal/policy/...`：策略与边界校验（如 VMID 范围）。
+4. `internal/cli/...`：CLI 解析与命令分发入口。
+
+M3 目标新增：
+
+1. `internal/workflow/...`：workflow 编排层与共享步骤骨架。
 
 ## 7. 风险与缓解
 
@@ -132,6 +137,6 @@ M2 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 ## 8. 立即可执行的下一步
 
-1. 先完成 M0：输出“旧 phase -> 新能力域”的详细映射表。
-2. 评审并锁定 M1 的目标目录结构。
-3. 在 M1 评审时同步锁定 wait 框架契约（参数、默认值、输出诊断字段）。
+1. 启动 M3：将 `internal/cli/workflow.go` 的编排职责迁移到 `internal/workflow/`。
+2. 统一 workflow step 执行骨架（输入校验、诊断、错误包装、恢复点）。
+3. 在 M3 完成后进入 M4，推进 wait 框架在 workflow 链路的收敛。
