@@ -117,7 +117,7 @@ M5 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：文档闭环 + 重构总结。
 
-M6 执行状态：active，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m6-docs-wrapup.md`。
+M6 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m6-docs-wrapup.md`。
 
 ## 6. 当前目录现状与后续目标
 
@@ -145,5 +145,5 @@ M3 目标新增：
 
 ## 8. 立即可执行的下一步
 
-1. 推进 M6：完成重构总结文档与回归验证结论回填。
-2. 在 M6 收尾阶段统一执行回归验证，并回填 M3/M4/M6 验收结论。
+1. M6 已完成：保持文档与实现一致，后续按变更持续维护。
+2. 后续新增重构项时，按 capability/workflow 语义补充里程碑文档并回归验证。
