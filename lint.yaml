@@ -11,6 +11,39 @@ commands:
       - "-c"
       - "cd applications/proxmox-cli/src && go test ./..."
 
+  - name: "Go file line limit (proxmox-cli <=250)"
+    cmd: "sh"
+    args:
+      - "-c"
+      - |
+        python3 - <<'PY'
+        from pathlib import Path
+        import sys
+
+        limit = 250
+        root = Path("applications/proxmox-cli/src")
+        baseline_allow = set()
+
+        violations = []
+        for path in root.rglob("*.go"):
+            if any(part in {"vendor", "build", "dist"} for part in path.parts):
+                continue
+            rel = path.relative_to(root)
+            with path.open("r", encoding="utf-8", errors="ignore") as fh:
+                lines = sum(1 for _ in fh)
+            if lines > limit and rel not in baseline_allow:
+                violations.append((lines, rel.as_posix()))
+
+        if violations:
+            violations.sort(reverse=True)
+            print(f"Go line-limit violations (> {limit}) outside baseline:", file=sys.stderr)
+            for lines, rel in violations:
+                print(f"  - {rel}: {lines}", file=sys.stderr)
+            sys.exit(1)
+
+        print("Go line-limit check passed (new violations: 0)")
+        PY
+
 include:
   - "*.go"
 

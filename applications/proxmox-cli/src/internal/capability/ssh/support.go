@@ -230,14 +230,6 @@ func shellQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'"
 }
 
-func shellJoin(parts []string) string {
-	quoted := make([]string, 0, len(parts))
-	for _, part := range parts {
-		quoted = append(quoted, shellQuote(part))
-	}
-	return strings.Join(quoted, " ")
-}
-
 func resolveTunnelPaths(args map[string]string, t target, localPort int, remoteHost string, remotePort int) (string, string) {
 	pidFile := strings.TrimSpace(args["pid-file"])
 	logFile := strings.TrimSpace(args["log-file"])

@@ -105,6 +105,8 @@ M4 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：可执行 lint 规则 + 首轮超限文件治理。
 
+M5 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m5-lint-line-limit.md`。
+
 ### M6: 文档与收尾
 
 1. 更新模块 README（新结构导航、开发入口）。
@@ -141,6 +143,5 @@ M3 目标新增：
 
 ## 8. 立即可执行的下一步
 
-1. 启动 M5：落地 Go 文件行数 lint 规则与首轮超限治理。
-2. 进入 M6：收敛文档与重构总结，回填 wait 接口参数形态评估。
-3. 在整体重构完成后统一执行回归验证，并回填 M3/M4 验收结论。
+1. 启动 M6：收敛文档与重构总结，回填 wait 接口参数形态评估。
+2. 在整体重构完成后统一执行回归验证，并回填 M3/M4 验收结论。

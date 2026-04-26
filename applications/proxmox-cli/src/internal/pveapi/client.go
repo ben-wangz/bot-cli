@@ -8,16 +8,12 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
-
-	"github.com/gorilla/websocket"
 
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/apperr"
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/redact"
@@ -187,44 +183,6 @@ func (c *Client) PostMultipartFile(ctx context.Context, path string, fields map[
 	return c.doAndDecode(req)
 }
 
-func buildMultipartPrefixSuffix(fields map[string]string, fileField string, filename string) (string, []byte, []byte, error) {
-	const placeholder = "__BOT_CLI_MULTIPART_FILE_PLACEHOLDER__"
-	buffer := bytes.Buffer{}
-	writer := multipart.NewWriter(&buffer)
-	keys := make([]string, 0, len(fields))
-	for key := range fields {
-		if strings.TrimSpace(key) == "" {
-			continue
-		}
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		if err := writer.WriteField(key, fields[key]); err != nil {
-			return "", nil, nil, apperr.Wrap(apperr.CodeNetwork, "failed to build multipart field", err)
-		}
-	}
-	part, err := writer.CreateFormFile(fileField, filename)
-	if err != nil {
-		return "", nil, nil, apperr.Wrap(apperr.CodeNetwork, "failed to create multipart file part", err)
-	}
-	if _, err := io.WriteString(part, placeholder); err != nil {
-		return "", nil, nil, apperr.Wrap(apperr.CodeNetwork, "failed to build multipart placeholder", err)
-	}
-	if err := writer.Close(); err != nil {
-		return "", nil, nil, apperr.Wrap(apperr.CodeNetwork, "failed to finalize multipart payload metadata", err)
-	}
-	raw := buffer.Bytes()
-	marker := []byte(placeholder)
-	index := bytes.Index(raw, marker)
-	if index < 0 {
-		return "", nil, nil, apperr.New(apperr.CodeInternal, "multipart placeholder marker not found")
-	}
-	prefix := append([]byte(nil), raw[:index]...)
-	suffix := append([]byte(nil), raw[index+len(marker):]...)
-	return writer.FormDataContentType(), prefix, suffix, nil
-}
-
 func (c *Client) doAndDecode(req *http.Request) (any, error) {
 	resp, err := c.Do(req)
 	if resp != nil {
@@ -259,53 +217,4 @@ func headersToMap(header http.Header) map[string]string {
 		result[key] = strings.Join(values, ";")
 	}
 	return result
-}
-
-func (c *Client) DialWebsocket(ctx context.Context, path string, query url.Values) (*websocket.Conn, *http.Response, error) {
-	requestPath := withQuery(path, query)
-	fullURL, err := c.websocketURL(requestPath)
-	if err != nil {
-		return nil, nil, err
-	}
-	headers := http.Header{}
-	for key, value := range c.headers {
-		headers.Set(key, value)
-	}
-	dialer := websocket.Dialer{
-		HandshakeTimeout: c.timeout,
-		TLSClientConfig:  &tls.Config{InsecureSkipVerify: c.insecure}, //nolint:gosec
-	}
-	conn, resp, dialErr := dialer.DialContext(ctx, fullURL, headers)
-	if dialErr != nil {
-		if resp != nil {
-			body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
-			_ = resp.Body.Close()
-			message := fmt.Sprintf("websocket dial failed status=%d body=%s", resp.StatusCode, strings.TrimSpace(string(body)))
-			return nil, resp, apperr.Wrap(apperr.CodeNetwork, message, dialErr)
-		}
-		return nil, resp, apperr.Wrap(apperr.CodeNetwork, "websocket dial failed", dialErr)
-	}
-	return conn, resp, nil
-}
-
-func (c *Client) websocketURL(path string) (string, error) {
-	baseParsed, err := url.Parse(c.baseURL)
-	if err != nil {
-		return "", apperr.Wrap(apperr.CodeConfig, "invalid api base url", err)
-	}
-	if !strings.HasPrefix(path, "/") {
-		path = "/" + path
-	}
-	pathParsed, err := url.Parse(path)
-	if err != nil {
-		return "", apperr.Wrap(apperr.CodeInvalidArgs, "invalid websocket path", err)
-	}
-	baseParsed.Path = strings.TrimRight(baseParsed.Path, "/") + pathParsed.Path
-	baseParsed.RawQuery = pathParsed.RawQuery
-	if baseParsed.Scheme == "https" {
-		baseParsed.Scheme = "wss"
-	} else {
-		baseParsed.Scheme = "ws"
-	}
-	return baseParsed.String(), nil
 }
