@@ -4,6 +4,9 @@
 
 Define the mandatory regression checks that must pass before creating and pushing a release tag.
 
+For full release readiness (version + notes + tagging), use
+`applications/proxmox-cli/tests/prompts/RELEASE-CHECKLIST-v0.1.md` together with this gate.
+
 ## Hard Rule
 
 - No release tag is allowed unless the full regression sequence passes.

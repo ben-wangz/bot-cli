@@ -7,7 +7,7 @@
 - M2 测试去重（workflow 覆盖）: completed
 - M3 虚拟 workflow 组合回归: completed
 - M4 需求外代码清理: completed
-- M5 文档与发布闭环: pending
+- M5 文档与发布闭环: completed
 
 ## 每个 Milestone 的统一完成定义
 
