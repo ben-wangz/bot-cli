@@ -1,11 +1,10 @@
-package capability
+package sshcap
 
 import (
 	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -13,13 +12,11 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"syscall"
-	"time"
 
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/apperr"
 )
 
-type sshTarget struct {
+type target struct {
 	Host                  string
 	Port                  int
 	User                  string
@@ -28,31 +25,20 @@ type sshTarget struct {
 	ExtraArgs             []string
 }
 
-type tunnelMeta struct {
-	LocalEndpoint string `json:"local_endpoint"`
-	LocalPort     int    `json:"local_port"`
-	RemoteHost    string `json:"remote_host"`
-	RemotePort    int    `json:"remote_port"`
-	Host          string `json:"host"`
-	Port          int    `json:"port"`
-	User          string `json:"user"`
-	PID           int    `json:"pid"`
-}
-
-func parseSSHTarget(args map[string]string, batch bool) (sshTarget, error) {
-	host, err := RequiredString(args, "host")
+func parseTarget(args map[string]string, batch bool) (target, error) {
+	host, err := requiredString(args, "host")
 	if err != nil {
-		return sshTarget{}, err
+		return target{}, err
 	}
-	user, err := RequiredString(args, "user")
+	user, err := requiredString(args, "user")
 	if err != nil {
-		return sshTarget{}, err
+		return target{}, err
 	}
 	port := 22
 	if rawPort := strings.TrimSpace(args["port"]); rawPort != "" {
 		v, parseErr := strconv.Atoi(rawPort)
 		if parseErr != nil || v <= 0 || v > 65535 {
-			return sshTarget{}, apperr.New(apperr.CodeInvalidArgs, "port must be an integer in range 1-65535")
+			return target{}, apperr.New(apperr.CodeInvalidArgs, "port must be an integer in range 1-65535")
 		}
 		port = v
 	}
@@ -63,14 +49,14 @@ func parseSSHTarget(args map[string]string, batch bool) (sshTarget, error) {
 	if rawTimeout := strings.TrimSpace(args["connect-timeout-seconds"]); rawTimeout != "" {
 		v, parseErr := strconv.Atoi(rawTimeout)
 		if parseErr != nil || v <= 0 {
-			return sshTarget{}, apperr.New(apperr.CodeInvalidArgs, "connect-timeout-seconds must be a positive integer")
+			return target{}, apperr.New(apperr.CodeInvalidArgs, "connect-timeout-seconds must be a positive integer")
 		}
 		connectTimeout = v
 	}
 	identityFile := strings.TrimSpace(args["identity-file"])
 	if identityFile != "" {
 		if _, statErr := os.Stat(identityFile); statErr != nil {
-			return sshTarget{}, apperr.Wrap(apperr.CodeConfig, "identity-file is not readable", statErr)
+			return target{}, apperr.Wrap(apperr.CodeConfig, "identity-file is not readable", statErr)
 		}
 	}
 	extra := strings.TrimSpace(args["extra-args"])
@@ -78,35 +64,35 @@ func parseSSHTarget(args map[string]string, batch bool) (sshTarget, error) {
 	if extra != "" {
 		extraArgs = strings.Fields(extra)
 	}
-	return sshTarget{Host: host, Port: port, User: user, IdentityFile: identityFile, ConnectTimeoutSeconds: connectTimeout, ExtraArgs: extraArgs}, nil
+	return target{Host: host, Port: port, User: user, IdentityFile: identityFile, ConnectTimeoutSeconds: connectTimeout, ExtraArgs: extraArgs}, nil
 }
 
-func buildSSHBaseArgs(target sshTarget, batch bool) []string {
+func buildSSHBaseArgs(t target, batch bool) []string {
 	args := []string{"-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"}
 	if batch {
 		args = append(args, "-o", "BatchMode=yes")
 	}
-	if target.ConnectTimeoutSeconds > 0 {
-		args = append(args, "-o", "ConnectTimeout="+strconv.Itoa(target.ConnectTimeoutSeconds))
+	if t.ConnectTimeoutSeconds > 0 {
+		args = append(args, "-o", "ConnectTimeout="+strconv.Itoa(t.ConnectTimeoutSeconds))
 	}
-	if target.IdentityFile != "" {
-		args = append(args, "-i", target.IdentityFile)
+	if t.IdentityFile != "" {
+		args = append(args, "-i", t.IdentityFile)
 	}
-	args = append(args, "-p", strconv.Itoa(target.Port))
-	args = append(args, target.ExtraArgs...)
+	args = append(args, "-p", strconv.Itoa(t.Port))
+	args = append(args, t.ExtraArgs...)
 	return args
 }
 
-func buildScpBaseArgs(target sshTarget, recursive bool) []string {
-	args := []string{"-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "BatchMode=yes", "-o", "ConnectTimeout=" + strconv.Itoa(target.ConnectTimeoutSeconds)}
-	if target.IdentityFile != "" {
-		args = append(args, "-i", target.IdentityFile)
+func buildScpBaseArgs(t target, recursive bool) []string {
+	args := []string{"-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "BatchMode=yes", "-o", "ConnectTimeout=" + strconv.Itoa(t.ConnectTimeoutSeconds)}
+	if t.IdentityFile != "" {
+		args = append(args, "-i", t.IdentityFile)
 	}
-	args = append(args, "-P", strconv.Itoa(target.Port))
+	args = append(args, "-P", strconv.Itoa(t.Port))
 	if recursive {
 		args = append(args, "-r")
 	}
-	args = append(args, target.ExtraArgs...)
+	args = append(args, t.ExtraArgs...)
 	return args
 }
 
@@ -132,7 +118,7 @@ func runCommandWithOutput(ctx context.Context, name string, args ...string) (str
 	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), exitCode, err
 }
 
-func analyzeSSHProbe(exitCode int, stderr string) (bool, bool) {
+func analyzeProbe(exitCode int, stderr string) (bool, bool) {
 	if exitCode == 0 {
 		return true, true
 	}
@@ -146,7 +132,7 @@ func analyzeSSHProbe(exitCode int, stderr string) (bool, bool) {
 	return exitCode == 255, false
 }
 
-func resolvePublicKey(args map[string]string) (string, string, error) {
+func ResolvePublicKey(args map[string]string) (string, string, error) {
 	fromArg := strings.TrimSpace(args["pub-key"])
 	fromFile := strings.TrimSpace(args["pub-key-file"])
 	if fromArg == "" && fromFile == "" {
@@ -169,7 +155,7 @@ func resolvePublicKey(args map[string]string) (string, string, error) {
 	return fromArg, "inline", nil
 }
 
-func publicKeyFingerprint(pubKey string) (string, error) {
+func PublicKeyFingerprint(pubKey string) (string, error) {
 	parts := strings.Fields(strings.TrimSpace(pubKey))
 	if len(parts) < 2 {
 		return "", apperr.New(apperr.CodeInvalidArgs, "pub key format is invalid")
@@ -183,7 +169,7 @@ func publicKeyFingerprint(pubKey string) (string, error) {
 	return "SHA256:" + encoded, nil
 }
 
-func buildInjectPubKeyScript(username string, pubKey string) string {
+func BuildInjectPubKeyScript(username string, pubKey string) string {
 	userQuoted := shellQuote(username)
 	keyQuoted := shellQuote(pubKey)
 	return strings.Join([]string{
@@ -201,7 +187,7 @@ func buildInjectPubKeyScript(username string, pubKey string) string {
 	}, "\n")
 }
 
-func extractAgentExecExit(result map[string]any) (int, bool) {
+func ExtractAgentExecExit(result map[string]any) (int, bool) {
 	res, ok := result["result"].(map[string]any)
 	if !ok {
 		return -1, false
@@ -210,7 +196,12 @@ func extractAgentExecExit(result map[string]any) (int, bool) {
 	if !ok {
 		return -1, false
 	}
-	exited := toBool(status["exited"])
+	exited, _ := status["exited"].(bool)
+	if !exited {
+		if s, ok := status["exited"].(string); ok {
+			exited = strings.EqualFold(strings.TrimSpace(s), "true") || strings.TrimSpace(s) == "1"
+		}
+	}
 	if !exited {
 		return -1, false
 	}
@@ -232,114 +223,6 @@ func extractAgentExecExit(result map[string]any) (int, bool) {
 	}
 }
 
-func resolveTunnelPaths(args map[string]string, target sshTarget, localPort int, remoteHost string, remotePort int) (string, string) {
-	pidFile := strings.TrimSpace(args["pid-file"])
-	logFile := strings.TrimSpace(args["log-file"])
-	name := fmt.Sprintf("%s-%d-%s-%d", sanitizeName(target.Host), localPort, sanitizeName(remoteHost), remotePort)
-	if pidFile == "" {
-		pidFile = filepath.Join("build", "ssh-tunnels", name+".pid")
-	}
-	if logFile == "" {
-		logFile = filepath.Join("build", "ssh-tunnels", name+".log")
-	}
-	return pidFile, logFile
-}
-
-func sanitizeName(v string) string {
-	v = strings.ToLower(strings.TrimSpace(v))
-	builder := strings.Builder{}
-	for _, r := range v {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' || r == '_' {
-			builder.WriteRune(r)
-			continue
-		}
-		builder.WriteByte('-')
-	}
-	name := strings.Trim(builder.String(), "-")
-	if name == "" {
-		return "tunnel"
-	}
-	return name
-}
-
-func readPIDFile(path string) (int, bool) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return 0, false
-	}
-	pid, convErr := strconv.Atoi(strings.TrimSpace(string(data)))
-	if convErr != nil || pid <= 0 {
-		return 0, false
-	}
-	return pid, true
-}
-
-func processExists(pid int) bool {
-	if pid <= 0 {
-		return false
-	}
-	err := syscall.Kill(pid, 0)
-	if err == nil {
-		return true
-	}
-	return !errors.Is(err, syscall.ESRCH)
-}
-
-func waitProcessExit(pid int, timeout time.Duration) bool {
-	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
-		if !processExists(pid) {
-			return true
-		}
-		time.Sleep(150 * time.Millisecond)
-	}
-	return !processExists(pid)
-}
-
-func writeTunnelMeta(pidFile string, meta tunnelMeta) error {
-	metaPath := pidFile + ".meta.json"
-	data, err := json.MarshalIndent(meta, "", "  ")
-	if err != nil {
-		return apperr.Wrap(apperr.CodeConfig, "failed to encode tunnel metadata", err)
-	}
-	if err := os.WriteFile(metaPath, append(data, '\n'), 0o644); err != nil {
-		return apperr.Wrap(apperr.CodeConfig, "failed to write tunnel metadata", err)
-	}
-	return nil
-}
-
-func readTunnelMeta(pidFile string) (tunnelMeta, bool) {
-	metaPath := pidFile + ".meta.json"
-	data, err := os.ReadFile(metaPath)
-	if err != nil {
-		return tunnelMeta{}, false
-	}
-	var meta tunnelMeta
-	if err := json.Unmarshal(data, &meta); err != nil {
-		return tunnelMeta{}, false
-	}
-	return meta, true
-}
-
-func cleanupFiles(pidFile string, cleanup map[string]any) {
-	if err := os.Remove(pidFile); err == nil || errors.Is(err, os.ErrNotExist) {
-		cleanup["removed_pid_file"] = true
-	}
-	metaPath := pidFile + ".meta.json"
-	if err := os.Remove(metaPath); err == nil || errors.Is(err, os.ErrNotExist) {
-		cleanup["removed_meta_file"] = true
-	}
-}
-
-func readFileTail(path string, max int) string {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return ""
-	}
-	text := strings.TrimSpace(string(data))
-	return tailText(text, max)
-}
-
 func shellQuote(s string) string {
 	if s == "" {
 		return "''"
@@ -353,4 +236,17 @@ func shellJoin(parts []string) string {
 		quoted = append(quoted, shellQuote(part))
 	}
 	return strings.Join(quoted, " ")
+}
+
+func resolveTunnelPaths(args map[string]string, t target, localPort int, remoteHost string, remotePort int) (string, string) {
+	pidFile := strings.TrimSpace(args["pid-file"])
+	logFile := strings.TrimSpace(args["log-file"])
+	name := fmt.Sprintf("%s-%d-%s-%d", sanitizeName(t.Host), localPort, sanitizeName(remoteHost), remotePort)
+	if pidFile == "" {
+		pidFile = filepath.Join("build", "ssh-tunnels", name+".pid")
+	}
+	if logFile == "" {
+		logFile = filepath.Join("build", "ssh-tunnels", name+".log")
+	}
+	return pidFile, logFile
 }

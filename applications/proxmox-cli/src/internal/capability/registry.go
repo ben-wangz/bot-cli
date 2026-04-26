@@ -75,8 +75,6 @@ var operationRegistry = map[string]registryEntry{
 	"storage_upload_iso":           {handler: runStorageUploadISO, meta: Meta{Capability: capabilityStorage, WaitSkipReason: waitSkipSelfPolled}},
 	"build_ubuntu_autoinstall_iso": {handler: runBuildUbuntuAutoinstallISOAdapter, meta: Meta{Capability: capabilityISOBuilder, WaitSkipReason: waitSkipSelfPolled}},
 
-	"start_vnc_proxy":                   {handler: runStartVNCProxy, meta: Meta{Capability: capabilityConsole, WaitSkipReason: waitSkipSessionDriven}},
-	"connect_vnc_websocket":             {handler: runConnectVNCWebsocket, meta: Meta{Capability: capabilityConsole, WaitSkipReason: waitSkipSessionDriven}},
 	"open_vm_termproxy":                 {handler: runOpenVMTermproxy, meta: Meta{Capability: capabilityConsole, WaitSkipReason: waitSkipSessionDriven}},
 	"validate_k1_serial_readable":       {handler: runValidateK1SerialReadable, meta: Meta{Capability: capabilityConsole, WaitSkipReason: waitSkipSessionDriven}},
 	"serial_ws_session_control":         {handler: runSerialWSSessionControl, meta: Meta{Capability: capabilityConsole, WaitSkipReason: waitSkipSessionDriven}},

@@ -15,7 +15,6 @@
 ## Scope Update
 
 - ISSUE-005 当前范围收敛为 SSH 控制面交付：通过 QGA 完成 SSH 通路引导，后续稳定交互使用 SSH/SCP/Tunnel。
-- A18 `start_vnc_proxy` 与 A19 `connect_vnc_websocket` 从 ISSUE-005 范围中移除。
 
 ## Current Validation Note
 

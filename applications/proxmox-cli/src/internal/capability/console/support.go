@@ -1,4 +1,4 @@
-package capability
+package consolecap
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -29,10 +28,6 @@ func parseUPIDNode(upid string) string {
 }
 
 func buildSerialWebsocketPath(node string, vmid int, port string, ticket string) string {
-	return buildVNCWebsocketPath(node, vmid, port, ticket)
-}
-
-func buildVNCWebsocketPath(node string, vmid int, port string, ticket string) string {
 	query := url.Values{}
 	query.Set("port", port)
 	query.Set("vncticket", ticket)
@@ -244,40 +239,4 @@ func previewWebsocketPayload(payload []byte, max int) string {
 		buf = append(buf, '.')
 	}
 	return string(buf)
-}
-
-var serialStartupBannerPattern = regexp.MustCompile(`^OKstarting serial terminal on interface serial[0-3]$`)
-
-func isOnlySerialStartupBanner(raw string) bool {
-	clean := strings.Join(strings.Fields(normalizeSerialText(raw)), " ")
-	if clean == "" {
-		return false
-	}
-	return serialStartupBannerPattern.MatchString(clean)
-}
-
-func tailText(raw string, max int) string {
-	if max <= 0 || len(raw) <= max {
-		return raw
-	}
-	return raw[len(raw)-max:]
-}
-
-var serialANSIEscapePattern = regexp.MustCompile("\x1b\\[[0-9;?]*[ -/]*[@-~]|\x1b[@-Z\\-_]")
-
-func normalizeSerialText(raw string) string {
-	clean := serialANSIEscapePattern.ReplaceAllString(raw, "")
-	clean = strings.ReplaceAll(clean, "\r", "")
-	clean = strings.ReplaceAll(clean, "\x00", "")
-	return clean
-}
-
-func matchesExpect(raw string, expect string) bool {
-	if expect == "" {
-		return len(raw) > 0
-	}
-	if strings.Contains(raw, expect) {
-		return true
-	}
-	return strings.Contains(normalizeSerialText(raw), expect)
 }

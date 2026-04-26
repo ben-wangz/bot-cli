@@ -1,4 +1,4 @@
-package capability
+package vmcap
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/pveapi"
 )
 
-func runCloneTemplate(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
+func RunCloneTemplate(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
 	node, err := RequiredNode(req.Args)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func runCloneTemplate(ctx context.Context, client *pveapi.Client, req Request) (
 	return writeResult(req, request, data), nil
 }
 
-func runMigrateVM(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
+func RunMigrateVM(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
 	node, err := RequiredNode(req.Args)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func runMigrateVM(ctx context.Context, client *pveapi.Client, req Request) (map[
 	return writeResult(req, map[string]any{"node": node, "vmid": vmid, "target": target}, data), nil
 }
 
-func runConvertVMToTemplate(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
+func RunConvertVMToTemplate(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
 	node, err := RequiredNode(req.Args)
 	if err != nil {
 		return nil, err
@@ -91,28 +91,7 @@ func runConvertVMToTemplate(ctx context.Context, client *pveapi.Client, req Requ
 	return writeResult(req, map[string]any{"node": node, "vmid": vmid}, data), nil
 }
 
-func runUpdateVMConfig(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
-	node, err := RequiredNode(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	vmid, err := RequiredOperationVMID(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	form := mapArgsToForm(req.Args, "node", "vmid")
-	if len(form) == 0 {
-		return nil, apperr.New(apperr.CodeInvalidArgs, "update_vm_config requires at least one config key")
-	}
-	path := fmt.Sprintf("/nodes/%s/qemu/%d/config", url.PathEscape(node), vmid)
-	data, err := client.PutFormData(ctx, path, form)
-	if err != nil {
-		return nil, err
-	}
-	return writeResult(req, map[string]any{"node": node, "vmid": vmid, "changed_keys": formKeys(form)}, data), nil
-}
-
-func runVMPower(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
+func RunVMPower(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
 	node, err := RequiredNode(req.Args)
 	if err != nil {
 		return nil, err
@@ -171,7 +150,7 @@ func runVMPower(ctx context.Context, client *pveapi.Client, req Request) (map[st
 	return result, nil
 }
 
-func runSetVMAgent(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
+func RunSetVMAgent(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
 	node, err := RequiredNode(req.Args)
 	if err != nil {
 		return nil, err
@@ -197,7 +176,7 @@ func runSetVMAgent(ctx context.Context, client *pveapi.Client, req Request) (map
 	return writeResult(req, map[string]any{"node": node, "vmid": vmid, "enabled": enabled == "1"}, data), nil
 }
 
-func runCreateVM(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
+func RunCreateVM(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
 	node, err := RequiredNode(req.Args)
 	if err != nil {
 		return nil, err
@@ -248,143 +227,4 @@ func runCreateVM(ctx context.Context, client *pveapi.Client, req Request) (map[s
 	}
 	result := map[string]any{"upid": asString(data), "created": true, "reused": false}
 	return buildResult(req, request, result, map[string]any{"if_exists": ifExists}), nil
-}
-
-func runAttachCDROMISO(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
-	node, err := RequiredNode(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	vmid, err := RequiredOperationVMID(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	iso, err := RequiredString(req.Args, "iso")
-	if err != nil {
-		return nil, err
-	}
-	ideSlot := strings.TrimSpace(req.Args["slot"])
-	if ideSlot == "" {
-		ideSlot = "ide2"
-	}
-	media := strings.TrimSpace(req.Args["media"])
-	slotValue := iso
-	if media != "" && !strings.Contains(strings.ToLower(slotValue), "media=") {
-		slotValue = slotValue + ",media=" + media
-	}
-	form := url.Values{}
-	form.Set(ideSlot, slotValue)
-	path := fmt.Sprintf("/nodes/%s/qemu/%d/config", url.PathEscape(node), vmid)
-	data, err := client.PutFormData(ctx, path, form)
-	if err != nil {
-		return nil, err
-	}
-	request := map[string]any{"node": node, "vmid": vmid, "slot": ideSlot, "iso": iso}
-	if media != "" {
-		request["media"] = media
-	}
-	result := writeResult(req, request, data)
-	if media != "" {
-		mergeDiagnosticsMap(result, map[string]any{"slot_value": slotValue})
-	}
-	return result, nil
-}
-
-func runSetNetBootConfig(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
-	node, err := RequiredNode(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	vmid, err := RequiredOperationVMID(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	net0, err := RequiredString(req.Args, "net0")
-	if err != nil {
-		return nil, err
-	}
-	boot, err := RequiredString(req.Args, "boot")
-	if err != nil {
-		return nil, err
-	}
-	form := url.Values{}
-	form.Set("net0", net0)
-	form.Set("boot", boot)
-	setIfPresent(form, "bootdisk", req.Args["bootdisk"])
-	path := fmt.Sprintf("/nodes/%s/qemu/%d/config", url.PathEscape(node), vmid)
-	data, err := client.PutFormData(ctx, path, form)
-	if err != nil {
-		return nil, err
-	}
-	return writeResult(req, map[string]any{"node": node, "vmid": vmid, "net0": net0, "boot": boot}, data), nil
-}
-
-func runEnableSerialConsole(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
-	node, err := RequiredNode(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	vmid, err := RequiredOperationVMID(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	form := url.Values{}
-	form.Set("serial0", "socket")
-	form.Set("vga", "serial0")
-	path := fmt.Sprintf("/nodes/%s/qemu/%d/config", url.PathEscape(node), vmid)
-	data, err := client.PutFormData(ctx, path, form)
-	if err != nil {
-		return nil, err
-	}
-	return writeResult(req, map[string]any{"node": node, "vmid": vmid}, data), nil
-}
-
-func runReviewInstallTasks(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
-	node, err := RequiredNode(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	vmid, err := RequiredOperationVMID(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	query := url.Values{}
-	query.Set("vmid", strconv.Itoa(vmid))
-	query.Set("source", "active")
-	path := fmt.Sprintf("/nodes/%s/tasks", url.PathEscape(node))
-	data, err := client.GetData(ctx, path, query)
-	if err != nil {
-		return nil, err
-	}
-	count := 0
-	if list, ok := data.([]any); ok {
-		count = len(list)
-	}
-	return buildResult(req, map[string]any{"node": node, "vmid": vmid}, data, map[string]any{"active_task_count": count}), nil
-}
-
-func runSendKey(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
-	node, err := RequiredNode(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	vmid, err := RequiredOperationVMID(req.Args)
-	if err != nil {
-		return nil, err
-	}
-	key, err := RequiredString(req.Args, "key")
-	if err != nil {
-		return nil, err
-	}
-	form := url.Values{}
-	form.Set("key", key)
-	setIfPresent(form, "skiplock", req.Args["skiplock"])
-	path := fmt.Sprintf("/nodes/%s/qemu/%d/sendkey", url.PathEscape(node), vmid)
-	data, err := client.PutFormData(ctx, path, form)
-	if err != nil {
-		return nil, err
-	}
-	result := writeResult(req, map[string]any{"node": node, "vmid": vmid, "key": key}, data)
-	result["diagnostics"] = map[string]any{"method": "PUT"}
-	return result, nil
 }
