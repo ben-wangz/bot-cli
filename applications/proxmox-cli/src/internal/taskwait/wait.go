@@ -30,45 +30,55 @@ func WaitTask(ctx context.Context, client *pveapi.Client, node string, upid stri
 		interval = 2 * time.Second
 	}
 
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	path := fmt.Sprintf("/nodes/%s/tasks/%s/status", url.PathEscape(node), url.PathEscape(upid))
 	var lastStatus map[string]any
-	for {
-		select {
-		case <-ctxWithTimeout.Done():
+	_, err := Poll(ctx, PollOptions{
+		Timeout:  timeout,
+		Interval: interval,
+		TimeoutError: func() error {
 			logTail := fetchTaskLogTail(ctx, client, node, upid, 20)
 			statusSummary := summarizeTaskStatus(lastStatus)
 			if logTail == "" {
-				return nil, apperr.New(apperr.CodeNetwork, fmt.Sprintf("wait_task timeout exceeded (node=%s upid=%s%s)", node, upid, statusSummary))
+				return apperr.New(apperr.CodeNetwork, fmt.Sprintf("wait_task timeout exceeded (node=%s upid=%s%s)", node, upid, statusSummary))
 			}
-			return nil, apperr.New(apperr.CodeNetwork, fmt.Sprintf("wait_task timeout exceeded (node=%s upid=%s%s) task_log_tail=%s", node, upid, statusSummary, logTail))
-		default:
-		}
-
-		data, err := client.GetData(ctxWithTimeout, path, url.Values{})
-		if err != nil {
-			return nil, err
+			return apperr.New(apperr.CodeNetwork, fmt.Sprintf("wait_task timeout exceeded (node=%s upid=%s%s) task_log_tail=%s", node, upid, statusSummary, logTail))
+		},
+		InterruptedError: func(cause error) error {
+			_ = cause
+			logTail := fetchTaskLogTail(ctx, client, node, upid, 20)
+			statusSummary := summarizeTaskStatus(lastStatus)
+			if logTail == "" {
+				return apperr.New(apperr.CodeNetwork, fmt.Sprintf("wait_task timeout exceeded (node=%s upid=%s%s)", node, upid, statusSummary))
+			}
+			return apperr.New(apperr.CodeNetwork, fmt.Sprintf("wait_task timeout exceeded (node=%s upid=%s%s) task_log_tail=%s", node, upid, statusSummary, logTail))
+		},
+	}, func(pollCtx context.Context) (bool, error) {
+		data, getErr := client.GetData(pollCtx, path, url.Values{})
+		if getErr != nil {
+			return false, getErr
 		}
 		statusMap, ok := data.(map[string]any)
 		if !ok {
-			return nil, apperr.New(apperr.CodeNetwork, "task status response is not an object")
+			return false, apperr.New(apperr.CodeNetwork, "task status response is not an object")
 		}
 		lastStatus = statusMap
 		status := strings.ToLower(strings.TrimSpace(stringify(statusMap["status"])))
-		if status == "stopped" {
-			exitStatus := strings.TrimSpace(stringify(statusMap["exitstatus"]))
-			if strings.EqualFold(exitStatus, "OK") {
-				return statusMap, nil
-			}
-			if exitStatus == "" {
-				return nil, apperr.New(apperr.CodeNetwork, "task stopped without exitstatus")
-			}
-			return nil, apperr.New(apperr.CodeNetwork, "task failed with exitstatus: "+exitStatus)
+		if status != "stopped" {
+			return false, nil
 		}
-		time.Sleep(interval)
+		exitStatus := strings.TrimSpace(stringify(statusMap["exitstatus"]))
+		if strings.EqualFold(exitStatus, "OK") {
+			return true, nil
+		}
+		if exitStatus == "" {
+			return false, apperr.New(apperr.CodeNetwork, "task stopped without exitstatus")
+		}
+		return false, apperr.New(apperr.CodeNetwork, "task failed with exitstatus: "+exitStatus)
+	})
+	if err != nil {
+		return nil, err
 	}
+	return lastStatus, nil
 }
 
 func summarizeTaskStatus(status map[string]any) string {

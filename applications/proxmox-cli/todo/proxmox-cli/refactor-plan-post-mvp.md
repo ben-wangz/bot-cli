@@ -95,6 +95,8 @@ M3 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：统一 wait 框架 + 首批迁移清单 + 兼容性验证结果。
 
+M4 执行状态：active，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m4-wait-unification.md`。
+
 ### M5: lint 强化（Go 文件行数 <= 250）
 
 1. 在 `lint.yaml` 增加行数检查命令，覆盖 `applications/proxmox-cli/src/**/*.go`。
@@ -108,6 +110,8 @@ M3 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 1. 更新模块 README（新结构导航、开发入口）。
 2. 更新 todo/issue 中与 phase 强绑定的陈述（保留归档历史，不保留误导入口）。
 3. 形成重构回顾：改动范围、收益、后续优化清单。
+4. 评估当前 wait 接口参数形态（capability/workflow/taskwait），判断是否需要进一步功能/接口统一重构，并记录决策。
+5. 执行一轮完整回归测试，确认重构后功能正确性并沉淀验证结论。
 
 产出：文档闭环 + 重构总结。
 

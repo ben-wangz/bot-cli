@@ -9,6 +9,7 @@ import (
 
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/apperr"
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/pveapi"
+	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/taskwait"
 )
 
 func getAgentExecStatus(ctx context.Context, client *pveapi.Client, node string, vmid int, pid string) (map[string]any, error) {
@@ -33,26 +34,24 @@ func pollAgentExecStatus(ctx context.Context, client *pveapi.Client, node string
 	if interval <= 0 {
 		interval = time.Second
 	}
-	deadline := time.Now().Add(timeout)
-	polls := 0
-	for {
-		if time.Now().After(deadline) {
-			return nil, polls, apperr.New(apperr.CodeNetwork, "agent_exec timed out waiting for exit status")
-		}
-		status, err := getAgentExecStatus(ctx, client, node, vmid, pid)
+	var latest map[string]any
+	polls, err := taskwait.Poll(ctx, taskwait.PollOptions{
+		Timeout:            timeout,
+		Interval:           interval,
+		TimeoutMessage:     "agent_exec timed out waiting for exit status",
+		InterruptedMessage: "agent_exec polling interrupted",
+	}, func(pollCtx context.Context) (bool, error) {
+		status, err := getAgentExecStatus(pollCtx, client, node, vmid, pid)
 		if err != nil {
-			return nil, polls, err
+			return false, err
 		}
-		polls++
-		if toBool(status["exited"]) {
-			return status, polls, nil
-		}
-		select {
-		case <-ctx.Done():
-			return nil, polls, apperr.Wrap(apperr.CodeNetwork, "agent_exec polling interrupted", ctx.Err())
-		case <-time.After(interval):
-		}
+		latest = status
+		return toBool(status["exited"]), nil
+	})
+	if err != nil {
+		return nil, polls, err
 	}
+	return latest, polls, nil
 }
 
 func extractExecPID(data any) string {
