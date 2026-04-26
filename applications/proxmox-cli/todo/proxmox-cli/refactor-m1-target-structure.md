@@ -1,6 +1,6 @@
 # proxmox-cli 重构 M1：目标结构与包边界定稿
 
-- 状态: in_progress
+- 状态: completed
 - 日期: 2026-04-26
 - 依赖: `refactor-m0-baseline-mapping.md`
 
@@ -157,6 +157,6 @@ M1 先锁定契约，不在本阶段做全量迁移：
 1. action capability 已写入 diagnostics（由 registry `Meta.Capability` 注入），便于后续按能力域观测与回归。
 2. action help 已切换为 capability 视图（不再以 phase 作为主展示口径）。
 
-待完成（M1 后续子步）：
+收尾说明：
 
-1. 将 wait 框架最小契约对齐到可执行接口定义（为 M4 做准备）。
+1. wait 框架“可执行接口定义”放入 M4 实现阶段完成（M1 保持契约冻结与分发改造完成）。

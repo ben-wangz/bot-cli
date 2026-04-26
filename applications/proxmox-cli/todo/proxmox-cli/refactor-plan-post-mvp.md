@@ -64,7 +64,7 @@ M0 执行结果：已完成，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：结构草图 + 包职责说明 + 迁移守则。
 
-M1 执行状态：in_progress，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m1-target-structure.md`。
+M1 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m1-target-structure.md`。
 
 ### M2: 无行为变化的“搬迁优先”重构
 
