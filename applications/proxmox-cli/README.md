@@ -44,9 +44,9 @@ Common commands:
 
 ## Build
 
-Use the module build script:
+Build from source root:
 
-`/root/code/github/bot-cli/applications/proxmox-cli/build.sh`
+`cd /root/code/github/bot-cli/applications/proxmox-cli/src && go build -o ../build/bin/proxmox-cli ./cmd/proxmox-cli`
 
 Output binary path:
 
