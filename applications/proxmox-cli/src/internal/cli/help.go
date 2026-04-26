@@ -3,7 +3,7 @@ package cli
 import (
 	"strings"
 
-	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/action"
+	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/capability"
 )
 
 func rootHelp() string {
@@ -60,7 +60,7 @@ Examples:
 
 Implemented actions by capability:
 `)
-	for _, group := range action.CapabilityGroups() {
+	for _, group := range capability.CapabilityGroups() {
 		sb.WriteString("  ")
 		sb.WriteString(group.Name)
 		sb.WriteString(":\n")

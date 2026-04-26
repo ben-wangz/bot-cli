@@ -1,4 +1,4 @@
-package action
+package capability
 
 import (
 	"context"
@@ -44,7 +44,7 @@ const (
 	capabilitySerialFallback = "serial-fallback"
 )
 
-var actionRegistry = map[string]registryEntry{
+var operationRegistry = map[string]registryEntry{
 	"list_nodes":                {handler: runListNodes, meta: Meta{Capability: capabilityInventory, WaitSkipReason: waitSkipReadOnly}},
 	"list_cluster_resources":    {handler: runListClusterResources, meta: Meta{Capability: capabilityInventory, WaitSkipReason: waitSkipReadOnly}},
 	"list_vms_by_node":          {handler: runListVMsByNode, meta: Meta{Capability: capabilityInventory, WaitSkipReason: waitSkipReadOnly}},
@@ -99,9 +99,9 @@ var actionRegistry = map[string]registryEntry{
 }
 
 func Dispatch(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, Meta, error) {
-	entry, ok := actionRegistry[req.Name]
+	entry, ok := operationRegistry[req.Name]
 	if !ok {
-		return nil, Meta{}, apperr.New(apperr.CodeInvalidArgs, "action not implemented yet: "+req.Name)
+		return nil, Meta{}, apperr.New(apperr.CodeInvalidArgs, "operation not implemented yet: "+req.Name)
 	}
 	result, err := entry.handler(ctx, client, req)
 	if err != nil {
@@ -111,7 +111,7 @@ func Dispatch(ctx context.Context, client *pveapi.Client, req Request) (map[stri
 }
 
 func LookupMeta(name string) (Meta, bool) {
-	entry, ok := actionRegistry[name]
+	entry, ok := operationRegistry[name]
 	if !ok {
 		return Meta{}, false
 	}
@@ -137,7 +137,7 @@ func CapabilityGroups() []CapabilityGroup {
 		indexed[name] = idx
 	}
 	buckets := map[string][]string{}
-	for name, entry := range actionRegistry {
+	for name, entry := range operationRegistry {
 		capability := entry.meta.Capability
 		if capability == "" {
 			capability = "misc"

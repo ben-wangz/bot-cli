@@ -1,4 +1,4 @@
-package action
+package capability
 
 import (
 	"strconv"
@@ -6,6 +6,7 @@ import (
 	"unicode"
 
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/apperr"
+	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/policy"
 )
 
 func ParseArgs(args []string) (map[string]string, error) {
@@ -74,7 +75,7 @@ func RequiredOperationVMID(args map[string]string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	if err := EnsureOperationVMID(vmid); err != nil {
+	if err := policy.EnsureOperationVMID(vmid); err != nil {
 		return 0, err
 	}
 	return vmid, nil
@@ -97,7 +98,7 @@ func RequiredOperationInt(args map[string]string, key string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	if err := EnsureOperationVMID(v); err != nil {
+	if err := policy.EnsureOperationVMID(v); err != nil {
 		return 0, err
 	}
 	return v, nil
@@ -139,7 +140,7 @@ func RequiredOperationUPID(args map[string]string) (string, error) {
 	if convErr != nil {
 		return "", apperr.New(apperr.CodeInvalidArgs, "upid must reference numeric vmid id")
 	}
-	if err := EnsureOperationVMID(vmid); err != nil {
+	if err := policy.EnsureOperationVMID(vmid); err != nil {
 		return "", err
 	}
 	return upid, nil

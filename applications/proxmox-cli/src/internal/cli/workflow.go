@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/action"
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/apperr"
+	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/policy"
 )
 
 const (
@@ -526,7 +526,7 @@ func parseWorkflowVMID(args map[string]string, key string, required bool) (int, 
 	if err != nil || vmid <= 0 {
 		return 0, apperr.New(apperr.CodeInvalidArgs, key+" must be a positive integer")
 	}
-	if err := action.EnsureOperationVMID(vmid); err != nil {
+	if err := policy.EnsureOperationVMID(vmid); err != nil {
 		return 0, err
 	}
 	return vmid, nil
@@ -629,7 +629,7 @@ func wrapWorkflowStepError(step string, vmid int, err error) error {
 	return apperr.Wrap(apperr.CodeNetwork, message, err)
 }
 
-func logWorkflowAction(rt commandRuntime, phase string, name string, args map[string]string) {
+func logWorkflowAction(rt commandRuntime, stage string, name string, args map[string]string) {
 	if rt.Stderr == nil {
 		return
 	}
@@ -646,7 +646,7 @@ func logWorkflowAction(rt commandRuntime, phase string, name string, args map[st
 		}
 		parts = append(parts, fmt.Sprintf("%s=%s", key, value))
 	}
-	_, _ = fmt.Fprintf(rt.Stderr, "[workflow] %s action=%s args={%s}\n", phase, name, strings.Join(parts, " "))
+	_, _ = fmt.Fprintf(rt.Stderr, "[workflow] %s action=%s args={%s}\n", stage, name, strings.Join(parts, " "))
 }
 
 func logWorkflowActionError(rt commandRuntime, name string, err error) {

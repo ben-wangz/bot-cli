@@ -15,12 +15,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/action"
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/apperr"
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/auth"
+	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/capability"
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/output"
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/pveapi"
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/redact"
+	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/taskwait"
 )
 
 type GlobalOptions struct {
@@ -378,7 +379,7 @@ func runActionCommand(rt commandRuntime, args []string) (map[string]any, error) 
 		return nil, apperr.New(apperr.CodeInvalidArgs, "action name is required")
 	}
 	name := args[0]
-	parsedArgs, err := action.ParseArgs(args[1:])
+	parsedArgs, err := capability.ParseArgs(args[1:])
 	if err != nil {
 		return nil, err
 	}
@@ -402,16 +403,16 @@ func runActionCommand(rt commandRuntime, args []string) (map[string]any, error) 
 	return applyActionWait(rt, result, meta)
 }
 
-func executeAction(rt commandRuntime, name string, parsedArgs map[string]string) (map[string]any, action.Meta, error) {
-	req := action.Request{Name: name, Args: parsedArgs, Scope: rt.Opts.AuthScope}
-	result, meta, err := action.Dispatch(context.Background(), rt.Client, req)
+func executeAction(rt commandRuntime, name string, parsedArgs map[string]string) (map[string]any, capability.Meta, error) {
+	req := capability.Request{Name: name, Args: parsedArgs, Scope: rt.Opts.AuthScope}
+	result, meta, err := capability.Dispatch(context.Background(), rt.Client, req)
 	if err != nil {
-		return nil, action.Meta{}, err
+		return nil, capability.Meta{}, err
 	}
 	return result, meta, nil
 }
 
-func applyActionWait(rt commandRuntime, result map[string]any, meta action.Meta) (map[string]any, error) {
+func applyActionWait(rt commandRuntime, result map[string]any, meta capability.Meta) (map[string]any, error) {
 	if hasWaitSkipDiagnostic(result) {
 		return result, nil
 	}
@@ -427,7 +428,7 @@ func applyActionWait(rt commandRuntime, result map[string]any, meta action.Meta)
 	if node == "" || upid == "" {
 		return nil, apperr.New(apperr.CodeInternal, "wait requested but async action did not provide node/upid")
 	}
-	waitResult, waitErr := action.WaitTask(context.Background(), rt.Client, node, upid, action.WaitOptions{Timeout: waitTimeout(rt.Opts.Timeout), Interval: 2 * time.Second})
+	waitResult, waitErr := taskwait.WaitTask(context.Background(), rt.Client, node, upid, taskwait.WaitOptions{Timeout: waitTimeout(rt.Opts.Timeout), Interval: 2 * time.Second})
 	if waitErr != nil {
 		return nil, waitErr
 	}
@@ -479,7 +480,7 @@ func hasWaitSkipDiagnostic(result map[string]any) bool {
 	return message != ""
 }
 
-func applyActionMeta(result map[string]any, meta action.Meta) {
+func applyActionMeta(result map[string]any, meta capability.Meta) {
 	if strings.TrimSpace(meta.Capability) == "" {
 		return
 	}
@@ -495,7 +496,7 @@ func runWorkflowCommand(rt commandRuntime, args []string) (map[string]any, error
 		return nil, apperr.New(apperr.CodeInvalidArgs, "workflow name is required")
 	}
 	name := args[0]
-	parsedArgs, err := action.ParseArgs(args[1:])
+	parsedArgs, err := capability.ParseArgs(args[1:])
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-package action
+package taskwait
 
 import (
 	"context"
@@ -56,9 +56,9 @@ func WaitTask(ctx context.Context, client *pveapi.Client, node string, upid stri
 			return nil, apperr.New(apperr.CodeNetwork, "task status response is not an object")
 		}
 		lastStatus = statusMap
-		status := strings.ToLower(strings.TrimSpace(asString(statusMap["status"])))
+		status := strings.ToLower(strings.TrimSpace(stringify(statusMap["status"])))
 		if status == "stopped" {
-			exitStatus := strings.TrimSpace(asString(statusMap["exitstatus"]))
+			exitStatus := strings.TrimSpace(stringify(statusMap["exitstatus"]))
 			if strings.EqualFold(exitStatus, "OK") {
 				return statusMap, nil
 			}
@@ -75,8 +75,8 @@ func summarizeTaskStatus(status map[string]any) string {
 	if status == nil {
 		return ""
 	}
-	s := strings.TrimSpace(asString(status["status"]))
-	e := strings.TrimSpace(asString(status["exitstatus"]))
+	s := strings.TrimSpace(stringify(status["status"]))
+	e := strings.TrimSpace(stringify(status["exitstatus"]))
 	parts := []string{}
 	if s != "" {
 		parts = append(parts, " status="+s)
@@ -113,11 +113,11 @@ func fetchTaskLogTail(ctx context.Context, client *pveapi.Client, node string, u
 		if !ok {
 			continue
 		}
-		text := strings.TrimSpace(asString(obj["t"]))
+		text := strings.TrimSpace(stringify(obj["t"]))
 		if text == "" {
 			continue
 		}
-		n := strings.TrimSpace(asString(obj["n"]))
+		n := strings.TrimSpace(stringify(obj["n"]))
 		if n != "" {
 			if _, convErr := strconv.Atoi(n); convErr == nil {
 				lines = append(lines, n+":"+text)
@@ -130,4 +130,11 @@ func fetchTaskLogTail(ctx context.Context, client *pveapi.Client, node string, u
 		return ""
 	}
 	return strings.Join(lines, " | ")
+}
+
+func stringify(v any) string {
+	if v == nil {
+		return ""
+	}
+	return fmt.Sprintf("%v", v)
 }

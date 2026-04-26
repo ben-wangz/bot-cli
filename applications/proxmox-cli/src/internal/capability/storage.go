@@ -1,4 +1,4 @@
-package action
+package capability
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/apperr"
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/pveapi"
+	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/taskwait"
 )
 
 func runStorageUploadGuard(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
@@ -128,7 +129,7 @@ func runStorageUploadISO(ctx context.Context, client *pveapi.Client, req Request
 		if waitNode == "" {
 			waitNode = node
 		}
-		status, waitErr := WaitTask(ctx, client, waitNode, uploadUPID, WaitOptions{Timeout: 20 * time.Minute, Interval: 2 * time.Second})
+		status, waitErr := taskwait.WaitTask(ctx, client, waitNode, uploadUPID, taskwait.WaitOptions{Timeout: 20 * time.Minute, Interval: 2 * time.Second})
 		if waitErr != nil {
 			return nil, apperr.Wrap(apperr.CodeNetwork, "storage upload task did not complete successfully", waitErr)
 		}
