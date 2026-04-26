@@ -23,7 +23,7 @@ func RunOpenVMTermproxy(ctx context.Context, client *pveapi.Client, req Request)
 	if err != nil {
 		return nil, err
 	}
-	form := mapArgsToForm(req.Args, "node", "vmid")
+	form := url.Values{}
 	serial := strings.TrimSpace(req.Args["serial"])
 	if serial == "" {
 		serial = "serial0"
