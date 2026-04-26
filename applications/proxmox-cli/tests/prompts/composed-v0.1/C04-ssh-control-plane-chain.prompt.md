@@ -32,7 +32,7 @@ Chain:
 5) `ssh_tunnel_start` + `ssh_tunnel_status` + `ssh_tunnel_stop`.
 
 Validation:
-- All actions return `ok == true`.
+- All capabilities return `ok == true`.
 - SCP roundtrip content matches.
 - Tunnel status reports running before stop.
 

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Run virtual-workflow prompt chains to cover actions that are not directly exercised by the two e2e workflows.
+Run virtual-workflow prompt chains to cover capabilities that are not directly exercised by the two e2e workflows.
 
 ## Required Execution Mode
 

@@ -24,7 +24,7 @@ Chain:
 3) `agent_exec_status` for returned pid until completion.
 
 Validation:
-- All actions return `ok == true`.
+- All capabilities return `ok == true`.
 - `agent_exec_status` ends with completed/exit code 0.
 
 Cleanup:

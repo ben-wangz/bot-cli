@@ -29,8 +29,8 @@ Chain:
 5) `migrate_vm --wait` to target node.
 
 Validation:
-- Every action returns `ok == true`.
-- Async actions finish with final task `status=stopped` and `exitstatus=OK`.
+- Every capability returns `ok == true`.
+- Async capabilities finish with final task `status=stopped` and `exitstatus=OK`.
 
 Cleanup:
 - Stop and destroy TEST_VMID on final host.

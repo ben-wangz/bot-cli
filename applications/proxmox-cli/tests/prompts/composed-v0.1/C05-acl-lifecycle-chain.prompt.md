@@ -20,7 +20,7 @@ Chain:
 3) Re-run `get_user_acl_binding` and verify tuple absent.
 
 Validation:
-- All actions return `ok == true`.
+- All capabilities return `ok == true`.
 - Revoke result contains `revoked == true`.
 
 Return:

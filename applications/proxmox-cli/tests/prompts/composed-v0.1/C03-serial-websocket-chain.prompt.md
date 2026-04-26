@@ -25,8 +25,8 @@ Chain:
 4) `validate_serial_output_criterion2` against captured output.
 
 Validation:
-- All actions return `ok == true`.
-- Session and validation actions produce expected readable output markers.
+- All capabilities return `ok == true`.
+- Session and validation capabilities produce expected readable output markers.
 
 Cleanup:
 - Stop and destroy disposable VM.

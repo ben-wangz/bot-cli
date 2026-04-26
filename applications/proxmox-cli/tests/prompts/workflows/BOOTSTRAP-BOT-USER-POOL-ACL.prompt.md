@@ -33,8 +33,8 @@ Execution requirements:
       - `/` + `PVEAuditor`
       - `/storage` + `PVEDatastoreAdmin`
       - `/sdn/zones/localnetwork` + `PVEAdmin`
-7) Validate ACL binding by follow-up action:
-   - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope root --output json action get_user_acl_binding --userid "$BOT_USERID"`
+7) Validate ACL binding by follow-up capability:
+   - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope root --output json capability get_user_acl_binding --userid "$BOT_USERID"`
    - assert binding list contains the three path/role tuples above.
 8) Return only structured result:
    - workflow

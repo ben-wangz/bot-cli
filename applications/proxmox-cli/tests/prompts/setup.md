@@ -7,7 +7,7 @@ Provide one stable setup prompt for regression runs. This setup uses root bootst
 ## Prompt
 
 ```text
-You are a coding/test execution agent. Prepare `build/pve-user.env` from `build/pve-root.env` for regression testing, then prepare a reusable template id file for action prompts.
+You are a coding/test execution agent. Prepare `build/pve-user.env` from `build/pve-root.env` for regression testing, then prepare a reusable template id file for capability/workflow prompts.
 
 Execution requirements:
 1) Work from repository root.
@@ -39,21 +39,21 @@ Execution requirements:
    - `PVE_API_SSL_SELF_SIGNED=1`
 8) Verify new user env works:
    - `source build/pve-user.env`
-   - run `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json action get_effective_permissions --path "/pool/${PVE_POOL}"`
+   - run `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json capability get_effective_permissions --path "/pool/${PVE_POOL}"`
    - ensure `ok == true` and result for `/pool/${PVE_POOL}` is non-empty.
 9) Prepare template baseline directly in setup via artifact provisioning chain (do not call any bootstrap prompt file):
-   - resolve `NODE` from first online node in `action list_nodes`
-   - resolve `TEMPLATE_VMID` as first free VMID in range `1001..2000` from `action list_cluster_resources --type vm` (do not use `get_next_vmid`)
+   - resolve `NODE` from first online node in `capability list_nodes`
+   - resolve `TEMPLATE_VMID` as first free VMID in range `1001..2000` from `capability list_cluster_resources --type vm` (do not use `get_next_vmid`)
    - set artifact paths:
      - `LOCAL_SOURCE_ISO=build/ubuntu-24.04.4-live-server-amd64.iso`
      - `LOCAL_OUTPUT_ISO=build/e2e-provision-artifact.iso`
      - `LOCAL_WORK_DIR=build/autoinstall-iso-work/e2e-provision-artifact`
      - `UPLOAD_FILENAME=e2e-provision-artifact.iso`
    - ensure `LOCAL_SOURCE_ISO` exists
-    - run prerequisite actions in order (auth-scope user):
-      - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json action storage_upload_guard --node "$NODE" --storage local --content-type iso`
-      - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json action build_ubuntu_autoinstall_iso --source-iso "$LOCAL_SOURCE_ISO" --output-iso "$LOCAL_OUTPUT_ISO" --work-dir "$LOCAL_WORK_DIR"`
-      - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json action storage_upload_iso --node "$NODE" --storage local --source-path "$LOCAL_OUTPUT_ISO" --filename "$UPLOAD_FILENAME" --if-exists replace`
+    - run prerequisite capabilities in order (auth-scope user):
+      - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json capability storage_upload_guard --node "$NODE" --storage local --content-type iso`
+      - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json capability build_ubuntu_autoinstall_iso --source-iso "$LOCAL_SOURCE_ISO" --output-iso "$LOCAL_OUTPUT_ISO" --work-dir "$LOCAL_WORK_DIR"`
+      - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json capability storage_upload_iso --node "$NODE" --storage local --source-path "$LOCAL_OUTPUT_ISO" --filename "$UPLOAD_FILENAME" --if-exists replace`
     - resolve `ARTIFACT_ISO` from upload result `volid` (fallback `local:iso/$UPLOAD_FILENAME`)
     - immediately delete local temporary ISO artifact after successful upload:
       - `rm -f "$LOCAL_OUTPUT_ISO"`
@@ -66,7 +66,7 @@ Execution requirements:
     - if first attempt times out in serial wait, continue with resume mode using 600s windows until success or non-timeout failure:
       - before each resume attempt, inspect install health and fail fast on known error states:
         - resolve `SERIAL_LOG_PATH` from latest workflow result `result.serial_log_path` (fallback `build/serial-provision-template-$TEMPLATE_VMID.log`)
-        - run `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json action review_install_tasks --node "$NODE" --vmid "$TEMPLATE_VMID"`
+        - run `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json capability review_install_tasks --node "$NODE" --vmid "$TEMPLATE_VMID"`
         - if review result reports any `state` in `{error,failed}` or any task with non-empty `error`, stop and report `installer_error_detected`
         - scan the latest serial log segment (or full file if small) and if fatal markers are found, stop and report `installer_error_detected`; suggested markers include: `subiquity.*ERROR`, `curtin command .* failed`, `installation failed`, `Traceback`, `No space left on device`
       - only when checks above do not indicate fatal failure, run resume:
@@ -75,7 +75,7 @@ Execution requirements:
 10) Write and verify template-id artifact:
    - write `build/ubuntu-24-with-agent.vm-template.id` with exact content `$TEMPLATE_VMID` (single line)
    - read back the file and require value equals workflow `result.template_vmid`
-    - validate target VM is template via `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json action get_vm_config --node "$NODE" --vmid "$TEMPLATE_VMID"` and require `result.template == 1`
+    - validate target VM is template via `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json capability get_vm_config --node "$NODE" --vmid "$TEMPLATE_VMID"` and require `result.template == 1`
    - if any check fails, stop and report `template_id_file_invalid`
 11) Return only structured output:
    - setup

@@ -32,7 +32,7 @@ Chain:
 6) `get_task_status --node SOURCE_NODE --upid UPID`.
 
 Validation:
-- All chain actions return `ok == true`.
+- All chain capabilities return `ok == true`.
 - `list_nodes` has at least one node entry.
 - `list_vms_by_node` returns JSON array.
 - `get_effective_permissions` returns non-empty object for requested path.
