@@ -1,6 +1,6 @@
 # proxmox-cli v0.1 收敛重构计划
 
-- 状态: active
+- 状态: archived
 - 优先级: high
 - 创建日期: 2026-04-25
 - 前置基线: `development-plan-mvp-archive.md`（MVP 已完成）

@@ -8,9 +8,6 @@ This directory is the single entry for full regression coverage of `proxmox-cli`
 
 ## Full Regression Entry
 
-Release gate policy is defined in `RELEASE-REGRESSION-GATE.md`.
-Release execution checklist is defined in `RELEASE-CHECKLIST-v0.1.md`.
-
 Run prompts in this order:
 
 1. `setup.md`
@@ -28,7 +25,6 @@ Run prompts in this order:
 ## Layout
 
 - `setup.md`
-- `RELEASE-REGRESSION-GATE.md`
 - `composed-v0.1/`
 - `workflows/`
 

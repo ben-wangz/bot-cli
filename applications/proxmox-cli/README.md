@@ -47,6 +47,4 @@ Do not build to `applications/proxmox-cli/src/proxmox-cli`.
 
 ## Release
 
-- Release regression gate: `applications/proxmox-cli/tests/prompts/RELEASE-REGRESSION-GATE.md`
-- Release checklist: `applications/proxmox-cli/tests/prompts/RELEASE-CHECKLIST-v0.1.md`
 - Tag format: `proxmox-cli-v<semver>`
