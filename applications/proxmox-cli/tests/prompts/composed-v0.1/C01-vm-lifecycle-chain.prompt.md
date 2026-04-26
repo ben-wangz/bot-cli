@@ -22,7 +22,7 @@ Setup:
 4) Resolve a target node different from source for migration; if none, return `no_migrate_target_node`.
 
 Chain:
-1) `clone_template --wait --full 0 --source-vmid TEMPLATE_VMID --target-vmid TEST_VMID --pool "$PVE_POOL"`.
+1) `clone_template --wait --full 0 --source-vmid TEMPLATE_VMID --target-vmid TEST_VMID --pool "$PVE_POOL" --name "botcli-c01-${TEST_VMID}"`.
 2) `update_vm_config` with safe update (e.g., description/name).
 3) `review_install_tasks`.
 4) `sendkey --key ret`.
@@ -39,8 +39,15 @@ Validation:
   - after 5 minutes, task still in progress with no explicit error/failure signal in observed task progress.
 
 Cleanup:
-- Stop and destroy TEST_VMID on final host.
+- Default: cleanup runs in `finally` (stop best-effort + destroy VM).
+- Exception (preserve for migration verification): if migrate did not reach terminal `exitstatus=OK` within observation window but still shows healthy in-progress signals (no explicit failure), skip cleanup intentionally.
+- When cleanup is skipped by this exception, return explicit preserve metadata for operator follow-up:
+  - `preserve_for_validation: true`
+  - `preserved_vmid: TEST_VMID`
+  - `preserved_node: <latest node for TEST_VMID>`
+  - `cleanup_skipped_reason: migration_still_progressing_without_failure_signal`
 
 Return:
 - `chain`, `command`, `success`, `key_result`, `diagnostics`.
+- Include `cleanup` details (`performed/skipped`, reason, vmid/node when preserved).
 ```

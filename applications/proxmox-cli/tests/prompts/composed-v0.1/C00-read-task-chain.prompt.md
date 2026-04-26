@@ -21,7 +21,7 @@ Setup:
 2) Resolve `TEMPLATE_VMID` from `build/ubuntu-24-with-agent.vm-template.id`.
 3) Resolve `SOURCE_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
 4) Resolve `TEST_VMID` via `get_next_vmid`.
-5) Create one disposable VM by `clone_template --wait --full 0 --source-vmid TEMPLATE_VMID --target-vmid TEST_VMID --pool "$PVE_POOL"`.
+5) Create one disposable VM by `clone_template --wait --full 0 --source-vmid TEMPLATE_VMID --target-vmid TEST_VMID --pool "$PVE_POOL" --name "botcli-c00-${TEST_VMID}"`.
 6) Trigger at least one fresh VM task for `TEST_VMID` (for stable task-chain assertions), e.g. start then stop once via `vm_power --wait`.
 
 Chain:
@@ -41,7 +41,9 @@ Validation:
 - `get_task_status` returns terminal or running task status payload for `UPID`.
 
 Cleanup:
-- Stop and destroy `TEST_VMID` on `SOURCE_NODE`.
+- Cleanup must run in `finally` even if chain validation fails.
+- Stop VM best-effort, then destroy `TEST_VMID` on `SOURCE_NODE` via Proxmox API delete (`purge=1`, `destroy-unreferenced-disks=1`).
+- If VM not found at cleanup time, treat as already cleaned.
 
 Return:
 - `chain`, `command`, `success`, `key_result`, `diagnostics`.

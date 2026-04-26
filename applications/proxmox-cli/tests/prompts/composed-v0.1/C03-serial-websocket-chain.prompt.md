@@ -16,7 +16,7 @@ You are a test execution agent. Execute serial/websocket control-plane chain.
 
 Setup:
 1) Load `build/pve-user.env`, switch to `applications/proxmox-cli/src`.
-2) Clone and boot one disposable VM from template (ensure clone uses `--pool "$PVE_POOL"`).
+2) Clone and boot one disposable VM from template (ensure clone uses `--pool "$PVE_POOL"` and a deterministic disposable name, for example `botcli-c03-<vmid>`).
 
 Chain:
 1) `open_vm_termproxy`.
@@ -29,7 +29,9 @@ Validation:
 - Session and validation capabilities produce expected readable output markers.
 
 Cleanup:
-- Stop and destroy disposable VM.
+- Cleanup must run in `finally` even if serial/ws checks fail.
+- Stop VM best-effort, then destroy disposable VM via Proxmox API delete (`purge=1`, `destroy-unreferenced-disks=1`).
+- If VM not found at cleanup time, treat as already cleaned.
 
 Return:
 - `chain`, `command`, `success`, `key_result`, `diagnostics`.

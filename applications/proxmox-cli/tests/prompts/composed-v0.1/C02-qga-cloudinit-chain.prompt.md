@@ -15,7 +15,7 @@ You are a test execution agent. Execute qga/cloud-init chain.
 
 Setup:
 1) Load `build/pve-user.env`, switch to `applications/proxmox-cli/src`.
-2) Resolve and start one disposable VM cloned from template (ensure clone uses `--pool "$PVE_POOL"`).
+2) Resolve and start one disposable VM cloned from template (ensure clone uses `--pool "$PVE_POOL"` and a deterministic disposable name, for example `botcli-c02-<vmid>`).
 3) Wait for QGA readiness by polling `agent_network_get_interfaces`.
 
 Chain:
@@ -28,7 +28,9 @@ Validation:
 - `agent_exec_status` ends with completed/exit code 0.
 
 Cleanup:
-- Stop and destroy disposable VM.
+- Cleanup must run in `finally` even if QGA checks fail.
+- Stop VM best-effort, then destroy disposable VM via Proxmox API delete (`purge=1`, `destroy-unreferenced-disks=1`).
+- If VM not found at cleanup time, treat as already cleaned.
 
 Return:
 - `chain`, `command`, `success`, `key_result`, `diagnostics`.

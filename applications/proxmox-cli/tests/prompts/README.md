@@ -14,6 +14,7 @@ Run prompts in this order:
 2. `workflows/BOOTSTRAP-BOT-USER-POOL-ACL.prompt.md`
 3. `workflows/PROVISION-TEMPLATE-FROM-ARTIFACT.prompt.md`
 4. `composed-v0.1/RUN-COMPOSED-SUITE.prompt.md`
+5. `workflows/CLEANUP-DISPOSABLE-VMS.prompt.md`
 
 ## Environment Rules
 
@@ -21,6 +22,8 @@ Run prompts in this order:
 - `setup.md` and `workflows/BOOTSTRAP-BOT-USER-POOL-ACL.prompt.md` require `build/pve-root.env`.
 - All other prompts should run with `build/pve-user.env`.
 - Prompts should resolve runtime inputs locally and clean up disposable assets in the same run.
+- Composed VM chains should use disposable VM names prefixed with `botcli-c0` and always run destroy cleanup in `finally` blocks.
+- Exception: C01 migration chain may preserve a VM when migration is still healthy/in-progress after timeout; pass preserved VMIDs to cleanup prompt via `PRESERVE_VMIDS`.
 
 ## Layout
 
@@ -47,6 +50,7 @@ Execution (README order)
 2) e2e bootstrap -> pass/fail (note)
 3) e2e provision-template -> pass/fail (note)
 4) composed-v0.1 RUN -> pass/fail (note)
+5) cleanup disposable VMs -> pass/fail (note)
 
 Summary
 - overall: pass/fail

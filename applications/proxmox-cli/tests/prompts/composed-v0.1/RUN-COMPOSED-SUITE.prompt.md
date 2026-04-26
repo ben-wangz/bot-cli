@@ -20,6 +20,23 @@ Run virtual-workflow prompt chains to cover capabilities that are not directly e
 5) Use API base `${PVE_API_BASE_URL%/}/api2/json`.
 6) Always include `--insecure-tls --output json`.
 7) Set VMID policy env vars for this suite: `PVE_ALLOWED_VMID_MIN=1001`, `PVE_ALLOWED_VMID_MAX=2000`.
+8) Generate one suite run marker for disposable resources, for example `SUITE_RUN_ID="$(date +%Y%m%d-%H%M%S)-$$"`.
+
+## Mandatory Cleanup Contract
+
+1) Every VM-writing chain (C00..C04) must run cleanup in a `finally` block (or equivalent) even when validation fails midway.
+2) Cleanup must include VM destruction (not stop-only):
+   - stop/shutdown best-effort;
+   - call Proxmox delete endpoint for the VM (`DELETE /nodes/<node>/qemu/<vmid>?purge=1&destroy-unreferenced-disks=1`) using current test credentials;
+   - treat "already absent" as success.
+3) Allowed preserve exception:
+   - only for `C01-vm-lifecycle-chain` when migration is still healthy/in-progress after observation window and no explicit failure signal;
+   - chain must return `preserve_for_validation=true` with vmid/node/reason.
+4) At end of suite, run one extra sweep:
+   - gather all VMIDs recorded by sub-agents;
+   - exclude VMIDs explicitly marked `preserve_for_validation=true` by C01;
+   - retry destroy for any other VM still present;
+   - return `cleanup` diagnostics including attempted/destroyed/remaining counts and `preserved_vmids`.
 
 ## Prompt Files to Execute
 
@@ -42,6 +59,12 @@ Return one JSON object:
   "summary": {
     "passed": 6,
     "failed": 0
+  },
+  "cleanup": {
+    "attempted": 5,
+    "destroyed": 5,
+    "remaining": 0,
+    "preserved_vmids": []
   },
   "results": [
     {

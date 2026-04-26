@@ -20,7 +20,7 @@ You are a test execution agent. Execute SSH control-plane chain.
 
 Setup:
 1) Load `build/pve-user.env`, switch to `applications/proxmox-cli/src`.
-2) Clone and boot one disposable VM from template (ensure clone uses `--pool "$PVE_POOL"`).
+2) Clone and boot one disposable VM from template (ensure clone uses `--pool "$PVE_POOL"` and a deterministic disposable name, for example `botcli-c04-<vmid>`).
 3) Generate temporary ed25519 keypair under `build/`.
 4) Inject public key via `ssh_inject_pubkey_qga` (use `--pub-key-file` or `--pub-key`).
 
@@ -37,7 +37,9 @@ Validation:
 - Tunnel status reports running before stop.
 
 Cleanup:
-- Stop and destroy disposable VM.
+- Cleanup must run in `finally` even if SSH checks fail.
+- Stop VM best-effort, then destroy disposable VM via Proxmox API delete (`purge=1`, `destroy-unreferenced-disks=1`).
+- If VM not found at cleanup time, treat as already cleaned.
 - Delete temporary key files and transfer artifacts.
 
 Return:
