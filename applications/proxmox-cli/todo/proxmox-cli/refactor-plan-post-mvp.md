@@ -74,6 +74,8 @@ M1 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：分批 commit（每批可独立回滚）。
 
+M2 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m2-capability-migration.md`。
+
 ### M3: workflow 编排层收敛
 
 1. 将 workflow 入口与 orchestration 逻辑从 phase 语义中解耦。
