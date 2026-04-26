@@ -2,32 +2,6 @@
 
 Agent-facing CLI for Proxmox-related operations.
 
-## Auth Strategy
-
-- Default execution path uses `pve user` credentials for VM management capabilities and workflows.
-- `root` credentials are not required for normal day-to-day VM lifecycle operations.
-- Root scope is reserved for one-time bootstrap tasks (for example, creating/assigning a least-privilege user), then execution should return to user scope.
-- Root-scope planning is limited to root-assisted pool/user ACL bootstrap (create pool/user, get ACL binding, grant ACL, revoke ACL).
-- ACL "change" operations are modeled as `revoke + grant`; no standalone capability is required.
-- Historical root-shell path is removed in v0.1 cleanup; keep using serial/websocket and SSH/QGA capabilities on the main path.
-
-## Code Layout
-
-- Go source root: `applications/proxmox-cli/src`
-- Entrypoint: `applications/proxmox-cli/src/cmd/proxmox-cli`
-- Internal packages: `applications/proxmox-cli/src/internal`
-- Prompt tests: `applications/proxmox-cli/tests/prompts`
-- Versioned workflow assets: `applications/proxmox-cli/assets`
-
-### Internal Package Guide
-
-- `internal/cli`: CLI entrypoints, global flags, command dispatch, and rendering wiring.
-- `internal/capability`: capability handlers grouped by stable domains (`vm`, `console`, `ssh`, `storage`, `guest`, `access`).
-- `internal/workflow`: workflow orchestration and shared step runner helpers.
-- `internal/taskwait`: reusable poll/wait primitives for task and session waits.
-- `internal/pveapi`: Proxmox HTTP/websocket client adapters.
-- `internal/auth`, `internal/output`, `internal/policy`, `internal/redact`: cross-cutting support modules.
-
 ## Versioning
 
 Version is managed via `forgekit` binary mapping.
@@ -38,22 +12,45 @@ Version is managed via `forgekit` binary mapping.
 
 Common commands:
 
-- `FORGEKIT_BIN=$(bash /root/code/github/bot-cli/setup/forgekit.sh)`
-- `${FORGEKIT_BIN} --project-root /root/code/github/bot-cli version get proxmox-cli`
-- `${FORGEKIT_BIN} --project-root /root/code/github/bot-cli version bump proxmox-cli patch`
+- `FORGEKIT_BIN=$(bash "$PROJECT_ROOT/setup/forgekit.sh")`
+- `${FORGEKIT_BIN} --project-root "$PROJECT_ROOT" version get proxmox-cli`
+- `${FORGEKIT_BIN} --project-root "$PROJECT_ROOT" version bump proxmox-cli patch`
 
-## Build
+## OpenCode Skill Install
 
-Build from source root:
+OpenCode docs confirm skill discovery locations include:
 
-`cd /root/code/github/bot-cli/applications/proxmox-cli/src && go build -o ../build/bin/proxmox-cli ./cmd/proxmox-cli`
+- Project-level (default): `$PROJECT_ROOT/.opencode/skills/<name>/SKILL.md`
+- User-level (global): `~/.config/opencode/skills/<name>/SKILL.md`
 
-Output binary path:
+Reference: `https://opencode.ai/docs/skills` (`Place files` section).
 
-`applications/proxmox-cli/build/bin/proxmox-cli`
+Install `proxmox-cli` skill to project-level path via `git clone`:
 
-Do not build to `applications/proxmox-cli/src/proxmox-cli`.
+```bash
+PROJECT_ROOT="/path/to/your/project"
+REPO_URL="https://github.com/ben-wangz/bot-cli.git"
+TMP_DIR="$(mktemp -d)"
+
+git clone --depth 1 --filter=blob:none --sparse "$REPO_URL" "$TMP_DIR"
+git -C "$TMP_DIR" sparse-checkout set applications/proxmox-cli/skills/proxmox-cli
+
+mkdir -p "$PROJECT_ROOT/.opencode/skills"
+rm -rf "$PROJECT_ROOT/.opencode/skills/proxmox-cli"
+cp -R "$TMP_DIR/applications/proxmox-cli/skills/proxmox-cli" "$PROJECT_ROOT/.opencode/skills/proxmox-cli"
+
+rm -rf "$TMP_DIR"
+```
+
+Install to user-level path (shared across projects):
+
+```bash
+mkdir -p "$HOME/.config/opencode/skills"
+rm -rf "$HOME/.config/opencode/skills/proxmox-cli"
+cp -R "$PROJECT_ROOT/.opencode/skills/proxmox-cli" "$HOME/.config/opencode/skills/proxmox-cli"
+```
 
 ## Release
 
 - Tag format: `proxmox-cli-v<semver>`
+- Release notes directory: `applications/proxmox-cli/release/`
