@@ -22,15 +22,15 @@ type registryEntry struct {
 }
 
 type CapabilityGroup struct {
-	Name    string
-	Actions []string
+	Name         string
+	Capabilities []string
 }
 
 const (
-	waitSkipReadOnly         = "action is read-only"
-	waitSkipSelfPolled       = "action is synchronous or self-polled"
-	waitSkipSessionDriven    = "action is synchronous or session-driven"
-	waitSkipSynchronous      = "action is synchronous"
+	waitSkipReadOnly         = "capability is read-only"
+	waitSkipSelfPolled       = "capability is synchronous or self-polled"
+	waitSkipSessionDriven    = "capability is synchronous or session-driven"
+	waitSkipSynchronous      = "capability is synchronous"
 	capabilityInventory      = "inventory"
 	capabilityTask           = "task"
 	capabilityVM             = "vm"
@@ -162,9 +162,9 @@ func CapabilityGroups() []CapabilityGroup {
 	})
 	groups := make([]CapabilityGroup, 0, len(capabilities))
 	for _, capability := range capabilities {
-		actions := buckets[capability]
-		sort.Strings(actions)
-		groups = append(groups, CapabilityGroup{Name: capability, Actions: actions})
+		items := buckets[capability]
+		sort.Strings(items)
+		groups = append(groups, CapabilityGroup{Name: capability, Capabilities: items})
 	}
 	return groups
 }

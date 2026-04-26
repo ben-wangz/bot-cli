@@ -95,7 +95,7 @@ log "[STEP A0] resolving node"
 if [[ -n "${NODE_OVERRIDE}" ]]; then
   NODE="${NODE_OVERRIDE}"
 else
-  NODE="$(cli_json action list_nodes | python3 -c 'import sys,json; d=json.load(sys.stdin); r=d.get("result",[]); print(next((x.get("node") for x in r if x.get("status")=="online" and x.get("node")), ""))')"
+  NODE="$(cli_json capability list_nodes | python3 -c 'import sys,json; d=json.load(sys.stdin); r=d.get("result",[]); print(next((x.get("node") for x in r if x.get("status")=="online" and x.get("node")), ""))')"
 fi
 if [[ -z "${NODE}" ]]; then
   log "no online node found"
@@ -104,7 +104,7 @@ fi
 log "resolved NODE=${NODE}"
 
 log "[STEP A1] resolving target vmid in range 1001..2000"
-TARGET_VMID="$(cli_json action list_cluster_resources --type vm | python3 -c 'import sys,json; d=json.load(sys.stdin); used=set();
+TARGET_VMID="$(cli_json capability list_cluster_resources --type vm | python3 -c 'import sys,json; d=json.load(sys.stdin); used=set();
 for x in d.get("result",[]):
   try: used.add(int(x.get("vmid")))
   except Exception: pass
@@ -126,17 +126,17 @@ if [[ ! -f "${LOCAL_SOURCE_ISO}" ]]; then
 fi
 
 log "[STEP A2] storage_upload_guard"
-cli_json action storage_upload_guard --node "${NODE}" --storage local --content-type iso >/dev/null
+cli_json capability storage_upload_guard --node "${NODE}" --storage local --content-type iso >/dev/null
 
 log "[STEP A3] build_ubuntu_autoinstall_iso"
-cli_json action build_ubuntu_autoinstall_iso --source-iso "${LOCAL_SOURCE_ISO}" --output-iso "${LOCAL_OUTPUT_ISO}" --work-dir "${LOCAL_WORK_DIR}" >/dev/null
+cli_json capability build_ubuntu_autoinstall_iso --source-iso "${LOCAL_SOURCE_ISO}" --output-iso "${LOCAL_OUTPUT_ISO}" --work-dir "${LOCAL_WORK_DIR}" >/dev/null
 if [[ ! -s "${LOCAL_OUTPUT_ISO}" ]]; then
   log "built iso missing or empty: ${LOCAL_OUTPUT_ISO}"
   exit 3
 fi
 
 log "[STEP B1] about to upload ISO"
-UPLOAD_JSON="$(cli_json action storage_upload_iso --node "${NODE}" --storage local --source-path "${LOCAL_OUTPUT_ISO}" --filename "${UPLOAD_FILENAME}" --if-exists replace)"
+UPLOAD_JSON="$(cli_json capability storage_upload_iso --node "${NODE}" --storage local --source-path "${LOCAL_OUTPUT_ISO}" --filename "${UPLOAD_FILENAME}" --if-exists replace)"
 printf '%s\n' "${UPLOAD_JSON}" >> "${LOG_FILE}"
 
 log "[STEP B2] upload completed, extracting volid"

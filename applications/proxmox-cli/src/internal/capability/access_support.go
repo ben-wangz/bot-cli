@@ -122,7 +122,7 @@ func parseACLMutationArgs(args map[string]string) (string, string, string, bool,
 		roleValue = strings.TrimSpace(args["roles"])
 	}
 	if roleValue == "" {
-		return "", "", "", false, apperr.New(apperr.CodeInvalidArgs, "missing required action arg --role")
+		return "", "", "", false, apperr.New(apperr.CodeInvalidArgs, "missing required capability arg --role")
 	}
 	propagate, err := parseOptionalBoolArg(args, "propagate")
 	if err != nil {

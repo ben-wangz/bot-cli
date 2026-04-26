@@ -212,5 +212,5 @@ func ensureRootBootstrapScope(scope string) error {
 	if scope == auth.ScopeRoot || scope == auth.ScopeRootToken {
 		return nil
 	}
-	return apperr.New(apperr.CodeAuth, "action requires --auth-scope root or root-token")
+	return apperr.New(apperr.CodeAuth, "capability requires --auth-scope root or root-token")
 }

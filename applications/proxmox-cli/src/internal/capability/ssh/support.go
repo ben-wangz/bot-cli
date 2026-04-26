@@ -136,7 +136,7 @@ func ResolvePublicKey(args map[string]string) (string, string, error) {
 	fromArg := strings.TrimSpace(args["pub-key"])
 	fromFile := strings.TrimSpace(args["pub-key-file"])
 	if fromArg == "" && fromFile == "" {
-		return "", "", apperr.New(apperr.CodeInvalidArgs, "missing required action arg --pub-key-file or --pub-key")
+		return "", "", apperr.New(apperr.CodeInvalidArgs, "missing required capability arg --pub-key-file or --pub-key")
 	}
 	if fromArg != "" && fromFile != "" {
 		return "", "", apperr.New(apperr.CodeInvalidArgs, "--pub-key-file and --pub-key are mutually exclusive")

@@ -199,8 +199,8 @@ func dispatchCommand(rt commandRuntime, args []string) error {
 	var payload map[string]any
 	var err error
 	switch command {
-	case "action":
-		payload, err = runActionCommand(rt, commandArgs)
+	case "capability":
+		payload, err = runCapabilityCommand(rt, commandArgs)
 	case "workflow":
 		payload, err = runWorkflowCommand(rt, commandArgs)
 	case "console":
@@ -370,13 +370,13 @@ func parseTimeout(value string) (time.Duration, error) {
 	return time.Duration(seconds) * time.Second, nil
 }
 
-func runActionCommand(rt commandRuntime, args []string) (map[string]any, error) {
+func runCapabilityCommand(rt commandRuntime, args []string) (map[string]any, error) {
 	if hasHelp(args) {
-		_, _ = io.WriteString(rt.Stdout, actionHelp())
+		_, _ = io.WriteString(rt.Stdout, capabilityHelp())
 		return nil, nil
 	}
 	if len(args) == 0 {
-		return nil, apperr.New(apperr.CodeInvalidArgs, "action name is required")
+		return nil, apperr.New(apperr.CodeInvalidArgs, "capability name is required")
 	}
 	name := args[0]
 	parsedArgs, err := capability.ParseArgs(args[1:])
@@ -385,25 +385,25 @@ func runActionCommand(rt commandRuntime, args []string) (map[string]any, error) 
 	}
 	if rt.Opts.DryRun {
 		return map[string]any{
-			"action":  name,
-			"ok":      true,
-			"scope":   rt.Opts.AuthScope,
-			"dry_run": true,
-			"request": parsedArgs,
+			"capability": name,
+			"ok":         true,
+			"scope":      rt.Opts.AuthScope,
+			"dry_run":    true,
+			"request":    parsedArgs,
 		}, nil
 	}
-	result, meta, err := executeAction(rt, name, parsedArgs)
+	result, meta, err := executeCapability(rt, name, parsedArgs)
 	if err != nil {
 		return nil, err
 	}
-	applyActionMeta(result, meta)
+	applyCapabilityMeta(result, meta)
 	if !rt.Opts.Wait {
 		return result, nil
 	}
-	return applyActionWait(rt, result, meta)
+	return applyCapabilityWait(rt, result, meta)
 }
 
-func executeAction(rt commandRuntime, name string, parsedArgs map[string]string) (map[string]any, capability.Meta, error) {
+func executeCapability(rt commandRuntime, name string, parsedArgs map[string]string) (map[string]any, capability.Meta, error) {
 	req := capability.Request{Name: name, Args: parsedArgs, Scope: rt.Opts.AuthScope}
 	result, meta, err := capability.Dispatch(context.Background(), rt.Client, req)
 	if err != nil {
@@ -412,21 +412,21 @@ func executeAction(rt commandRuntime, name string, parsedArgs map[string]string)
 	return result, meta, nil
 }
 
-func applyActionWait(rt commandRuntime, result map[string]any, meta capability.Meta) (map[string]any, error) {
+func applyCapabilityWait(rt commandRuntime, result map[string]any, meta capability.Meta) (map[string]any, error) {
 	if hasWaitSkipDiagnostic(result) {
 		return result, nil
 	}
 	if !meta.Async {
 		reason := strings.TrimSpace(meta.WaitSkipReason)
 		if reason == "" {
-			reason = "action is synchronous"
+			reason = "capability is synchronous"
 		}
 		mergeDiagnostics(result, map[string]any{"wait_skipped": reason})
 		return result, nil
 	}
 	node, upid := getWaitTarget(result)
 	if node == "" || upid == "" {
-		return nil, apperr.New(apperr.CodeInternal, "wait requested but async action did not provide node/upid")
+		return nil, apperr.New(apperr.CodeInternal, "wait requested but async capability did not provide node/upid")
 	}
 	waitResult, waitErr := taskwait.WaitTask(context.Background(), rt.Client, node, upid, taskwait.WaitOptions{Timeout: waitTimeout(rt.Opts.Timeout), Interval: 2 * time.Second})
 	if waitErr != nil {
@@ -480,7 +480,7 @@ func hasWaitSkipDiagnostic(result map[string]any) bool {
 	return message != ""
 }
 
-func applyActionMeta(result map[string]any, meta capability.Meta) {
+func applyCapabilityMeta(result map[string]any, meta capability.Meta) {
 	if strings.TrimSpace(meta.Capability) == "" {
 		return
 	}
@@ -569,8 +569,8 @@ func tryPrintCommandHelp(args []string, stdout io.Writer) bool {
 		return false
 	}
 	switch args[0] {
-	case "action":
-		_, _ = io.WriteString(stdout, actionHelp())
+	case "capability":
+		_, _ = io.WriteString(stdout, capabilityHelp())
 		return true
 	case "workflow":
 		_, _ = io.WriteString(stdout, workflowHelp())

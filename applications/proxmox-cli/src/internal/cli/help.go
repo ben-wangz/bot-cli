@@ -13,7 +13,7 @@ Usage:
   proxmox-cli [global options] <command> [args]
 
 Commands:
-  action      Execute one action (A01-A53 roadmap)
+  capability  Execute one capability
   workflow    Execute composed workflow
   console     Serial console script/interactive helpers
   auth        Auth inspect and diagnostics
@@ -35,36 +35,36 @@ Global options:
   --debug                          Enable debug logs with redaction
   -h, --help                       Show help
 
-Safety env vars (for VMID-scoped actions):
+Safety env vars (for VMID-scoped capabilities):
   PVE_ALLOWED_VMID_MIN             Allowed VMID lower bound (default: 1001)
   PVE_ALLOWED_VMID_MAX             Allowed VMID upper bound (default: 2000)
 
 Examples:
   proxmox-cli --auth-file ./auth.json auth inspect
-  proxmox-cli --api-base https://pve:8006/api2/json action list_nodes
+  proxmox-cli --api-base https://pve:8006/api2/json capability list_nodes
   proxmox-cli --output table workflow ubuntu24-serial-autoinstall
 `
 }
 
-func actionHelp() string {
+func capabilityHelp() string {
 	var sb strings.Builder
-	sb.WriteString(`proxmox-cli action - execute one action
+	sb.WriteString(`proxmox-cli capability - execute one capability
 
 Usage:
-  proxmox-cli [global options] action <name> [action args]
+  proxmox-cli [global options] capability <name> [args]
 
 Examples:
-  proxmox-cli action list_nodes
-  proxmox-cli action list_vms_by_node --node pve1
-  proxmox-cli action get_vm_status --node pve1 --vmid 120
+  proxmox-cli capability list_nodes
+  proxmox-cli capability list_vms_by_node --node pve1
+  proxmox-cli capability get_vm_status --node pve1 --vmid 120
 
-Implemented actions by capability:
+Implemented capabilities:
 `)
 	for _, group := range capability.CapabilityGroups() {
 		sb.WriteString("  ")
 		sb.WriteString(group.Name)
 		sb.WriteString(":\n")
-		for _, name := range group.Actions {
+		for _, name := range group.Capabilities {
 			sb.WriteString("    - ")
 			sb.WriteString(name)
 			sb.WriteString("\n")
@@ -74,7 +74,7 @@ Implemented actions by capability:
 
 Notes:
   - Use workflow commands for composed end-to-end paths.
-  - --wait applies task-wait only for async actions; others are synchronous or self-polled.
+  - --wait applies task-wait only for async capabilities; others are synchronous or self-polled.
 `)
 	return sb.String()
 }

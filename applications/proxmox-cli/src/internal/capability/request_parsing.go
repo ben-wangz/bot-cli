@@ -12,7 +12,7 @@ import (
 func ParseArgs(args []string) (map[string]string, error) {
 	result := map[string]string{}
 	for i := 0; i < len(args); i++ {
-		name, inline, hasInline, err := splitActionArg(args[i])
+		name, inline, hasInline, err := splitCapabilityArg(args[i])
 		if err != nil {
 			return nil, err
 		}
@@ -21,7 +21,7 @@ func ParseArgs(args []string) (map[string]string, error) {
 			continue
 		}
 		if i+1 >= len(args) {
-			return nil, apperr.New(apperr.CodeInvalidArgs, "missing value for action arg --"+name)
+			return nil, apperr.New(apperr.CodeInvalidArgs, "missing value for capability arg --"+name)
 		}
 		result[name] = args[i+1]
 		i++
@@ -29,13 +29,13 @@ func ParseArgs(args []string) (map[string]string, error) {
 	return result, nil
 }
 
-func splitActionArg(token string) (name string, value string, hasValue bool, err error) {
+func splitCapabilityArg(token string) (name string, value string, hasValue bool, err error) {
 	if !strings.HasPrefix(token, "--") {
-		return "", "", false, apperr.New(apperr.CodeInvalidArgs, "action args must be --key value or --key=value")
+		return "", "", false, apperr.New(apperr.CodeInvalidArgs, "capability args must be --key value or --key=value")
 	}
 	trimmed := strings.TrimPrefix(token, "--")
 	if trimmed == "" {
-		return "", "", false, apperr.New(apperr.CodeInvalidArgs, "invalid empty action arg")
+		return "", "", false, apperr.New(apperr.CodeInvalidArgs, "invalid empty capability arg")
 	}
 	parts := strings.SplitN(trimmed, "=", 2)
 	if len(parts) == 2 {
@@ -47,7 +47,7 @@ func splitActionArg(token string) (name string, value string, hasValue bool, err
 func RequiredNode(args map[string]string) (string, error) {
 	node := strings.TrimSpace(args["node"])
 	if node == "" {
-		return "", apperr.New(apperr.CodeInvalidArgs, "missing required action arg --node")
+		return "", apperr.New(apperr.CodeInvalidArgs, "missing required capability arg --node")
 	}
 	for _, r := range node {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '-' || r == '_' || r == '.' {
@@ -61,7 +61,7 @@ func RequiredNode(args map[string]string) (string, error) {
 func RequiredVMID(args map[string]string) (int, error) {
 	vmidRaw := strings.TrimSpace(args["vmid"])
 	if vmidRaw == "" {
-		return 0, apperr.New(apperr.CodeInvalidArgs, "missing required action arg --vmid")
+		return 0, apperr.New(apperr.CodeInvalidArgs, "missing required capability arg --vmid")
 	}
 	vmid, err := strconv.Atoi(vmidRaw)
 	if err != nil || vmid <= 0 {
@@ -84,7 +84,7 @@ func RequiredOperationVMID(args map[string]string) (int, error) {
 func RequiredInt(args map[string]string, key string) (int, error) {
 	raw := strings.TrimSpace(args[key])
 	if raw == "" {
-		return 0, apperr.New(apperr.CodeInvalidArgs, "missing required action arg --"+key)
+		return 0, apperr.New(apperr.CodeInvalidArgs, "missing required capability arg --"+key)
 	}
 	v, err := strconv.Atoi(raw)
 	if err != nil || v <= 0 {
@@ -107,7 +107,7 @@ func RequiredOperationInt(args map[string]string, key string) (int, error) {
 func RequiredString(args map[string]string, key string) (string, error) {
 	v := strings.TrimSpace(args[key])
 	if v == "" {
-		return "", apperr.New(apperr.CodeInvalidArgs, "missing required action arg --"+key)
+		return "", apperr.New(apperr.CodeInvalidArgs, "missing required capability arg --"+key)
 	}
 	return v, nil
 }
@@ -115,7 +115,7 @@ func RequiredString(args map[string]string, key string) (string, error) {
 func RequiredUPID(args map[string]string) (string, error) {
 	upid := strings.TrimSpace(args["upid"])
 	if upid == "" {
-		return "", apperr.New(apperr.CodeInvalidArgs, "missing required action arg --upid")
+		return "", apperr.New(apperr.CodeInvalidArgs, "missing required capability arg --upid")
 	}
 	if !strings.HasPrefix(strings.ToUpper(upid), "UPID:") {
 		return "", apperr.New(apperr.CodeInvalidArgs, "upid must start with UPID:")

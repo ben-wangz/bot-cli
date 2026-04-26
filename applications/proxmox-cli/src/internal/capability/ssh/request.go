@@ -16,7 +16,7 @@ type Request struct {
 
 func buildResult(req Request, request map[string]any, result any, diagnostics map[string]any) map[string]any {
 	return map[string]any{
-		"action":      req.Name,
+		"capability":  req.Name,
 		"ok":          true,
 		"scope":       req.Scope,
 		"request":     request,
@@ -28,7 +28,7 @@ func buildResult(req Request, request map[string]any, result any, diagnostics ma
 func requiredString(args map[string]string, key string) (string, error) {
 	v := strings.TrimSpace(args[key])
 	if v == "" {
-		return "", apperr.New(apperr.CodeInvalidArgs, "missing required action arg --"+key)
+		return "", apperr.New(apperr.CodeInvalidArgs, "missing required capability arg --"+key)
 	}
 	return v, nil
 }
@@ -36,7 +36,7 @@ func requiredString(args map[string]string, key string) (string, error) {
 func requiredInt(args map[string]string, key string) (int, error) {
 	raw := strings.TrimSpace(args[key])
 	if raw == "" {
-		return 0, apperr.New(apperr.CodeInvalidArgs, "missing required action arg --"+key)
+		return 0, apperr.New(apperr.CodeInvalidArgs, "missing required capability arg --"+key)
 	}
 	v, err := strconv.Atoi(raw)
 	if err != nil || v <= 0 {

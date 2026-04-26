@@ -44,7 +44,7 @@ func runAgentExec(ctx context.Context, client *pveapi.Client, req Request) (map[
 		command = strings.TrimSpace(req.Args["cmd"])
 	}
 	if command == "" {
-		return nil, apperr.New(apperr.CodeInvalidArgs, "missing required action arg --command")
+		return nil, apperr.New(apperr.CodeInvalidArgs, "missing required capability arg --command")
 	}
 	originalCommand := command
 	useShell, err := parseOptionalBoolArg(req.Args, "shell")

@@ -14,7 +14,7 @@ type Request struct {
 
 func buildResult(req Request, request map[string]any, result any, diagnostics map[string]any) map[string]any {
 	return map[string]any{
-		"action":      req.Name,
+		"capability":  req.Name,
 		"ok":          true,
 		"scope":       req.Scope,
 		"request":     request,
