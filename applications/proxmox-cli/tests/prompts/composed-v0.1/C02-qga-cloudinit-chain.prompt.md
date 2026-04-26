@@ -15,7 +15,7 @@ You are a test execution agent. Execute qga/cloud-init chain.
 
 Setup:
 1) Load `build/pve-user.env`, switch to `applications/proxmox-cli/src`.
-2) Resolve and start one disposable VM cloned from template.
+2) Resolve and start one disposable VM cloned from template (ensure clone uses `--pool "$PVE_POOL"`).
 3) Wait for QGA readiness by polling `agent_network_get_interfaces`.
 
 Chain:

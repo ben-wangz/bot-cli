@@ -21,14 +21,15 @@ Setup:
 2) Resolve `TEMPLATE_VMID` from `build/ubuntu-24-with-agent.vm-template.id`.
 3) Resolve `SOURCE_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
 4) Resolve `TEST_VMID` via `get_next_vmid`.
-5) Create one disposable VM by `clone_template --wait --full 0 --source-vmid TEMPLATE_VMID --target-vmid TEST_VMID`.
+5) Create one disposable VM by `clone_template --wait --full 0 --source-vmid TEMPLATE_VMID --target-vmid TEST_VMID --pool "$PVE_POOL"`.
+6) Trigger at least one fresh VM task for `TEST_VMID` (for stable task-chain assertions), e.g. start then stop once via `vm_power --wait`.
 
 Chain:
 1) `list_nodes` and pick one online node as `NODE`.
 2) `list_vms_by_node --node NODE`.
 3) `get_effective_permissions --path /pool/$PVE_POOL`.
 4) `get_next_vmid` and ensure value is positive integer.
-5) `list_tasks_by_vmid --node SOURCE_NODE --vmid TEST_VMID`, resolve one `UPID`.
+5) `list_tasks_by_vmid --node SOURCE_NODE --vmid TEST_VMID --source all`, resolve one `UPID`.
 6) `get_task_status --node SOURCE_NODE --upid UPID`.
 
 Validation:

@@ -160,6 +160,10 @@ func RunSerialWSCaptureToFile(ctx context.Context, client *pveapi.Client, req Re
 				}
 				return nil, apperr.Wrap(apperr.CodeNetwork, "failed to send serial websocket keepalive", keepaliveErr)
 			}
+			running, statusErr := isVMRunning(ctx, client, node, vmid)
+			if statusErr == nil && !running {
+				goto finished
+			}
 		case read := <-reads:
 			if read.err != nil {
 				if websocket.IsCloseError(read.err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {

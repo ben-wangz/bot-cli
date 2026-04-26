@@ -20,9 +20,9 @@ You are a test execution agent. Execute SSH control-plane chain.
 
 Setup:
 1) Load `build/pve-user.env`, switch to `applications/proxmox-cli/src`.
-2) Clone and boot one disposable VM from template.
+2) Clone and boot one disposable VM from template (ensure clone uses `--pool "$PVE_POOL"`).
 3) Generate temporary ed25519 keypair under `build/`.
-4) Inject public key via `ssh_inject_pubkey_qga`.
+4) Inject public key via `ssh_inject_pubkey_qga` (use `--pub-key-file` or `--pub-key`).
 
 Chain:
 1) `ssh_check_service`.

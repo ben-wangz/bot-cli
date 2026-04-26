@@ -198,6 +198,16 @@ func ExtractAgentExecExit(result map[string]any) (int, bool) {
 	}
 	exited, _ := status["exited"].(bool)
 	if !exited {
+		switch v := status["exited"].(type) {
+		case float64:
+			exited = int(v) != 0
+		case int:
+			exited = v != 0
+		case int64:
+			exited = v != 0
+		}
+	}
+	if !exited {
 		if s, ok := status["exited"].(string); ok {
 			exited = strings.EqualFold(strings.TrimSpace(s), "true") || strings.TrimSpace(s) == "1"
 		}
@@ -211,6 +221,10 @@ func ExtractAgentExecExit(result map[string]any) (int, bool) {
 	case int:
 		return v, true
 	case int64:
+		return int(v), true
+	case uint64:
+		return int(v), true
+	case uint:
 		return int(v), true
 	case string:
 		n, err := strconv.Atoi(strings.TrimSpace(v))

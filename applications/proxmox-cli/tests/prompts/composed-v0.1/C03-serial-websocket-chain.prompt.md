@@ -16,7 +16,7 @@ You are a test execution agent. Execute serial/websocket control-plane chain.
 
 Setup:
 1) Load `build/pve-user.env`, switch to `applications/proxmox-cli/src`.
-2) Clone and boot one disposable VM from template.
+2) Clone and boot one disposable VM from template (ensure clone uses `--pool "$PVE_POOL"`).
 
 Chain:
 1) `open_vm_termproxy`.
