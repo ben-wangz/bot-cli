@@ -1,137 +1,49 @@
 # bot-cli
 
-Repository for building **agent-native CLIs**.
+Repository for agent-first command line tools.
 
-This repository is used to design and maintain multiple small CLI tools that are built for AI agents first, while still being usable by humans.
+## Scope
 
-## What Is an Agent CLI?
+- Hosts multiple CLIs under `applications/`.
+- Keeps shared engineering standards (versioning, linting, release automation).
+- Keeps per-CLI runtime details in each application's own docs.
 
-An agent CLI is a command-line interface designed for reliable machine use:
+## Repository Layout
 
-- **Structured output**: supports deterministic JSON output for programmatic parsing.
-- **Discoverable commands**: clear `--help`, stable command groups, predictable flags.
-- **Composable workflows**: works in pipelines, scripts, and autonomous agent loops.
-- **Real backend integration**: wraps real software/APIs/services, not toy mocks.
+- `applications/<app>/`: each CLI implementation, tests, release notes, and skill docs
+- `setup/`: bootstrap utilities used by repository workflows
+- `.github/workflows/`: CI and release pipelines
+- `version-control.yaml`: binary-to-version-file mapping
+- `lint.yaml`: repository lint commands executed by forgekit
 
-## Project Goals
+## Working Model
 
-- Build practical CLI tools for daily workflows.
-- Standardize command design so agents can switch tools with low friction.
-- Keep each CLI small, testable, and easy to iterate.
-- Reuse common patterns (errors, output schema, auth, retries, pagination).
+1. Treat each CLI as self-contained.
+2. Put tool-specific usage and operational playbooks in `applications/<app>/README.md` and skill docs.
+3. Keep root README focused on repository-level conventions only.
 
-## Directory Layout
+## Version and Lint (Repository Level)
 
-All agent CLIs are placed under:
-
-- `applications/<app-name>/`
-
-Current app scaffold:
-
-- `applications/proxmox-cli/`
-
-## Version Management (forgekit)
-
-This project uses `forgekit` for version management.
-
-### Binary mapping
-
-`forgekit version` can manage standalone binaries through `version-control.yaml`.
-
-For `proxmox-cli`:
-
-- binary name: `proxmox-cli`
-- binary path: `applications/proxmox-cli`
-- version file: `applications/proxmox-cli/VERSION`
-
-### Bootstrap forgekit binary
+This repo uses `forgekit` for version and lint orchestration.
 
 ```bash
-REPO_ROOT="$(pwd)"
-FORGEKIT_BIN=$(bash "${REPO_ROOT}/setup/forgekit.sh")
-"${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version get proxmox-cli
+PROJECT_ROOT="$(pwd)"
+FORGEKIT_BIN=$(bash "${PROJECT_ROOT}/setup/forgekit.sh")
+
+"${FORGEKIT_BIN}" --project-root "${PROJECT_ROOT}" lint
+"${FORGEKIT_BIN}" --project-root "${PROJECT_ROOT}" version get <app-name>
+"${FORGEKIT_BIN}" --project-root "${PROJECT_ROOT}" version bump <app-name> patch
 ```
 
-### Common commands
+## Release Convention
 
-```bash
-REPO_ROOT="$(pwd)"
-FORGEKIT_BIN=$(bash "${REPO_ROOT}/setup/forgekit.sh")
+- Tag format: `<application>-v<semver>`
+- Release workflow validates app path and mapped version file before publishing artifacts.
 
-# Get current semver
-"${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version get proxmox-cli
-
-# Bump version
-"${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version bump proxmox-cli patch
-"${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version bump proxmox-cli minor
-"${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" version bump proxmox-cli major
-
-# Run repository lint checks (uses lint.yaml)
-"${FORGEKIT_BIN}" --project-root "${REPO_ROOT}" lint
-```
-
-### GitHub release tags
-
-This repository publishes per-application GitHub Releases from prefixed tags:
-
-- format: `<application>-v<semver>`
-- example: `proxmox-cli-v0.1.0`
-
-On tag push, the release workflow validates:
-
-- app exists under `applications/<application>`
-- app is listed in `version-control.yaml` binaries
-- tag version equals `applications/<application>/VERSION`
-
-For `proxmox-cli`, run the prompt suites under `applications/proxmox-cli/tests/prompts/` before publishing a release tag.
-
-## Core Conventions (Planned Baseline)
-
-Each CLI in this repo should follow these conventions unless explicitly overridden:
-
-1. **Command shape**
-   - Use verb-first subcommands where possible.
-   - Keep naming consistent across tools (`list`, `get`, `create`, `update`, `delete`, `run`, `check`).
-
-2. **Output modes**
-   - Human-readable output by default.
-   - `--json` for machine-readable output.
-   - Exit code `0` for success, non-zero for failure.
-
-3. **Error contract**
-   - Clear, short error messages.
-   - When `--json` is enabled, return structured error payloads.
-
-4. **Safety defaults**
-   - Read-only by default for dangerous targets.
-   - Require explicit flags/arguments for destructive operations.
-
-5. **Docs and discoverability**
-   - Every CLI must provide meaningful `--help` output.
-   - Every CLI should ship or reference a `SKILL.md` for agent usage patterns.
-
-## Suggested CLI Development Checklist
-
-For each new agent CLI:
-
-1. Define scope (what backend/system it controls).
-2. Define command groups and minimal JSON schema.
-3. Implement MVP commands.
-4. Add unit tests for parser + core logic.
-5. Add at least one end-to-end command test.
-6. Add/update usage docs and agent skill notes.
+For app-specific release readiness (tests, prompts, rollout notes), use that app's docs under `applications/<app>/`.
 
 ## OpenCode Integration
 
-This repo is configured to load local rules via:
-
-- `opencode.json` -> `instructions: [".opencode/AGENTS.md"]`
-
-Local project skills can be installed under:
-
-- `.opencode/skills/<skill-name>/SKILL.md`
-
-## Notes
-
-- Priorities are reliability, speed, and practical usefulness over framework complexity.
-- The repository will gradually expand as more agent-focused CLIs are added.
+- Repository instructions: `opencode.json` -> `.opencode/AGENTS.md`
+- Skill locations follow OpenCode conventions (project-level or user-level paths).
+- App-specific skills should live with the app source and be installable into OpenCode skill directories.
