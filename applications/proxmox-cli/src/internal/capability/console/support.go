@@ -16,6 +16,12 @@ import (
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/pveapi"
 )
 
+const (
+	serialScriptInitialDelay = 300 * time.Millisecond
+	serialScriptReadyDelay   = 250 * time.Millisecond
+	serialScriptCommandDelay = 120 * time.Millisecond
+)
+
 func parseUPIDNode(upid string) string {
 	parts := strings.Split(strings.TrimSpace(upid), ":")
 	if len(parts) < 2 {
@@ -177,6 +183,22 @@ func sendTermproxyResize(conn *websocket.Conn, cols int, rows int) error {
 	if err := conn.WriteMessage(websocket.BinaryMessage, []byte(payload)); err != nil {
 		if !strings.Contains(strings.ToLower(err.Error()), "close") {
 			return err
+		}
+	}
+	return nil
+}
+
+func sendSerialScriptCommands(conn *websocket.Conn, commands []string) error {
+	time.Sleep(serialScriptInitialDelay)
+	if len(commands) > 0 {
+		time.Sleep(serialScriptReadyDelay)
+	}
+	for _, command := range commands {
+		if err := sendTermproxyInput(conn, command); err != nil {
+			return err
+		}
+		if strings.TrimSpace(command) != "" {
+			time.Sleep(serialScriptCommandDelay)
 		}
 	}
 	return nil

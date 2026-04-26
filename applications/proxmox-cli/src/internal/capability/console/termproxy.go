@@ -132,17 +132,8 @@ func RunSerialWSSessionControl(ctx context.Context, client *pveapi.Client, req R
 		return nil, apperr.Wrap(apperr.CodeNetwork, "failed to send initial terminal resize", resizeErr)
 	}
 	commands := parseScriptCommands(req.Args["script"])
-	time.Sleep(300 * time.Millisecond)
-	if len(commands) > 0 {
-		time.Sleep(250 * time.Millisecond)
-	}
-	for _, command := range commands {
-		if writeErr := sendTermproxyInput(conn, command); writeErr != nil {
-			return nil, apperr.Wrap(apperr.CodeNetwork, "failed to send serial command", writeErr)
-		}
-		if strings.TrimSpace(command) != "" {
-			time.Sleep(120 * time.Millisecond)
-		}
+	if sendErr := sendSerialScriptCommands(conn, commands); sendErr != nil {
+		return nil, apperr.Wrap(apperr.CodeNetwork, "failed to send serial command", sendErr)
 	}
 	if deadlineErr := conn.SetReadDeadline(time.Time{}); deadlineErr != nil {
 		return nil, apperr.Wrap(apperr.CodeNetwork, "failed to reset websocket read deadline", deadlineErr)

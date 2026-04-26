@@ -95,7 +95,7 @@ M3 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/ref
 
 产出：统一 wait 框架 + 首批迁移清单 + 兼容性验证结果。
 
-M4 执行状态：active，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m4-wait-unification.md`。
+M4 执行状态：completed，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m4-wait-unification.md`。
 
 ### M5: lint 强化（Go 文件行数 <= 250）
 
@@ -141,6 +141,6 @@ M3 目标新增：
 
 ## 8. 立即可执行的下一步
 
-1. 启动 M4：盘点 capability/workflow 现有 wait 逻辑与参数差异。
-2. 抽象统一 wait 组件并优先迁移 workflow 高频链路。
-3. 补齐 workflow 回归验证，并将验收结论回填到 M3 文档。
+1. 启动 M5：落地 Go 文件行数 lint 规则与首轮超限治理。
+2. 进入 M6：收敛文档与重构总结，回填 wait 接口参数形态评估。
+3. 在整体重构完成后统一执行回归验证，并回填 M3/M4 验收结论。

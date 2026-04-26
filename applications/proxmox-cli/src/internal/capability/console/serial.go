@@ -107,17 +107,8 @@ func RunSerialWSCaptureToFile(ctx context.Context, client *pveapi.Client, req Re
 		return nil, apperr.Wrap(apperr.CodeNetwork, "failed to send initial terminal resize", resizeErr)
 	}
 	commands := parseScriptCommands(req.Args["script"])
-	time.Sleep(300 * time.Millisecond)
-	if len(commands) > 0 {
-		time.Sleep(250 * time.Millisecond)
-	}
-	for _, command := range commands {
-		if writeErr := sendTermproxyInput(conn, command); writeErr != nil {
-			return nil, apperr.Wrap(apperr.CodeNetwork, "failed to send serial command", writeErr)
-		}
-		if strings.TrimSpace(command) != "" {
-			time.Sleep(120 * time.Millisecond)
-		}
+	if sendErr := sendSerialScriptCommands(conn, commands); sendErr != nil {
+		return nil, apperr.Wrap(apperr.CodeNetwork, "failed to send serial command", sendErr)
 	}
 
 	type wsRead struct {

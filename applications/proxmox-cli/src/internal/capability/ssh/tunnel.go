@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/apperr"
+	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/taskwait"
 )
 
 type tunnelMeta struct {
@@ -81,8 +82,14 @@ func TunnelStart(ctx context.Context, req Request) (map[string]any, error) {
 		_ = cmd.Process.Kill()
 		return nil, err
 	}
-	time.Sleep(250 * time.Millisecond)
-	if !processExists(pid) {
+	_, waitErr := taskwait.Poll(context.Background(), taskwait.PollOptions{
+		Timeout:        250 * time.Millisecond,
+		Interval:       50 * time.Millisecond,
+		TimeoutMessage: "tunnel process did not stay alive during startup window",
+	}, func(_ context.Context) (bool, error) {
+		return processExists(pid), nil
+	})
+	if waitErr != nil {
 		logTail := readFileTail(logFile, 240)
 		return nil, apperr.New(apperr.CodeNetwork, "ssh tunnel exited immediately; log_tail="+logTail)
 	}
@@ -176,12 +183,18 @@ func processExists(pid int) bool {
 }
 
 func waitProcessExit(pid int, timeout time.Duration) bool {
-	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
-		if !processExists(pid) {
-			return true
-		}
-		time.Sleep(150 * time.Millisecond)
+	if !processExists(pid) {
+		return true
+	}
+	_, err := taskwait.Poll(context.Background(), taskwait.PollOptions{
+		Timeout:        timeout,
+		Interval:       150 * time.Millisecond,
+		TimeoutMessage: "wait process exit timeout",
+	}, func(_ context.Context) (bool, error) {
+		return !processExists(pid), nil
+	})
+	if err == nil {
+		return true
 	}
 	return !processExists(pid)
 }
