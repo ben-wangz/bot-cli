@@ -391,42 +391,36 @@ func runActionCommand(rt commandRuntime, args []string) (map[string]any, error) 
 			"request": parsedArgs,
 		}, nil
 	}
-	result, err := executeActionByPhase(rt, name, parsedArgs)
+	result, meta, err := executeAction(rt, name, parsedArgs)
 	if err != nil {
 		return nil, err
 	}
+	applyActionMeta(result, meta)
 	if !rt.Opts.Wait {
 		return result, nil
 	}
-	return applyActionWait(rt, name, result)
+	return applyActionWait(rt, result, meta)
 }
 
-func executeActionByPhase(rt commandRuntime, name string, parsedArgs map[string]string) (map[string]any, error) {
+func executeAction(rt commandRuntime, name string, parsedArgs map[string]string) (map[string]any, action.Meta, error) {
 	req := action.Request{Name: name, Args: parsedArgs, Scope: rt.Opts.AuthScope}
-	if action.IsPhase1Action(name) {
-		return action.ExecutePhase1(context.Background(), rt.Client, req)
+	result, meta, err := action.Dispatch(context.Background(), rt.Client, req)
+	if err != nil {
+		return nil, action.Meta{}, err
 	}
-	if action.IsPhase2Action(name) {
-		return action.ExecutePhase2(context.Background(), rt.Client, req)
-	}
-	if action.IsPhase3Action(name) {
-		return action.ExecutePhase3(context.Background(), rt.Client, req)
-	}
-	if action.IsPhase4Action(name) {
-		return action.ExecutePhase4(context.Background(), rt.Client, req)
-	}
-	if action.IsPhase5Action(name) {
-		return action.ExecutePhase5(context.Background(), rt.Client, req)
-	}
-	return nil, apperr.New(apperr.CodeInvalidArgs, "action not implemented yet: "+name)
+	return result, meta, nil
 }
 
-func applyActionWait(rt commandRuntime, name string, result map[string]any) (map[string]any, error) {
+func applyActionWait(rt commandRuntime, result map[string]any, meta action.Meta) (map[string]any, error) {
 	if hasWaitSkipDiagnostic(result) {
 		return result, nil
 	}
-	if !action.IsActionAsync(name) {
-		mergeDiagnostics(result, map[string]any{"wait_skipped": action.WaitSkipReason(name)})
+	if !meta.Async {
+		reason := strings.TrimSpace(meta.WaitSkipReason)
+		if reason == "" {
+			reason = "action is synchronous"
+		}
+		mergeDiagnostics(result, map[string]any{"wait_skipped": reason})
 		return result, nil
 	}
 	node, upid := getWaitTarget(result)
@@ -483,6 +477,13 @@ func hasWaitSkipDiagnostic(result map[string]any) bool {
 	}
 	message := strings.TrimSpace(asStringValue(diagnostics["wait_skipped"]))
 	return message != ""
+}
+
+func applyActionMeta(result map[string]any, meta action.Meta) {
+	if strings.TrimSpace(meta.Capability) == "" {
+		return
+	}
+	mergeDiagnostics(result, map[string]any{"capability": meta.Capability})
 }
 
 func runWorkflowCommand(rt commandRuntime, args []string) (map[string]any, error) {

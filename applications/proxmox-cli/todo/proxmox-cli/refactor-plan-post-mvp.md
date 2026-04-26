@@ -1,6 +1,6 @@
 # proxmox-cli 重构计划（Post-MVP，需求不变）
 
-- 状态: draft
+- 状态: active
 - 优先级: high
 - 创建日期: 2026-04-26
 - 目标版本: v0.2（内部重构版本，不引入新需求）
@@ -54,6 +54,8 @@
 
 产出：`旧->新` 映射文档 + 风险点列表。
 
+M0 执行结果：已完成，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m0-baseline-mapping.md`。
+
 ### M1: 目标结构定稿（目录与包边界）
 
 1. 设计并评审新目录结构（以能力域为主，横切能力单独分层）。
@@ -61,6 +63,8 @@
 3. 定义迁移规则：import 方向、禁止反向依赖、公共模型放置位置。
 
 产出：结构草图 + 包职责说明 + 迁移守则。
+
+M1 执行状态：in_progress，见 `applications/proxmox-cli/todo/proxmox-cli/refactor-m1-target-structure.md`。
 
 ### M2: 无行为变化的“搬迁优先”重构
 
