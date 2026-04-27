@@ -92,7 +92,7 @@ jobs:
       - name: Build multi-platform binaries
         env:
           APP_NAME: ${{ steps.meta.outputs.app }}
-          CMD_DIR: ${{ steps.meta.outputs.cmd_dir }}
+          APP_DIR: ${{ steps.meta.outputs.app_dir }}
         run: |
           mkdir -p dist
           targets=(
@@ -108,8 +108,8 @@ jobs:
             echo "Building ${output}"
 
             CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" \
-              go build -trimpath -ldflags "-s -w" \
-              -o "$output" "./${CMD_DIR}"
+              go -C "${APP_DIR}/src" build -trimpath -ldflags "-s -w" \
+              -o "${GITHUB_WORKSPACE}/${output}" "./cmd/${APP_NAME}"
           done
 
       - name: Package skills bundle
