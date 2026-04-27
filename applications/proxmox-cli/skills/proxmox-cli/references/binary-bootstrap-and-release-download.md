@@ -35,8 +35,25 @@ This guide assumes release artifacts are published as:
   - `proxmox-cli_darwin_amd64`
   - `proxmox-cli_darwin_arm64`
   - `checksums.txt`
+  - `proxmox-cli_skills_<semver>.tar.gz`
 
 If your project uses different names, adapt the `tag`/`asset` variables.
+
+## Optional: Download Skill Bundle
+
+If you also need the OpenCode skill package from the same release:
+
+```bash
+tag="proxmox-cli-v${PROXMOX_CLI_VERSION}"
+skill_asset="proxmox-cli_skills_${PROXMOX_CLI_VERSION}.tar.gz"
+base="https://github.com/${PROXMOX_CLI_GH_REPO}/releases/download/${tag}"
+
+mkdir -p ./build ./.opencode/skills
+curl -fsSL -o ./build/proxmox-cli-skills.tar.gz "${base}/${skill_asset}"
+tar -xzf ./build/proxmox-cli-skills.tar.gz -C ./.opencode/skills
+```
+
+The archive contains `skills/proxmox-cli/...`, so extraction creates `./.opencode/skills/proxmox-cli`.
 
 ## Portable Bootstrap Snippet
 

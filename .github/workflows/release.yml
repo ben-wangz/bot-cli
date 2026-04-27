@@ -112,6 +112,22 @@ jobs:
               -o "$output" "./${CMD_DIR}"
           done
 
+      - name: Package skills bundle
+        env:
+          APP_NAME: ${{ steps.meta.outputs.app }}
+          APP_DIR: ${{ steps.meta.outputs.app_dir }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          skills_dir="${APP_DIR}/skills"
+          bundle="dist/${APP_NAME}_skills_${VERSION}.tar.gz"
+
+          if [ -d "$skills_dir" ]; then
+            echo "Packaging skills bundle: $bundle"
+            tar -czf "$bundle" -C "$APP_DIR" skills
+          else
+            echo "No skills directory found at $skills_dir, skipping skills bundle"
+          fi
+
       - name: Generate checksums
         run: |
           cd dist

@@ -25,21 +25,20 @@ OpenCode docs confirm skill discovery locations include:
 
 Reference: `https://opencode.ai/docs/skills` (`Place files` section).
 
-Install `proxmox-cli` skill to project-level path via `git clone`:
+Install `proxmox-cli` skill to project-level path via release asset (`.tar.gz`):
 
 ```bash
 PROJECT_ROOT="/path/to/your/project"
-REPO_URL="https://github.com/ben-wangz/bot-cli.git"
-TMP_DIR="$(mktemp -d)"
+GH_REPO="ben-wangz/bot-cli"
+VERSION="0.1.1"
+TAG="proxmox-cli-v${VERSION}"
+ASSET="proxmox-cli_skills_${VERSION}.tar.gz"
 
-git clone --depth 1 --filter=blob:none --sparse "$REPO_URL" "$TMP_DIR"
-git -C "$TMP_DIR" sparse-checkout set applications/proxmox-cli/skills/proxmox-cli
-
-mkdir -p "$PROJECT_ROOT/.opencode/skills"
+mkdir -p "$PROJECT_ROOT/build" "$PROJECT_ROOT/.opencode/skills"
+curl -fsSL -o "$PROJECT_ROOT/build/proxmox-cli-skills.tar.gz" \
+  "https://github.com/${GH_REPO}/releases/download/${TAG}/${ASSET}"
 rm -rf "$PROJECT_ROOT/.opencode/skills/proxmox-cli"
-cp -R "$TMP_DIR/applications/proxmox-cli/skills/proxmox-cli" "$PROJECT_ROOT/.opencode/skills/proxmox-cli"
-
-rm -rf "$TMP_DIR"
+tar -xzf "$PROJECT_ROOT/build/proxmox-cli-skills.tar.gz" -C "$PROJECT_ROOT/.opencode/skills"
 ```
 
 Install to user-level path (shared across projects):
@@ -54,3 +53,4 @@ cp -R "$PROJECT_ROOT/.opencode/skills/proxmox-cli" "$HOME/.config/opencode/skill
 
 - Tag format: `proxmox-cli-v<semver>`
 - Release notes directory: `applications/proxmox-cli/release/`
+- Release assets include platform binaries, `checksums.txt`, and skills bundle `proxmox-cli_skills_<version>.tar.gz`

@@ -44,6 +44,18 @@ fi
 
 If your environment does not provide `sha256sum`, install it first or use an equivalent SHA256 verifier.
 
+Optional (install OpenCode skill bundle from the same release):
+
+```bash
+tag="proxmox-cli-v${PROXMOX_CLI_VERSION}"
+skill_asset="proxmox-cli_skills_${PROXMOX_CLI_VERSION}.tar.gz"
+base="https://github.com/${PROXMOX_CLI_GH_REPO}/releases/download/${tag}"
+
+mkdir -p ./build ./.opencode/skills
+curl -fsSL -o ./build/proxmox-cli-skills.tar.gz "${base}/${skill_asset}"
+tar -xzf ./build/proxmox-cli-skills.tar.gz -C ./.opencode/skills
+```
+
 ## 3) Verify Connectivity and Identity
 
 ```bash

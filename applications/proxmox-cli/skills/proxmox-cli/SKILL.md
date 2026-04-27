@@ -96,6 +96,8 @@ Recommended order:
 3. Fall back to `go run ./cmd/proxmox-cli` only when local binary is unavailable.
 4. Keep command flags identical across binary and `go run` execution modes.
 
+Release note: the same release also publishes `proxmox-cli_skills_<version>.tar.gz` for skill installation.
+
 See full pattern and script template in [Binary bootstrap and release download](references/binary-bootstrap-and-release-download.md).
 
 ## Safety Checklist
