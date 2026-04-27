@@ -33,16 +33,21 @@ if [ -z "${PROXMOX_CLI_BIN}" ]; then
   asset="proxmox-cli_${os}_${arch}"
   base="https://github.com/${PROXMOX_CLI_GH_REPO}/releases/download/${tag}"
 
-  mkdir -p ./.bin
-  curl -fsSL -o ./.bin/proxmox-cli "${base}/${asset}"
-  curl -fsSL -o ./.bin/checksums.txt "${base}/checksums.txt"
-  (cd ./.bin && sha256sum --check --ignore-missing checksums.txt)
-  chmod +x ./.bin/proxmox-cli
-  PROXMOX_CLI_BIN="$(pwd)/.bin/proxmox-cli"
+  mkdir -p ./build/bin
+  curl -fsSL -o ./build/bin/proxmox-cli "${base}/${asset}"
+  curl -fsSL -o ./build/bin/checksums.txt "${base}/checksums.txt"
+  (cd ./build/bin && sha256sum --check --ignore-missing checksums.txt)
+  chmod +x ./build/bin/proxmox-cli
+  PROXMOX_CLI_BIN="$(pwd)/build/bin/proxmox-cli"
 fi
 ```
 
 If your environment does not provide `sha256sum`, install it first or use an equivalent SHA256 verifier.
+
+Guardrail:
+
+- Prefer an ignored artifact path like `./build/bin` (recommended in this repo).
+- If you use a custom download path, ensure it is ignored before downloading binaries.
 
 Optional (install OpenCode skill bundle from the same release):
 

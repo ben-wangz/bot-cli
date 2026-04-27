@@ -21,8 +21,13 @@ Guarantee a usable `proxmox-cli` binary before running VM operations.
 
 Optional:
 
-- `PROXMOX_CLI_BIN_DIR` (default: `./.bin`)
+- `PROXMOX_CLI_BIN_DIR` (default: `./build/bin`)
 - `PROXMOX_CLI_DOWNLOAD_BASE` for mirror/proxy base URL
+
+Guardrails:
+
+1. Prefer a path already covered by repository `.gitignore` (recommended: `./build/bin` in this repo).
+2. If using a custom path, ensure it is ignored before download.
 
 ## Release Asset Convention
 
@@ -64,7 +69,7 @@ set -euo pipefail
 PROXMOX_CLI_BIN="${PROXMOX_CLI_BIN:-$(command -v proxmox-cli 2>/dev/null || true)}"
 PROXMOX_CLI_GH_REPO="${PROXMOX_CLI_GH_REPO:-}"
 PROXMOX_CLI_VERSION="${PROXMOX_CLI_VERSION:-}"
-PROXMOX_CLI_BIN_DIR="${PROXMOX_CLI_BIN_DIR:-./.bin}"
+PROXMOX_CLI_BIN_DIR="${PROXMOX_CLI_BIN_DIR:-./build/bin}"
 
 if [ -n "${PROXMOX_CLI_BIN}" ] && [ -x "${PROXMOX_CLI_BIN}" ]; then
   printf '%s\n' "${PROXMOX_CLI_BIN}"
