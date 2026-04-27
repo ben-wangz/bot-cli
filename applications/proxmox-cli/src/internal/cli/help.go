@@ -28,7 +28,7 @@ Global options:
   --auth-ticket <value>            Session ticket credential
   --auth-csrf-token <value>        CSRF token for ticket mode
   --insecure-tls                   Skip TLS cert verification
-  --timeout <seconds|duration>     Request timeout (default: 30s)
+  --timeout <seconds|duration>     Request timeout (default: 30s; set a longer timeout explicitly for ISO upload and other long-running operations)
   --wait                           Wait for asynchronous task completion
   --dry-run                        Print execution plan without mutation
   --output <json|yaml|table>       Output format (default: json)

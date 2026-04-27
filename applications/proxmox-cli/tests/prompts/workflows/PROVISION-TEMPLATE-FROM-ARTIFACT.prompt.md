@@ -22,6 +22,8 @@ Execution requirements:
 6) Set VMID policy bounds explicitly:
    - `PVE_ALLOWED_VMID_MIN=1001`
    - `PVE_ALLOWED_VMID_MAX=2000`
+7) For ISO upload command, set CLI timeout to `--timeout 20m`.
+   - rationale: `3 GiB / 3 MiB/s ~= 1024s ~= 17m04s`, so 20m leaves safety margin.
 
 Input resolution:
 7) Resolve `NODE` from first online node in `capability list_nodes` output.
@@ -50,7 +52,7 @@ Step A - Build installer ISO (A52):
 Step B - Upload installer ISO (A53), split with progress markers:
 14) Print marker before upload, then execute upload:
     - marker: `[STEP B1] about to upload ISO`
-    - `go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --output json capability storage_upload_iso --node "$NODE" --storage local --source-path "$LOCAL_OUTPUT_ISO" --filename "$UPLOAD_FILENAME" --if-exists replace`
+    - `go run ./cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --timeout 20m --output json capability storage_upload_iso --node "$NODE" --storage local --source-path "$LOCAL_OUTPUT_ISO" --filename "$UPLOAD_FILENAME" --if-exists replace`
 15) Print marker after upload returns:
     - marker: `[STEP B2] upload completed, extracting volid`
 16) Extract `ARTIFACT_ISO` from result `volid` (fallback to `local:iso/$UPLOAD_FILENAME` if empty).

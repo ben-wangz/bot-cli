@@ -53,7 +53,7 @@ Execution requirements:
     - run prerequisite capabilities in order (auth-scope user):
       - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json capability storage_upload_guard --node "$NODE" --storage local --content-type iso`
       - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json capability build_ubuntu_autoinstall_iso --source-iso "$LOCAL_SOURCE_ISO" --output-iso "$LOCAL_OUTPUT_ISO" --work-dir "$LOCAL_WORK_DIR"`
-      - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --auth-scope user --output json capability storage_upload_iso --node "$NODE" --storage local --source-path "$LOCAL_OUTPUT_ISO" --filename "$UPLOAD_FILENAME" --if-exists replace`
+      - `go run ./applications/proxmox-cli/src/cmd/proxmox-cli --api-base "${PVE_API_BASE_URL%/}/api2/json" --insecure-tls --timeout 20m --auth-scope user --output json capability storage_upload_iso --node "$NODE" --storage local --source-path "$LOCAL_OUTPUT_ISO" --filename "$UPLOAD_FILENAME" --if-exists replace`
     - resolve `ARTIFACT_ISO` from upload result `volid` (fallback `local:iso/$UPLOAD_FILENAME`)
     - immediately delete local temporary ISO artifact after successful upload:
       - `rm -f "$LOCAL_OUTPUT_ISO"`
@@ -93,4 +93,5 @@ Execution requirements:
 Safety:
 - This setup is the only prompt that depends on `build/pve-root.env`.
 - Do not modify unrelated users/pools.
+- ISO upload timeout guidance: `3 GiB / 3 MiB/s ~= 1024s ~= 17m04s`; use `--timeout 20m` for upload steps.
 ```
