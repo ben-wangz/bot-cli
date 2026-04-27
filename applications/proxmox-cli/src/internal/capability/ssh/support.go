@@ -68,17 +68,6 @@ func parseTarget(args map[string]string, batch bool, capabilityName string) (tar
 	return target{Host: host, Port: port, User: user, IdentityFile: identityFile, ConnectTimeoutSeconds: connectTimeout, ExtraArgs: extraArgs}, nil
 }
 
-func rejectUnsupportedPassword(args map[string]string, capabilityName string) error {
-	if _, provided := args["password"]; !provided {
-		return nil
-	}
-	name := strings.TrimSpace(capabilityName)
-	if name == "" {
-		name = "ssh capability"
-	}
-	return apperr.New(apperr.CodeInvalidArgs, "--password is not supported for "+name+" in batch/key mode; use --identity-file")
-}
-
 func buildSSHBaseArgs(t target, batch bool) []string {
 	args := []string{"-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"}
 	if batch {
