@@ -13,7 +13,7 @@ import (
 )
 
 func CheckService(ctx context.Context, req Request) (map[string]any, error) {
-	t, err := parseTarget(req.Args, true)
+	t, err := parseTarget(req.Args, true, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func CheckService(ctx context.Context, req Request) (map[string]any, error) {
 }
 
 func Exec(ctx context.Context, req Request) (map[string]any, error) {
-	t, err := parseTarget(req.Args, true)
+	t, err := parseTarget(req.Args, true, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func Exec(ctx context.Context, req Request) (map[string]any, error) {
 }
 
 func ScpTransfer(ctx context.Context, req Request) (map[string]any, error) {
-	t, err := parseTarget(req.Args, true)
+	t, err := parseTarget(req.Args, true, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func ScpTransfer(ctx context.Context, req Request) (map[string]any, error) {
 }
 
 func PrintConnectCommand(req Request) (map[string]any, error) {
-	t, err := parseTarget(req.Args, false)
+	t, err := parseTarget(req.Args, false, req.Name)
 	if err != nil {
 		return nil, err
 	}

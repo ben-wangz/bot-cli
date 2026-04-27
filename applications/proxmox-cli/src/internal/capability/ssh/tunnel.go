@@ -29,7 +29,7 @@ type tunnelMeta struct {
 }
 
 func TunnelStart(ctx context.Context, req Request) (map[string]any, error) {
-	t, err := parseTarget(req.Args, true)
+	t, err := parseTarget(req.Args, true, req.Name)
 	if err != nil {
 		return nil, err
 	}
