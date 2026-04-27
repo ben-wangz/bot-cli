@@ -22,7 +22,8 @@ Setup:
 1) Load `build/pve-user.env`, switch to `applications/proxmox-cli/src`.
 2) Clone and boot one disposable VM from template (ensure clone uses `--pool "$PVE_POOL"` and a deterministic disposable name, for example `botcli-c04-<vmid>`).
 3) Generate temporary ed25519 keypair under `build/`.
-4) Inject public key via `ssh_inject_pubkey_qga` (use `--pub-key-file` or `--pub-key`).
+4) Negative check: first call `ssh_inject_pubkey_qga` with a non-existent username (for example `botcli-missing-user`) and require failure.
+5) Inject public key via `ssh_inject_pubkey_qga` for existing guest user (use `--pub-key-file` or `--pub-key`).
 
 Chain:
 1) `ssh_check_service`.
@@ -33,12 +34,13 @@ Chain:
 
 Validation:
 - All capabilities return `ok == true`.
+- Non-existent-user `ssh_inject_pubkey_qga` attempt fails with explicit error signal.
 - SCP roundtrip content matches.
 - Tunnel status reports running before stop.
 
 Cleanup:
 - Cleanup must run in `finally` even if SSH checks fail.
-- Stop VM best-effort, then destroy disposable VM via Proxmox API delete (`purge=1`, `destroy-unreferenced-disks=1`).
+- Stop VM best-effort, then destroy with `capability destroy_vm --node <vm-node> --vmid <vmid> --if-missing ok --purge 1 --destroy-unreferenced-disks 1`.
 - If VM not found at cleanup time, treat as already cleaned.
 - Delete temporary key files and transfer artifacts.
 

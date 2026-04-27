@@ -30,7 +30,7 @@ Validation:
 
 Cleanup:
 - Cleanup must run in `finally` even if serial/ws checks fail.
-- Stop VM best-effort, then destroy disposable VM via Proxmox API delete (`purge=1`, `destroy-unreferenced-disks=1`).
+- Stop VM best-effort, then destroy with `capability destroy_vm --node <vm-node> --vmid <vmid> --if-missing ok --purge 1 --destroy-unreferenced-disks 1`.
 - If VM not found at cleanup time, treat as already cleaned.
 
 Return:

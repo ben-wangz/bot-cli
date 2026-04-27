@@ -40,6 +40,7 @@ Validation:
 
 Cleanup:
 - Default: cleanup runs in `finally` (stop best-effort + destroy VM).
+- Use `capability destroy_vm --node <latest node for TEST_VMID> --vmid TEST_VMID --if-missing ok --purge 1 --destroy-unreferenced-disks 1` for destroy step.
 - Exception (preserve for migration verification): if migrate did not reach terminal `exitstatus=OK` within observation window but still shows healthy in-progress signals (no explicit failure), skip cleanup intentionally.
 - When cleanup is skipped by this exception, return explicit preserve metadata for operator follow-up:
   - `preserve_for_validation: true`

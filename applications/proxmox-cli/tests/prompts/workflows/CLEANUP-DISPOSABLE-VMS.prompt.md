@@ -22,9 +22,9 @@ Execution requirements:
    - VMID is not in `PRESERVE_VMIDS`,
    - VM name starts with one of: `botcli-c00-`, `botcli-c01-`, `botcli-c02-`, `botcli-c03-`, `botcli-c04-`.
 8) For each candidate VM:
-   - best-effort stop with `capability vm_power --mode stop`;
-   - destroy VM via Proxmox API `DELETE /nodes/<node>/qemu/<vmid>?purge=1&destroy-unreferenced-disks=1` using current user credentials;
-   - if VM already missing, treat as success.
+    - best-effort stop with `capability vm_power --mode stop`;
+    - destroy VM with `capability destroy_vm --node <node> --vmid <vmid> --if-missing ok --purge 1 --destroy-unreferenced-disks 1` using current user credentials;
+    - if VM already missing, treat as success.
 9) Re-read `list_cluster_resources --type vm` and verify no candidate VM remains.
 10) Return JSON only:
    - `workflow`: `cleanup-disposable-vms`

@@ -178,13 +178,15 @@ Execution order inside this phase:
 
 ## Test Plan (High Level)
 
-1. Unit tests:
-   - `get_next_vmid` in-range/out-of-range scenarios.
-   - `get_next_vmid` returns error when no free VMID exists in allowed range.
-   - destroy idempotency (`if-missing=ok|fail`).
-   - ssh inject user-missing hard fail.
-2. Prompt/e2e updates:
+1. Prompt/e2e updates (primary focus):
    - lifecycle cleanup uses `destroy_vm` instead of raw API.
+   - `get_next_vmid` is consumed directly in a mutation path to verify no range mismatch.
+   - add a negative check for `ssh_inject_pubkey_qga` with non-existent user (must fail).
    - add one doc-driven SSH capability smoke path.
-3. CLI help snapshots:
+2. CLI help snapshots:
    - verify `capability <name> --help` output for 2-3 representative capabilities.
+   - verify `capability describe <name>` JSON shape for machine-readability.
+
+Note:
+
+- Unit tests are optional for this change set; prioritize prompt/e2e and CLI help validation.

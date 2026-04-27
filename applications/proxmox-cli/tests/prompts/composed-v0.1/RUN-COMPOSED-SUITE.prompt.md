@@ -27,7 +27,7 @@ Run virtual-workflow prompt chains to cover capabilities that are not directly e
 1) Every VM-writing chain (C00..C04) must run cleanup in a `finally` block (or equivalent) even when validation fails midway.
 2) Cleanup must include VM destruction (not stop-only):
    - stop/shutdown best-effort;
-   - call Proxmox delete endpoint for the VM (`DELETE /nodes/<node>/qemu/<vmid>?purge=1&destroy-unreferenced-disks=1`) using current test credentials;
+   - call `capability destroy_vm --if-missing ok --purge 1 --destroy-unreferenced-disks 1` using current test credentials;
    - treat "already absent" as success.
 3) Allowed preserve exception:
    - only for `C01-vm-lifecycle-chain` when migration is still healthy/in-progress after observation window and no explicit failure signal;

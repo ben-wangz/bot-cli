@@ -146,6 +146,15 @@ func (c *Client) DeleteFormData(ctx context.Context, path string, form url.Value
 	return c.doAndDecode(req)
 }
 
+func (c *Client) DeleteData(ctx context.Context, path string, query url.Values) (any, error) {
+	requestPath := withQuery(path, query)
+	req, err := c.NewRequest(ctx, http.MethodDelete, requestPath, nil)
+	if err != nil {
+		return nil, err
+	}
+	return c.doAndDecode(req)
+}
+
 func (c *Client) PostMultipartFile(ctx context.Context, path string, fields map[string]string, fileField string, filePath string, uploadFilename string) (any, error) {
 	if strings.TrimSpace(fileField) == "" {
 		return nil, apperr.New(apperr.CodeInvalidArgs, "multipart file field is required")

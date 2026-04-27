@@ -22,7 +22,7 @@ Run prompts in this order:
 - `setup.md` and `workflows/BOOTSTRAP-BOT-USER-POOL-ACL.prompt.md` require `build/pve-root.env`.
 - All other prompts should run with `build/pve-user.env`.
 - Prompts should resolve runtime inputs locally and clean up disposable assets in the same run.
-- Composed VM chains should use disposable VM names prefixed with `botcli-c0` and always run destroy cleanup in `finally` blocks.
+- Composed VM chains should use disposable VM names prefixed with `botcli-c0` and always run `capability destroy_vm` cleanup in `finally` blocks.
 - Exception: C01 migration chain may preserve a VM when migration is still healthy/in-progress after timeout; pass preserved VMIDs to cleanup prompt via `PRESERVE_VMIDS`.
 
 ## Layout

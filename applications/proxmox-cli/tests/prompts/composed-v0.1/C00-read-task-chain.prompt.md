@@ -20,7 +20,7 @@ Setup:
 1) Load `build/pve-user.env`, switch to `applications/proxmox-cli/src`.
 2) Resolve `TEMPLATE_VMID` from `build/ubuntu-24-with-agent.vm-template.id`.
 3) Resolve `SOURCE_NODE` from `list_cluster_resources --type vm` by `TEMPLATE_VMID`.
-4) Resolve `TEST_VMID` via `get_next_vmid`.
+4) Resolve `TEST_VMID` via `get_next_vmid` and use it directly for clone target VMID.
 5) Create one disposable VM by `clone_template --wait --full 0 --source-vmid TEMPLATE_VMID --target-vmid TEST_VMID --pool "$PVE_POOL" --name "botcli-c00-${TEST_VMID}"`.
 6) Trigger at least one fresh VM task for `TEST_VMID` (for stable task-chain assertions), e.g. start then stop once via `vm_power --wait`.
 
@@ -37,12 +37,13 @@ Validation:
 - `list_nodes` has at least one node entry.
 - `list_vms_by_node` returns JSON array.
 - `get_effective_permissions` returns non-empty object for requested path.
+- `clone_template` succeeds when consuming `TEST_VMID` returned by `get_next_vmid` (no allowed-range mismatch).
 - `list_tasks_by_vmid` contains at least one task with non-empty `upid`.
 - `get_task_status` returns terminal or running task status payload for `UPID`.
 
 Cleanup:
 - Cleanup must run in `finally` even if chain validation fails.
-- Stop VM best-effort, then destroy `TEST_VMID` on `SOURCE_NODE` via Proxmox API delete (`purge=1`, `destroy-unreferenced-disks=1`).
+- Stop VM best-effort, then destroy with `capability destroy_vm --node SOURCE_NODE --vmid TEST_VMID --if-missing ok --purge 1 --destroy-unreferenced-disks 1`.
 - If VM not found at cleanup time, treat as already cleaned.
 
 Return:

@@ -205,15 +205,15 @@ func RunDestroyVM(ctx context.Context, client *pveapi.Client, req Request) (map[
 		}
 		return nil, apperr.New(apperr.CodeInvalidArgs, fmt.Sprintf("vm %d does not exist on node %s", vmid, node))
 	}
-	form := url.Values{}
-	if err := setOptional01(form, req.Args, "purge"); err != nil {
+	query := url.Values{}
+	if err := setOptional01(query, req.Args, "purge"); err != nil {
 		return nil, err
 	}
-	if err := setOptional01(form, req.Args, "destroy-unreferenced-disks"); err != nil {
+	if err := setOptional01(query, req.Args, "destroy-unreferenced-disks"); err != nil {
 		return nil, err
 	}
 	path := fmt.Sprintf("/nodes/%s/qemu/%d", url.PathEscape(node), vmid)
-	data, err := client.DeleteFormData(ctx, path, form)
+	data, err := client.DeleteData(ctx, path, query)
 	if err != nil {
 		if ifMissing == "ok" && isNotFoundVMError(err) {
 			result := map[string]any{"node": node, "vmid": vmid, "destroyed": false, "missing": true}
