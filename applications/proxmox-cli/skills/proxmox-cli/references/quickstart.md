@@ -34,15 +34,18 @@ if [ -z "${PROXMOX_CLI_BIN}" ]; then
   base="https://github.com/${PROXMOX_CLI_GH_REPO}/releases/download/${tag}"
 
   mkdir -p ./build/bin
-  curl -fsSL -o ./build/bin/proxmox-cli "${base}/${asset}"
+  curl -fsSL -o "./build/bin/${asset}" "${base}/${asset}"
   curl -fsSL -o ./build/bin/checksums.txt "${base}/checksums.txt"
   (cd ./build/bin && sha256sum --check --ignore-missing checksums.txt)
+  mv -f "./build/bin/${asset}" ./build/bin/proxmox-cli
   chmod +x ./build/bin/proxmox-cli
   PROXMOX_CLI_BIN="$(pwd)/build/bin/proxmox-cli"
 fi
 ```
 
 If your environment does not provide `sha256sum`, install it first or use an equivalent SHA256 verifier.
+
+The snippet downloads to the original release asset filename, verifies checksum, then renames to `proxmox-cli`.
 
 Guardrail:
 

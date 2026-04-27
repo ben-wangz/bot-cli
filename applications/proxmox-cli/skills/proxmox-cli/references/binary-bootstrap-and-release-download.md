@@ -62,6 +62,8 @@ The archive contains `skills/proxmox-cli/...`, so extraction creates `./.opencod
 
 ## Portable Bootstrap Snippet
 
+This snippet keeps the release asset filename through checksum verification, then renames to `proxmox-cli`.
+
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
@@ -99,10 +101,11 @@ else
 fi
 
 mkdir -p "${PROXMOX_CLI_BIN_DIR}"
-curl -fsSL -o "${PROXMOX_CLI_BIN_DIR}/proxmox-cli" "${base}/${asset}"
+curl -fsSL -o "${PROXMOX_CLI_BIN_DIR}/${asset}" "${base}/${asset}"
 curl -fsSL -o "${PROXMOX_CLI_BIN_DIR}/checksums.txt" "${base}/checksums.txt"
 
 (cd "${PROXMOX_CLI_BIN_DIR}" && sha256sum --check --ignore-missing checksums.txt)
+mv -f "${PROXMOX_CLI_BIN_DIR}/${asset}" "${PROXMOX_CLI_BIN_DIR}/proxmox-cli"
 chmod +x "${PROXMOX_CLI_BIN_DIR}/proxmox-cli"
 
 printf '%s\n' "$(cd "${PROXMOX_CLI_BIN_DIR}" && pwd)/proxmox-cli"
