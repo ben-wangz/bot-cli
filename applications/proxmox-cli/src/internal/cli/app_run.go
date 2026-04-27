@@ -38,6 +38,19 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return printError(err, stderr)
 	}
 
+	if canDispatchWithoutAuth(tail) {
+		runtime := commandRuntime{
+			Opts:   opts,
+			Stdout: stdout,
+			Stderr: stderr,
+		}
+		err = dispatchCommand(runtime, tail)
+		if err != nil {
+			return printError(err, stderr)
+		}
+		return 0
+	}
+
 	creds, sources, err := auth.Load(auth.FlagCredentials{
 		User:      opts.AuthUser,
 		Password:  opts.AuthPass,
@@ -159,4 +172,17 @@ func printError(err error, stderr io.Writer) int {
 	}
 	_, _ = io.WriteString(stderr, fmt.Sprintf("error: %s\n", message))
 	return apperr.ExitCode(err)
+}
+
+func canDispatchWithoutAuth(args []string) bool {
+	if len(args) == 0 {
+		return false
+	}
+	if args[0] != "capability" {
+		return false
+	}
+	if len(args) > 1 && strings.TrimSpace(args[1]) == "describe" {
+		return true
+	}
+	return hasHelp(args[1:])
 }
