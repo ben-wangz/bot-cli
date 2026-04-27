@@ -173,15 +173,18 @@ func BuildInjectPubKeyScript(username string, pubKey string) string {
 	return strings.Join([]string{
 		"set -eu",
 		"USER_NAME=" + userQuoted,
-		"HOME_DIR=$(getent passwd \"$USER_NAME\" | cut -d: -f6 || true)",
-		"if [ -z \"$HOME_DIR\" ]; then HOME_DIR=\"/home/$USER_NAME\"; fi",
+		"PASSWD_LINE=$(getent passwd \"$USER_NAME\" || true)",
+		"if [ -z \"$PASSWD_LINE\" ]; then echo \"user not found: $USER_NAME\" >&2; exit 2; fi",
+		"HOME_DIR=$(printf '%s' \"$PASSWD_LINE\" | cut -d: -f6)",
+		"if [ -z \"$HOME_DIR\" ]; then echo \"home directory is empty for user: $USER_NAME\" >&2; exit 3; fi",
 		"if [ \"$USER_NAME\" = \"root\" ]; then HOME_DIR=/root; fi",
+		"USER_GROUP=$(id -gn \"$USER_NAME\")",
 		"mkdir -p \"$HOME_DIR/.ssh\"",
 		"chmod 700 \"$HOME_DIR/.ssh\"",
 		"touch \"$HOME_DIR/.ssh/authorized_keys\"",
 		"chmod 600 \"$HOME_DIR/.ssh/authorized_keys\"",
 		"if ! grep -qxF -- " + keyQuoted + " \"$HOME_DIR/.ssh/authorized_keys\"; then printf '%s\\n' " + keyQuoted + " >> \"$HOME_DIR/.ssh/authorized_keys\"; fi",
-		"chown -R \"$USER_NAME\":\"$USER_NAME\" \"$HOME_DIR/.ssh\" || true",
+		"chown -R \"$USER_NAME\":\"$USER_GROUP\" \"$HOME_DIR/.ssh\"",
 	}, "\n")
 }
 

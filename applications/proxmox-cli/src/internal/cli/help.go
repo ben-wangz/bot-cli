@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/ben-wangz/bot-cli/applications/proxmox-cli/src/internal/capability"
@@ -52,6 +53,8 @@ func capabilityHelp() string {
 
 Usage:
   proxmox-cli [global options] capability <name> [args]
+  proxmox-cli [global options] capability <name> --help
+  proxmox-cli [global options] capability describe <name>
 
 Examples:
   proxmox-cli capability list_nodes
@@ -74,9 +77,65 @@ Implemented capabilities:
 
 Notes:
   - Use workflow commands for composed end-to-end paths.
+  - Use capability <name> --help for required/optional args and examples.
   - --wait applies task-wait only for async capabilities; others are synchronous or self-polled.
 `)
 	return sb.String()
+}
+
+func capabilityDetailHelp(name string) (string, bool) {
+	entry, ok := capability.LookupHelpMeta(name)
+	if !ok {
+		return "", false
+	}
+	meta, _ := capability.LookupMeta(name)
+	var sb strings.Builder
+	sb.WriteString("proxmox-cli capability ")
+	sb.WriteString(name)
+	sb.WriteString("\n\n")
+	if strings.TrimSpace(entry.Summary) != "" {
+		sb.WriteString(entry.Summary)
+		sb.WriteString("\n\n")
+	}
+	sb.WriteString("Usage:\n")
+	sb.WriteString("  proxmox-cli [global options] capability ")
+	sb.WriteString(name)
+	sb.WriteString(" [args]\n\n")
+	sb.WriteString("Args:\n")
+	sb.WriteString("  Required: ")
+	if len(entry.RequiredArgs) == 0 {
+		sb.WriteString("(none)")
+	} else {
+		sb.WriteString("--")
+		sb.WriteString(strings.Join(entry.RequiredArgs, ", --"))
+	}
+	sb.WriteString("\n")
+	sb.WriteString("  Optional: ")
+	if len(entry.OptionalArgs) == 0 {
+		sb.WriteString("(none)")
+	} else {
+		sb.WriteString("--")
+		sb.WriteString(strings.Join(entry.OptionalArgs, ", --"))
+	}
+	sb.WriteString("\n\n")
+	sb.WriteString("Execution:\n")
+	sb.WriteString("  Async task: ")
+	sb.WriteString(fmt.Sprintf("%t", meta.Async))
+	sb.WriteString("\n")
+	if strings.TrimSpace(meta.WaitSkipReason) != "" {
+		sb.WriteString("  Wait note: ")
+		sb.WriteString(meta.WaitSkipReason)
+		sb.WriteString("\n")
+	}
+	if len(entry.Examples) > 0 {
+		sb.WriteString("\nExamples:\n")
+		for _, sample := range entry.Examples {
+			sb.WriteString("  ")
+			sb.WriteString(sample)
+			sb.WriteString("\n")
+		}
+	}
+	return sb.String(), true
 }
 
 func workflowHelp() string {

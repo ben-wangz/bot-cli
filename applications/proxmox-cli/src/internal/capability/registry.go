@@ -60,6 +60,7 @@ var operationRegistry = map[string]registryEntry{
 	"convert_vm_to_template": {handler: runConvertVMToTemplate, meta: Meta{Capability: capabilityVM, Async: true}},
 	"update_vm_config":       {handler: runUpdateVMConfig, meta: Meta{Capability: capabilityVM, WaitSkipReason: waitSkipSynchronous}},
 	"vm_power":               {handler: runVMPower, meta: Meta{Capability: capabilityVM, Async: true}},
+	"destroy_vm":             {handler: runDestroyVM, meta: Meta{Capability: capabilityVM, Async: true}},
 	"set_vm_agent":           {handler: runSetVMAgent, meta: Meta{Capability: capabilityVM, WaitSkipReason: waitSkipSynchronous}},
 	"create_vm":              {handler: runCreateVM, meta: Meta{Capability: capabilityVM, Async: true}},
 	"attach_cdrom_iso":       {handler: runAttachCDROMISO, meta: Meta{Capability: capabilityVM, WaitSkipReason: waitSkipSynchronous}},

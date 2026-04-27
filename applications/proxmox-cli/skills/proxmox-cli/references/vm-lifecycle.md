@@ -4,13 +4,13 @@ This playbook is for disposable VM lifecycle operations: clone, configure, power
 
 ## Typical Lifecycle Chain
 
-1. Resolve template VMID and free target VMID.
+1. Resolve template VMID and target VMID (`get_next_vmid` returns an ID in allowed range).
 2. `clone_template --source-vmid <template> --target-vmid <vmid> --pool "$PVE_POOL"`
 3. `update_vm_config` (name/description/resource knobs)
 4. `vm_power` (start/stop/reboot)
 5. Optional: `migrate_vm --online 1 --with-local-disks 1`
 6. Validation checks (`get_vm_status`, task status polling)
-7. Cleanup (stop + destroy/dispose)
+7. Cleanup (`vm_power --mode stop` + `destroy_vm`)
 
 ## Task Completion Policy
 

@@ -55,5 +55,9 @@ Likely causes:
 Actions:
 
 1. inject key again via `ssh_inject_pubkey_qga`
-2. run `ssh_check_service`
+2. run `ssh_check_service` with `--identity-file <private-key-path>`
 3. verify guest IP via QGA interfaces
+
+Note:
+
+- SSH capabilities are batch/key mode only (`BatchMode=yes`); interactive password prompts are not supported.

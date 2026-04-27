@@ -91,7 +91,7 @@ Recommended smoke chain:
 2. `vm_power` start
 3. `agent_network_get_interfaces`
 4. `vm_power` stop
-5. destroy disposable VM
+5. `destroy_vm`
 
 ## 6) Parse Responses Strictly
 

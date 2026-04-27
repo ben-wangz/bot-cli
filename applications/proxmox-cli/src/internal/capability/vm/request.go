@@ -162,14 +162,24 @@ func vmExistsOnNode(ctx context.Context, client *pveapi.Client, node string, vmi
 	path := fmt.Sprintf("/nodes/%s/qemu/%d/status/current", url.PathEscape(node), vmid)
 	data, err := client.GetData(ctx, path, url.Values{})
 	if err != nil {
-		message := strings.ToLower(strings.TrimSpace(err.Error()))
-		if strings.Contains(message, "404") || strings.Contains(message, "not found") || isMissingVMConfigError(message) {
+		if isNotFoundVMError(err) {
 			return false, nil, nil
 		}
 		return false, nil, err
 	}
 	statusMap, _ := data.(map[string]any)
 	return true, statusMap, nil
+}
+
+func isNotFoundVMError(err error) bool {
+	if err == nil {
+		return false
+	}
+	message := strings.ToLower(strings.TrimSpace(err.Error()))
+	if strings.Contains(message, "404") || strings.Contains(message, "not found") {
+		return true
+	}
+	return isMissingVMConfigError(message)
 }
 
 func isMissingVMConfigError(message string) bool {

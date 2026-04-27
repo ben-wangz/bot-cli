@@ -170,6 +170,12 @@ func tryPrintCommandHelp(args []string, stdout io.Writer) bool {
 	if len(args) == 0 {
 		return false
 	}
+	if args[0] == "capability" && len(args) >= 2 {
+		subject := strings.TrimSpace(args[1])
+		if subject != "" && subject != "--help" && subject != "-h" && subject != "help" {
+			return false
+		}
+	}
 	if !hasHelp(args[1:]) {
 		return false
 	}

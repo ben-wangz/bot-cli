@@ -27,6 +27,10 @@ func runVMPower(ctx context.Context, client *pveapi.Client, req Request) (map[st
 	return vmcap.RunVMPower(ctx, client, vmcap.Request{Name: req.Name, Args: req.Args, Scope: req.Scope})
 }
 
+func runDestroyVM(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
+	return vmcap.RunDestroyVM(ctx, client, vmcap.Request{Name: req.Name, Args: req.Args, Scope: req.Scope})
+}
+
 func runSetVMAgent(ctx context.Context, client *pveapi.Client, req Request) (map[string]any, error) {
 	return vmcap.RunSetVMAgent(ctx, client, vmcap.Request{Name: req.Name, Args: req.Args, Scope: req.Scope})
 }

@@ -29,7 +29,7 @@ Core workflows:
 Representative capability families:
 
 - Inventory/task: `list_nodes`, `list_cluster_resources`, `get_vm_config`, `get_task_status`, `list_tasks_by_vmid`
-- VM lifecycle: `clone_template`, `vm_power`, `update_vm_config`, `migrate_vm`, `convert_vm_to_template`
+- VM lifecycle: `clone_template`, `vm_power`, `destroy_vm`, `update_vm_config`, `migrate_vm`, `convert_vm_to_template`
 - Guest/QGA: `agent_network_get_interfaces`, `agent_exec`, `agent_exec_status`
 - Access control: `create_pve_user_with_root`, `create_pool_with_root`, `get_user_acl_binding`, `grant_user_acl`, `revoke_user_acl`
 - SSH control plane: `ssh_check_service`, `ssh_inject_pubkey_qga`, `ssh_exec`, `ssh_scp_transfer`, `ssh_tunnel_start`

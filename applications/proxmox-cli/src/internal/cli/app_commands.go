@@ -58,12 +58,20 @@ func dispatchCommand(rt commandRuntime, args []string) error {
 }
 
 func runCapabilityCommand(rt commandRuntime, args []string) (map[string]any, error) {
-	if hasHelp(args) {
+	if len(args) == 0 || hasHelp(args[:1]) {
 		_, _ = io.WriteString(rt.Stdout, capabilityHelp())
 		return nil, nil
 	}
-	if len(args) == 0 {
-		return nil, apperr.New(apperr.CodeInvalidArgs, "capability name is required")
+	if args[0] == "describe" {
+		return runCapabilityDescribe(rt, args[1:])
+	}
+	if hasHelp(args[1:]) {
+		detail, ok := capabilityDetailHelp(args[0])
+		if !ok {
+			return nil, apperr.New(apperr.CodeInvalidArgs, "capability not implemented yet: "+args[0])
+		}
+		_, _ = io.WriteString(rt.Stdout, detail)
+		return nil, nil
 	}
 	name := args[0]
 	parsedArgs, err := capability.ParseArgs(args[1:])
@@ -88,6 +96,34 @@ func runCapabilityCommand(rt commandRuntime, args []string) (map[string]any, err
 		return result, nil
 	}
 	return applyCapabilityWait(rt, result, meta)
+}
+
+func runCapabilityDescribe(rt commandRuntime, args []string) (map[string]any, error) {
+	if len(args) == 0 || hasHelp(args[:1]) {
+		return map[string]any{
+			"command": "capability",
+			"action":  "describe",
+			"usage":   "proxmox-cli capability describe <name>",
+		}, nil
+	}
+	name := strings.TrimSpace(args[0])
+	if name == "" {
+		return nil, apperr.New(apperr.CodeInvalidArgs, "capability name is required")
+	}
+	meta, ok := capability.LookupMeta(name)
+	if !ok {
+		return nil, apperr.New(apperr.CodeInvalidArgs, "capability not implemented yet: "+name)
+	}
+	helpMeta, _ := capability.LookupHelpMeta(name)
+	return map[string]any{
+		"capability": name,
+		"group":      meta.Capability,
+		"async":      meta.Async,
+		"wait": map[string]any{
+			"skip_reason": meta.WaitSkipReason,
+		},
+		"help": helpMeta,
+	}, nil
 }
 
 func executeCapability(rt commandRuntime, name string, parsedArgs map[string]string) (map[string]any, capability.Meta, error) {
