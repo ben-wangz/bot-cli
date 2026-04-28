@@ -10,12 +10,16 @@ compatibility: opencode
 metadata:
   audience: developers
   tool: gh
-  tested-version: "2.89.0"
+  generated-by: cli-skill-generator
+  generated-at: "2026-04-17"
+  adopted-from: hand-authored
+  adopted-at: "2026-04-17"
+  tested-version: "2.90.0"
 ---
 
 # GitHub CLI (gh) Skill
 
-Master the GitHub CLI for pull requests, issues, releases, Actions, and more.
+Master the GitHub CLI for pull requests, issues, releases, Actions, projects, and more.
 
 ## Agentic Output Principles
 
@@ -56,20 +60,22 @@ When using gh in an agentic context, **token efficiency is critical**. Always ap
 
 ---
 
+<!-- generated -->
+
 ## Before You Start: Version Check
 
-**This skill was generated for gh CLI v2.89.0 (released 2026-03-26).**
+**This skill was generated for gh CLI v2.90.0 (released 2026-04-16).**
 
 Always verify your installed version first:
 
 ```bash
 gh --version
-# Expected output: gh version 2.89.0 (2026-03-26)
+# Expected output: gh version 2.90.0 (2026-04-16)
 ```
 
 **If your version differs,** inform the user:
 
-> "Note: This skill was tested with gh v2.89.0. Your installed version is **X.Y.Z**.
+> "Note: This skill was tested with gh v2.90.0. Your installed version is **X.Y.Z**.
 > Some flags or subcommands may differ. To update:
 > - **macOS/Linux (brew):** `brew upgrade gh`
 > - **Ubuntu/Debian:** `sudo apt upgrade gh`
@@ -85,6 +91,11 @@ Most core commands remain stable across minor versions, so proceed with caution.
 Token-efficient patterns for common GitHub tasks:
 
 ```bash
+# Authentication
+gh auth login                    # Log in to GitHub
+gh auth status                   # Check login status
+gh auth token                    # Print current auth token
+
 # Pull requests: check if exists
 gh pr list --head $(git branch --show-current) --json number --jq 'length > 0'
 
@@ -97,6 +108,9 @@ gh pr list --json number,title,state --jq '.[] | "#\(.number) \(.title) [\(.stat
 # Pull request: check merge readiness
 gh pr view 42 --json mergeable,reviewDecision,statusCheckRollup --jq \
   '"\(.mergeable) / reviews: \(.reviewDecision)"'
+
+# Pull request: create
+gh pr create --title "Fix bug" --body "Closes #123"
 
 # Pull request: approve
 gh pr review 42 --approve
@@ -126,6 +140,10 @@ gh run list --workflow ci.yml --limit 1 --json status,conclusion --jq \
 # GitHub Actions: view run (bounded output)
 gh run view 12345 --log | head -100
 
+# Projects: create and manage
+gh project create --owner myorg --title "Q1 Roadmap"
+gh project item-list 1 --owner myorg --jq '.[] | "\(.id) \(.title)"'
+
 # API: list issues (with field projection)
 gh api repos/{owner}/{repo}/issues --jq '.[].number'
 
@@ -143,20 +161,22 @@ gh search prs "state:open author:@me" --json number,title --jq '.[] | "#\(.numbe
 |---|---|
 | `create` | Create a new pull request |
 | `list` | List pull requests in the repository |
-| `view` | View details of a pull request |
+| `status` | Show status of relevant pull requests |
 | `checkout` | Check out a PR branch locally |
-| `merge` | Merge a pull request |
+| `checks` | Show CI status for a single pull request |
 | `close` | Close a pull request |
-| `reopen` | Reopen a pull request |
-| `review` | Add a review (approve/request changes/comment) |
+| `comment` | Add a comment to a pull request |
 | `diff` | View changes in a pull request |
-| `checks` | Show CI status |
-| `comment` | Add a comment to a PR |
-| `edit` | Edit PR title/body |
-| `ready` | Mark draft PR as ready for review |
+| `edit` | Edit a pull request |
+| `lock` | Lock pull request conversation |
+| `merge` | Merge a pull request |
+| `ready` | Mark a draft PR as ready for review |
+| `reopen` | Reopen a pull request |
 | `revert` | Revert a pull request |
+| `review` | Add a review (approve/request changes/comment) |
+| `unlock` | Unlock pull request conversation |
 | `update-branch` | Update PR branch from base |
-| `lock` / `unlock` | Lock/unlock PR conversation |
+| `view` | View details of a pull request |
 
 **Key flags:**
 - `--draft` — create as draft
@@ -168,23 +188,27 @@ gh search prs "state:open author:@me" --json number,title --jq '.[] | "#\(.numbe
 - `--assignee <login>` — assign user
 - `--fill` — auto-populate from commits
 - `--web` — open in browser
+- `-R, --repo [HOST/]OWNER/REPO` — select another repository
 
 ### Issues (`gh issue`)
 
 | Subcommand | Purpose |
 |---|---|
 | `create` | Create a new issue |
-| `list` | List issues |
-| `view` | View issue details |
-| `close` | Close an issue |
-| `reopen` | Reopen an issue |
-| `comment` | Add a comment |
-| `edit` | Edit title/body/labels/assignees |
-| `delete` | Delete an issue |
-| `lock` / `unlock` | Lock/unlock conversation |
-| `pin` / `unpin` | Pin/unpin issue |
-| `transfer` | Move issue to another repo |
-| `develop` | Manage linked branches |
+| `list` | List issues in a repository |
+| `status` | Show status of relevant issues |
+| `close` | Close issue |
+| `comment` | Add a comment to an issue |
+| `delete` | Delete issue |
+| `develop` | Manage linked branches for an issue |
+| `edit` | Edit issues |
+| `lock` | Lock issue conversation |
+| `pin` | Pin a issue |
+| `reopen` | Reopen issue |
+| `transfer` | Transfer issue to another repository |
+| `unlock` | Unlock issue conversation |
+| `unpin` | Unpin a issue |
+| `view` | View an issue |
 
 **Key flags:**
 - `--label <name>` — add labels
@@ -192,26 +216,28 @@ gh search prs "state:open author:@me" --json number,title --jq '.[] | "#\(.numbe
 - `--milestone <name>` — add to milestone
 - `--template <name>` — use issue template
 - `--web` — open in browser
+- `-R, --repo [HOST/]OWNER/REPO` — select another repository
 
 ### Repositories (`gh repo`)
 
 | Subcommand | Purpose |
 |---|---|
-| `create` | Create a new repository |
-| `list` | List repositories |
-| `clone` | Clone a repository |
-| `view` | View repository info |
-| `fork` | Create a fork |
-| `edit` | Edit repository settings |
-| `delete` | Delete a repository |
-| `archive` / `unarchive` | Archive/unarchive repo |
-| `sync` | Sync fork with upstream |
-| `rename` | Rename repository |
-| `set-default` | Set default repo for current dir |
-| `deploy-key` | Manage deploy keys |
+| `archive` | Archive a repository |
 | `autolink` | Manage autolink references |
+| `clone` | Clone a repository locally |
+| `create` | Create a new repository |
+| `delete` | Delete a repository |
+| `deploy-key` | Manage deploy keys in a repository |
+| `edit` | Edit repository settings |
+| `fork` | Create a fork |
 | `gitignore` | List gitignore templates |
 | `license` | Explore licenses |
+| `list` | List repositories owned by user or organization |
+| `rename` | Rename a repository |
+| `set-default` | Set default repo for current dir |
+| `sync` | Sync fork with upstream |
+| `unarchive` | Unarchive a repository |
+| `view` | View repository info |
 
 **Key flags:**
 - `--public` / `--private` — visibility
@@ -223,55 +249,123 @@ gh search prs "state:open author:@me" --json number,title --jq '.[] | "#\(.numbe
 | Subcommand | Purpose |
 |---|---|
 | `create` | Create a new release |
-| `list` | List releases |
-| `view` | View release details |
-| `edit` | Edit release |
 | `delete` | Delete a release |
-| `upload` | Upload assets to release |
+| `delete-asset` | Delete an asset from a release |
 | `download` | Download release assets |
+| `edit` | Edit release |
+| `list` | List releases |
+| `upload` | Upload assets to release |
 | `verify` | Verify release attestation |
 | `verify-asset` | Verify asset attestation |
-| `delete-asset` | Remove an asset |
+| `view` | View release details |
 
 **Key flags:**
 - `--notes <text>` — release notes
 - `--draft` — create as draft
 - `--prerelease` — mark as pre-release
 - `--target <branch>` — target branch for tag
+- `-R, --repo [HOST/]OWNER/REPO` — select another repository
+
+### Projects (`gh project`)
+
+| Subcommand | Purpose |
+|---|---|
+| `close` | Close a project |
+| `copy` | Copy a project |
+| `create` | Create a project |
+| `delete` | Delete a project |
+| `edit` | Edit a project |
+| `field-create` | Create a field in a project |
+| `field-delete` | Delete a field in a project |
+| `field-list` | List the fields in a project |
+| `item-add` | Add a pull request or an issue to a project |
+| `item-archive` | Archive an item in a project |
+| `item-create` | Create a draft issue item in a project |
+| `item-delete` | Delete an item from a project by ID |
+| `item-edit` | Edit an item in a project |
+| `item-list` | List the items in a project |
+| `link` | Link a project to a repository or a team |
+| `list` | List the projects for an owner |
+| `mark-template` | Mark a project as a template |
+| `unlink` | Unlink a project from a repository or a team |
+| `view` | View a project |
+
+**Key scope requirement:** Minimum token scope is `project`.
 
 ### Search (`gh search`)
 
 | Subcommand | Purpose |
 |---|---|
+| `code` | Search code |
+| `commits` | Search commits |
 | `issues` | Search for issues |
 | `prs` | Search for pull requests |
 | `repos` | Search for repositories |
-| `code` | Search code |
-| `commits` | Search commits |
 
 Syntax: `gh search issues "is:open label:bug"` (GitHub search syntax)
 
-### GitHub Actions (`gh run`, `gh workflow`)
+### GitHub Actions (`gh run`, `gh workflow`, `gh cache`)
 
 #### `gh run`
 | Subcommand | Purpose |
 |---|---|
-| `list` | List recent workflow runs |
-| `view` | View run details |
-| `watch` | Watch run until completion |
-| `rerun` | Rerun a failed run |
 | `cancel` | Cancel a run |
 | `delete` | Delete a run |
 | `download` | Download run artifacts |
+| `list` | List recent workflow runs |
+| `rerun` | Rerun a failed run |
+| `view` | View run details |
+| `watch` | Watch run until completion |
 
 #### `gh workflow`
 | Subcommand | Purpose |
 |---|---|
-| `list` | List workflows |
-| `view` | View workflow details |
-| `run` | Trigger a workflow (needs `workflow_dispatch`) |
-| `enable` | Enable a workflow |
 | `disable` | Disable a workflow |
+| `enable` | Enable a workflow |
+| `list` | List workflows |
+| `run` | Trigger a workflow (needs `workflow_dispatch`) |
+| `view` | View workflow details |
+
+#### `gh cache`
+| Subcommand | Purpose |
+|---|---|
+| `delete` | Delete GitHub Actions caches |
+| `list` | List GitHub Actions caches |
+
+### Artifact Attestations (`gh attestation`)
+
+| Subcommand | Purpose |
+|---|---|
+| `download` | Download an artifact's attestations for offline use |
+| `trusted-root` | Output trusted_root.jsonl contents for offline verification |
+| `verify` | Verify an artifact's integrity using attestations |
+
+**Alias:** `gh at`
+
+### Repository Rulesets (`gh ruleset`)
+
+| Subcommand | Purpose |
+|---|---|
+| `check` | View rules that would apply to a given branch |
+| `list` | List rulesets for a repository or organization |
+| `view` | View information about a ruleset |
+
+**Alias:** `gh rs`
+
+### Other Commands
+
+| Command | Purpose |
+|---|---|
+| `gh browse` | Open repositories, issues, pull requests, and more in the browser |
+| `gh codespace` | Connect to and manage codespaces |
+| `gh gist` | Manage gists (create, view, edit, delete, clone, list, rename) |
+| `gh label` | Manage labels |
+| `gh org` | Manage organizations |
+| `gh ssh-key` | Manage SSH keys |
+| `gh gpg-key` | Manage GPG keys |
+| `gh copilot` | Run the GitHub Copilot CLI (preview) |
+| `gh agent-task` | Work with agent tasks (preview) |
+| `gh skill` | Install and manage agent skills (preview) |
 
 ### Secrets & Variables (`gh secret`, `gh variable`)
 
@@ -282,6 +376,7 @@ Syntax: `gh search issues "is:open label:bug"` (GitHub search syntax)
 | `gh secret delete <NAME>` | Delete a secret |
 | `gh variable set <NAME> --body <value>` | Create/update a variable |
 | `gh variable list` | List variables |
+| `gh variable delete <NAME>` | Delete a variable |
 
 ### Authentication (`gh auth`)
 
@@ -289,11 +384,32 @@ Syntax: `gh search issues "is:open label:bug"` (GitHub search syntax)
 |---|---|
 | `login` | Authenticate with GitHub |
 | `logout` | Sign out |
-| `status` | Show auth status |
-| `token` | Print current auth token |
-| `switch` | Switch GitHub account |
 | `refresh` | Refresh stored credentials |
 | `setup-git` | Configure git to use gh for auth |
+| `status` | Show auth status |
+| `switch` | Switch GitHub account |
+| `token` | Print current auth token |
+
+### Configuration (`gh config`)
+
+| Subcommand | Purpose |
+|---|---|
+| `clear-cache` | Clear the CLI cache |
+| `get` | Print value of a configuration key |
+| `list` | Print all configuration keys and values |
+| `set` | Update configuration with a value |
+
+### Utilities
+
+| Command | Purpose |
+|---|---|
+| `gh alias` | Create command shortcuts |
+| `gh api` | Make an authenticated GitHub API request |
+| `gh completion` | Generate shell completion scripts |
+| `gh extension` | Manage gh extensions |
+| `gh licenses` | View third-party license information |
+| `gh preview` | Execute previews for gh features |
+| `gh status` | Print information about relevant issues, PRs, and notifications |
 
 ---
 
@@ -351,6 +467,9 @@ Advanced formatting with `--template`:
 - `pluck <field> <list>` — extract field from all items
 - `truncate <length> <input>` — limit length
 
+Sprig functions also supported:
+- `contains`, `hasPrefix`, `hasSuffix`, `regexMatch`
+
 ---
 
 ## Environment Variables
@@ -376,6 +495,7 @@ NO_COLOR=1 GH_NO_UPDATE_NOTIFIER=1 GH_PAGER=cat gh pr list
 | Variable | Purpose | Agentic use |
 |---|---|---|
 | `GH_TOKEN` | Authentication token (preferred over `GITHUB_TOKEN`) | Set in environment |
+| `GH_ENTERPRISE_TOKEN` | Authentication token for GitHub Enterprise Server | Use for Enterprise hosts |
 | `GH_HOST` | GitHub hostname (default: `github.com`) | Use for GitHub Enterprise |
 | `GH_REPO` | Default repository (`OWNER/REPO`) | Avoids `-R` flag repetition |
 | `GH_EDITOR` | Editor for composing text | Typically not used in agents |
@@ -384,9 +504,21 @@ NO_COLOR=1 GH_NO_UPDATE_NOTIFIER=1 GH_PAGER=cat gh pr list
 | `GH_PAGER` | Paging program (e.g., `less`) | **Always set to `cat`** |
 | `GH_CONFIG_DIR` | Config directory (default: `~/.config/gh`) | Use if custom location needed |
 | `NO_COLOR` | Disable ANSI colors | **Always set to 1** |
+| `CLICOLOR` | Set to 0 to disable ANSI colors | **Do not use** (contradicts NO_COLOR) |
 | `CLICOLOR_FORCE` | Force ANSI colors when piped | **Do not use** (contradicts NO_COLOR) |
 | `GH_NO_UPDATE_NOTIFIER` | Suppress update notifications | **Always set to 1** |
+| `GH_NO_EXTENSION_UPDATE_NOTIFIER` | Suppress extension update notifications | Set to 1 if using extensions |
 | `GH_FORCE_TTY` | Force terminal output | **Do not use** (adds formatting noise) |
+| `GH_COLOR_LABELS` | Display labels using RGB hex color codes | Do not use in agents |
+| `GH_ACCESSIBLE_COLORS` | Use customizable 4-bit accessible colors | Do not use in agents |
+| `GH_PROMPT_DISABLED` | Disable interactive prompting | Set to 1 for non-interactive use |
+| `GLAMOUR_STYLE` | Style for rendering Markdown | Do not use in agents |
+| `GH_MDWIDTH` | Default max width for markdown wrapping | Typically not needed |
+| `GH_SPINNER_DISABLED` | Replace spinner with textual progress | Set to 1 for cleaner output |
+| `GH_ACCESSIBLE_PROMPTER` | Enable accessible prompts (preview) | Depends on use case |
+| `GH_PATH` | Path to gh executable | Use if auto-detection fails |
+
+<!-- /generated -->
 
 ---
 
@@ -426,6 +558,9 @@ Deep dives into common workflows:
 - **Linking issues:** Include `Fixes #N` or `Closes #N` in PR body to auto-close issue on merge.
 - **Private tokens:** Always use `GH_TOKEN` or store in `gh auth login`. Never commit tokens to git.
 - **Enterprise GitHub:** Set `GH_HOST=github.company.com` for GitHub Enterprise.
+- **Project scope:** Use `gh auth refresh -s project` to grant project scope if needed.
+- **Preview features:** Commands marked `(preview)` may change; use with caution in production automation.
+- **`gh api` and JSON arrays:** Never use `-F field='["a","b"]'` for array payloads — `-F` sends the value as a string literal, not parsed JSON. GitHub API returns HTTP 422 "not an array". Use `--input /tmp/payload.json` instead. See [references/search-and-query.md](references/search-and-query.md) → "Complex payloads".
 
 ---
 

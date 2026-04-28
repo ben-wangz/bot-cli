@@ -139,12 +139,16 @@ gh api repos/{owner}/{repo}/pulls/42 \
 -f field="value"
 ```
 
-**Typed fields** (auto-converted):
+**Typed fields** (`-F` auto-converts scalars):
 ```bash
 -F number=42           # integer
 -F active=true         # boolean
--F tags='["a","b"]'    # JSON array
 ```
+
+> **Note:** `-F` auto-converts integers and booleans. It does **not** reliably
+> convert JSON arrays or nested objects — the value is sent as a string literal,
+> causing HTTP 422 on endpoints that expect a real JSON array. Use `--input`
+> for complex payloads (see below).
 
 **Fields from file:**
 ```bash
@@ -156,6 +160,33 @@ gh api repos/{owner}/{repo}/pulls/42 \
 ```bash
 cat data.json | gh api repos/{owner}/{repo}/issues -F data=@-
 ```
+
+### Complex payloads (arrays / nested objects)
+
+When an endpoint expects an array or nested object (e.g., repository topics, label
+lists, branch protection rules), **do not use `-F`**. Use `--input` with a JSON file:
+
+```bash
+# Write the payload
+cat > /tmp/payload.json << 'EOF'
+{
+  "names": ["opencode", "odoo", "ai-coding"]
+}
+EOF
+
+# Send it — works reliably for all endpoints
+gh api -X PUT repos/{owner}/{repo}/topics --input /tmp/payload.json
+```
+
+**Why `--input` instead of `-F names='["a","b"]'`:**
+The `-F` flag sends the string `["a","b"]` literally — the API receives a string,
+not a JSON array, and returns HTTP 422: *"not an array"*. The `--input` flag sends
+the file content as the raw JSON body, bypassing all client-side type coercion.
+
+**Common endpoints that need `--input`:**
+- `PUT /repos/{owner}/{repo}/topics` — repository topics (`names` field is an array)
+- `PUT /repos/{owner}/{repo}/branches/{branch}/protection` — branch protection rules
+- Any endpoint where the GitHub API docs show a field typed as `array` or `object`
 
 ### List users in organization
 
