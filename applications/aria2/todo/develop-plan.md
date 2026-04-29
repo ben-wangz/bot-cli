@@ -27,7 +27,7 @@
 
 1. `applications/aria2-cli/src/`
    - Go 模块、可编译二进制入口
-   - CLI 命令分发（至少 `capability`、`workflow`、`auth/help`）
+   - CLI 命令分发（至少 `capability`、`workflow`、`help`）
    - aria2 JSON-RPC 客户端层
 2. `applications/aria2-cli/skills/aria2-cli/SKILL.md`
    - agent 使用规范（JSON 输出、安全、幂等与等待策略）

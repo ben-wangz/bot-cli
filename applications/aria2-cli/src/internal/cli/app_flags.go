@@ -22,6 +22,10 @@ func parseGlobalOptions(args []string) (GlobalOptions, []string, error) {
 			opts.Help = true
 			continue
 		}
+		if key == "wait" {
+			opts.Wait = true
+			continue
+		}
 		if i+1 >= len(args) {
 			return opts, nil, apperr.New(apperr.CodeInvalidArgs, "missing value for --"+key)
 		}
@@ -40,6 +44,18 @@ func parseGlobalOptions(args []string) (GlobalOptions, []string, error) {
 			opts.Timeout = time.Duration(seconds) * time.Second
 		case "output":
 			opts.Output = strings.ToLower(strings.TrimSpace(value))
+		case "wait-timeout":
+			seconds, err := strconv.Atoi(value)
+			if err != nil || seconds <= 0 {
+				return opts, nil, apperr.New(apperr.CodeInvalidArgs, "wait-timeout must be a positive integer")
+			}
+			opts.WaitTimeout = time.Duration(seconds) * time.Second
+		case "wait-interval":
+			milliseconds, err := strconv.Atoi(value)
+			if err != nil || milliseconds <= 0 {
+				return opts, nil, apperr.New(apperr.CodeInvalidArgs, "wait-interval must be a positive integer milliseconds")
+			}
+			opts.WaitInterval = time.Duration(milliseconds) * time.Millisecond
 		default:
 			return opts, nil, apperr.New(apperr.CodeInvalidArgs, "unknown global option --"+key)
 		}

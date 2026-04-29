@@ -77,6 +77,9 @@ func (c *Client) Call(ctx context.Context, method string, params []any) (json.Ra
 	defer resp.Body.Close()
 	if resp.StatusCode >= http.StatusBadRequest {
 		b, _ := io.ReadAll(resp.Body)
+		if rpcErr := parseRPCErrorFromBody(method, b); rpcErr != nil {
+			return nil, rpcErr
+		}
 		return nil, apperr.New(apperr.CodeNetwork, fmt.Sprintf("rpc endpoint status=%d body=%s", resp.StatusCode, strings.TrimSpace(string(b))))
 	}
 	var parsed rpcResponse
@@ -96,4 +99,20 @@ func (c *Client) Endpoint() string {
 
 func (c *Client) Secret() string {
 	return c.secret
+}
+
+func parseRPCErrorFromBody(method string, body []byte) error {
+	trimmed := strings.TrimSpace(string(body))
+	if trimmed == "" {
+		return nil
+	}
+	var parsed rpcResponse
+	if err := json.Unmarshal([]byte(trimmed), &parsed); err != nil {
+		return nil
+	}
+	if parsed.Error == nil {
+		return nil
+	}
+	retryable := parsed.Error.Code == -32603
+	return apperr.New(apperr.CodeRPC, fmt.Sprintf("rpc method=%s code=%d retryable=%t message=%s", method, parsed.Error.Code, retryable, parsed.Error.Message))
 }

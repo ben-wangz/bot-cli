@@ -82,3 +82,15 @@ func OptionalJSONArray(args map[string]string, key string) ([]any, error) {
 	}
 	return out, nil
 }
+
+func OptionalJSONObject(args map[string]string, key string) (map[string]any, error) {
+	raw := strings.TrimSpace(args[key])
+	if raw == "" {
+		return map[string]any{}, nil
+	}
+	var out map[string]any
+	if err := json.Unmarshal([]byte(raw), &out); err != nil {
+		return nil, apperr.New(apperr.CodeInvalidArgs, key+" must be a json object")
+	}
+	return out, nil
+}

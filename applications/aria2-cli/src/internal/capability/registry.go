@@ -65,3 +65,14 @@ func IsReadOnly(name string) bool {
 	}
 	return entry.readOnly
 }
+
+func Describe(name string) (map[string]any, bool) {
+	entry, ok := operationRegistry[name]
+	if !ok {
+		return nil, false
+	}
+	return map[string]any{
+		"name":      name,
+		"read_only": entry.readOnly,
+	}, true
+}

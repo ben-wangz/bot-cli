@@ -38,6 +38,15 @@ export ARIA2_RPC_SECRET="your-secret"
 ./aria2-cli capability get_global_stat --rpc-endpoint http://127.0.0.1:6800/jsonrpc --rpc-secret your-secret
 ```
 
+4. For end-to-end validation, use prompt specs:
+
+- `applications/aria2-cli/tests/prompts/basic-capability-chain.md`
+- `applications/aria2-cli/tests/prompts/workflow-smoke.md`
+- `applications/aria2-cli/tests/prompts/daemon-idempotent-with-secret.md`
+- `applications/aria2-cli/tests/prompts/error-invalid-secret.md`
+- `applications/aria2-cli/tests/prompts/error-invalid-endpoint.md`
+- `applications/aria2-cli/tests/prompts/error-missing-gid.md`
+
 ## Core Commands
 
 - `capability add_uri`
@@ -48,6 +57,12 @@ export ARIA2_RPC_SECRET="your-secret"
 - `capability pause|pause_all|resume|resume_all|remove|remove_all`
 - `capability tell_status|list_active|list_waiting|list_stopped|get_global_stat`
 - `capability purge_download_result|rpc_call`
+
+## Wait Behavior
+
+- Global `--wait` is supported for mutating capabilities.
+- Default is no wait; with `--wait`, CLI polls task status and writes wait diagnostics.
+- Tune wait with `--wait-timeout <sec>` and `--wait-interval <ms>`.
 
 ## Daemon Idempotency Contract
 

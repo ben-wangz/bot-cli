@@ -116,14 +116,17 @@ func runAddURI(ctx context.Context, client *aria2rpc.Client, req Request) (map[s
 	if err != nil {
 		return nil, err
 	}
-	options, _ := OptionalJSONArray(req.Args, "options")
+	options, err := OptionalJSONObject(req.Args, "options")
+	if err != nil {
+		return nil, err
+	}
 	position, err := OptionalInt(req.Args, "position", -1)
 	if err != nil {
 		return nil, err
 	}
 	params := []any{[]string{uri}}
 	if len(options) > 0 {
-		params = append(params, options[0])
+		params = append(params, options)
 	}
 	if position >= 0 {
 		params = append(params, position)
@@ -154,7 +157,25 @@ func runAddTorrent(ctx context.Context, client *aria2rpc.Client, req Request) (m
 		return nil, apperr.Wrap(apperr.CodeConfig, "failed to read torrent file", err)
 	}
 	encoded := base64.StdEncoding.EncodeToString(data)
-	res, err := client.Call(ctx, "aria2.addTorrent", []any{encoded})
+	options, err := OptionalJSONObject(req.Args, "options")
+	if err != nil {
+		return nil, err
+	}
+	position, err := OptionalInt(req.Args, "position", -1)
+	if err != nil {
+		return nil, err
+	}
+	params := []any{encoded, []string{}}
+	if len(options) > 0 {
+		params = append(params, options)
+	}
+	if position >= 0 {
+		if len(options) == 0 {
+			params = append(params, map[string]any{})
+		}
+		params = append(params, position)
+	}
+	res, err := client.Call(ctx, "aria2.addTorrent", params)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +192,25 @@ func runAddMetalink(ctx context.Context, client *aria2rpc.Client, req Request) (
 		return nil, apperr.Wrap(apperr.CodeConfig, "failed to read metalink file", err)
 	}
 	encoded := base64.StdEncoding.EncodeToString(data)
-	res, err := client.Call(ctx, "aria2.addMetalink", []any{encoded})
+	options, err := OptionalJSONObject(req.Args, "options")
+	if err != nil {
+		return nil, err
+	}
+	position, err := OptionalInt(req.Args, "position", -1)
+	if err != nil {
+		return nil, err
+	}
+	params := []any{encoded}
+	if len(options) > 0 {
+		params = append(params, options)
+	}
+	if position >= 0 {
+		if len(options) == 0 {
+			params = append(params, map[string]any{})
+		}
+		params = append(params, position)
+	}
+	res, err := client.Call(ctx, "aria2.addMetalink", params)
 	if err != nil {
 		return nil, err
 	}
@@ -248,20 +287,31 @@ func runRemoveAll(ctx context.Context, client *aria2rpc.Client, req Request) (ma
 	if err != nil {
 		return nil, err
 	}
+	waiting, err := client.Call(ctx, "aria2.tellWaiting", []any{0, 1000})
+	if err != nil {
+		return nil, err
+	}
 	var items []map[string]any
 	if err := json.Unmarshal(active, &items); err != nil {
 		return nil, apperr.Wrap(apperr.CodeInternal, "failed to decode active list", err)
 	}
+	var waitingItems []map[string]any
+	if err := json.Unmarshal(waiting, &waitingItems); err != nil {
+		return nil, apperr.Wrap(apperr.CodeInternal, "failed to decode waiting list", err)
+	}
+	items = append(items, waitingItems...)
 	removed := make([]string, 0, len(items))
+	seen := map[string]bool{}
 	method := "aria2.remove"
 	if OptionalBool(req.Args, "force", false) {
 		method = "aria2.forceRemove"
 	}
 	for _, item := range items {
 		gid := strings.TrimSpace(stringValue(item["gid"]))
-		if gid == "" {
+		if gid == "" || seen[gid] {
 			continue
 		}
+		seen[gid] = true
 		if _, err := client.Call(ctx, method, []any{gid}); err == nil {
 			removed = append(removed, gid)
 		}

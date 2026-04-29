@@ -22,13 +22,16 @@ Global options:
   --rpc-endpoint <url>   JSON-RPC endpoint (default http://127.0.0.1:6800/jsonrpc)
   --rpc-secret <secret>  RPC secret token (or env ARIA2_RPC_SECRET)
   --timeout <seconds>    Request timeout in seconds
+  --wait                 Wait for mutating operations to reach stable state
+  --wait-timeout <sec>   Wait polling timeout in seconds (default 30)
+  --wait-interval <ms>   Wait polling interval in milliseconds (default 400)
   --output <format>      Output format (json)
 ` + "\n")
 }
 
 func capabilityHelp() string {
 	list := capability.Names()
-	return fmt.Sprintf("capability usage:\n  aria2-cli capability <name> [--key value]\n\nimplemented capabilities:\n  %s\n", strings.Join(list, "\n  "))
+	return fmt.Sprintf("capability usage:\n  aria2-cli capability <name> [--key value]\n  aria2-cli capability describe [<name>]\n\nimplemented capabilities:\n  %s\n", strings.Join(list, "\n  "))
 }
 
 func workflowHelp() string {
