@@ -1,8 +1,8 @@
 # basic capability chain
 
-Use this fixed download URL for reproducible validation:
+Use aria2-cli self-release binary URL for reproducible validation:
 
-- `https://github.com/ben-wangz/bot-cli/releases/download/v0.2.4/proxmox-cli-linux-amd64`
+- `https://github.com/ben-wangz/bot-cli/releases/download/v0.1.0/aria2-cli-linux-amd64`
 
 Execution chain:
 

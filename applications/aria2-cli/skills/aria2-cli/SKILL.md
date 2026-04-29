@@ -33,6 +33,18 @@ Use `applications/aria2-cli/src/cmd/aria2-cli` to run deterministic, JSON-first 
 2. `capability get_global_stat`
 3. run task capabilities/workflows
 
+## Example chain (aria2-cli self binary)
+
+- Test URL: `https://github.com/ben-wangz/bot-cli/releases/download/v0.1.0/aria2-cli-linux-amd64`
+- Run sequence:
+  1. `capability ensure_daemon_started`
+  2. `capability add_uri --uri <url>`
+  3. `capability tell_status --gid <gid>`
+  4. `capability pause --gid <gid>`
+  5. `capability resume --gid <gid>`
+  6. `capability remove --gid <gid>`
+  7. `capability purge_download_result`
+
 ## Required globals
 
 - `--rpc-endpoint`
