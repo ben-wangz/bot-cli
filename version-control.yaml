@@ -3,3 +3,6 @@ binaries:
   - name: proxmox-cli
     path: applications/proxmox-cli
     versionFile: VERSION
+  - name: aria2-cli
+    path: applications/aria2-cli
+    versionFile: VERSION
