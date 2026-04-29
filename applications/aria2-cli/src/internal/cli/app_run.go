@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 
@@ -36,6 +37,29 @@ func printError(err error, stderr io.Writer) int {
 	if err == nil {
 		return 0
 	}
-	_, _ = io.WriteString(stderr, fmt.Sprintf("error: %s\n", err.Error()))
+	payload := map[string]any{
+		"ok":      false,
+		"request": map[string]any{},
+		"result":  map[string]any{},
+		"error": map[string]any{
+			"code":      "internal_error",
+			"message":   err.Error(),
+			"retryable": false,
+		},
+		"diagnostics": map[string]any{},
+	}
+	if typed, ok := err.(*apperr.Error); ok {
+		payload["error"] = map[string]any{
+			"code":      string(typed.Code),
+			"message":   typed.Error(),
+			"retryable": typed.Code == apperr.CodeNetwork,
+		}
+	}
+	encoded, encodeErr := json.MarshalIndent(payload, "", "  ")
+	if encodeErr != nil {
+		_, _ = io.WriteString(stderr, fmt.Sprintf("error: %s\n", err.Error()))
+		return apperr.ExitCode(err)
+	}
+	_, _ = io.WriteString(stderr, string(encoded)+"\n")
 	return apperr.ExitCode(err)
 }
