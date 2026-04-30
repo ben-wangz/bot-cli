@@ -38,6 +38,8 @@ var operationRegistry = map[string]registryEntry{
 	"list_waiting":          {handler: runListWaiting, readOnly: true},
 	"list_stopped":          {handler: runListStopped, readOnly: true},
 	"get_global_stat":       {handler: runGetGlobalStat, readOnly: true},
+	"get_global_option":     {handler: runGetGlobalOption, readOnly: true},
+	"change_global_option":  {handler: runChangeGlobalOption},
 	"rpc_call":              {handler: runRPCCall},
 }
 
@@ -71,8 +73,24 @@ func Describe(name string) (map[string]any, bool) {
 	if !ok {
 		return nil, false
 	}
+	args := capabilityArgs(name)
 	return map[string]any{
 		"name":      name,
 		"read_only": entry.readOnly,
+		"args":      args,
 	}, true
+}
+
+func capabilityArgs(name string) []map[string]any {
+	switch name {
+	case "change_global_option":
+		return []map[string]any{
+			{"name": "option", "required": false, "repeatable": true, "format": "key=value", "description": "Global option pair; repeat flag for multiple options."},
+			{"name": "options", "required": false, "format": "json object", "description": "JSON object map for global options."},
+		}
+	case "get_global_option":
+		return []map[string]any{}
+	default:
+		return []map[string]any{}
+	}
 }

@@ -31,7 +31,7 @@ Global options:
 
 func capabilityHelp() string {
 	list := capability.Names()
-	return fmt.Sprintf("capability usage:\n  aria2-cli capability <name> [--key value]\n  aria2-cli capability describe [<name>]\n\nimplemented capabilities:\n  %s\n", strings.Join(list, "\n  "))
+	return fmt.Sprintf("capability usage:\n  aria2-cli capability <name> [--key value]\n  aria2-cli capability describe [<name>]\n\nexamples:\n  aria2-cli capability change_global_option --option max-tries=1 --option timeout=60\n  aria2-cli capability change_global_option --options '{\"max-concurrent-downloads\":\"1\",\"split\":\"1\"}'\n\nimplemented capabilities:\n  %s\n", strings.Join(list, "\n  "))
 }
 
 func workflowHelp() string {

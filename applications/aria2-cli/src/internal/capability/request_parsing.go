@@ -16,16 +16,27 @@ func ParseArgs(args []string) (map[string]string, error) {
 			return nil, err
 		}
 		if hasInline {
-			result[name] = inline
+			result[name] = mergeArgValue(result[name], inline)
 			continue
 		}
 		if i+1 >= len(args) {
 			return nil, apperr.New(apperr.CodeInvalidArgs, "missing value for capability arg --"+name)
 		}
-		result[name] = args[i+1]
+		result[name] = mergeArgValue(result[name], args[i+1])
 		i++
 	}
 	return result, nil
+}
+
+func mergeArgValue(existing, next string) string {
+	next = strings.TrimSpace(next)
+	if existing == "" {
+		return next
+	}
+	if next == "" {
+		return existing
+	}
+	return existing + "\n" + next
 }
 
 func splitArg(token string) (string, string, bool, error) {
@@ -91,6 +102,23 @@ func OptionalJSONObject(args map[string]string, key string) (map[string]any, err
 	var out map[string]any
 	if err := json.Unmarshal([]byte(raw), &out); err != nil {
 		return nil, apperr.New(apperr.CodeInvalidArgs, key+" must be a json object")
+	}
+	return out, nil
+}
+
+func OptionalKeyValueList(args map[string]string, key string) ([]string, error) {
+	raw := strings.TrimSpace(args[key])
+	if raw == "" {
+		return []string{}, nil
+	}
+	parts := strings.Split(raw, "\n")
+	out := make([]string, 0, len(parts))
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed == "" {
+			continue
+		}
+		out = append(out, trimmed)
 	}
 	return out, nil
 }
