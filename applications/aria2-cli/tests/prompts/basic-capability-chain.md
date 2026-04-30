@@ -6,14 +6,15 @@ Use aria2-cli self-release binary URL for reproducible validation:
 
 Execution chain:
 
-1. call `capability ensure_daemon_started`
-2. call `capability add_uri --uri <url>`
-3. capture `result` as gid
-4. call `capability tell_status --gid <gid>`
-5. call `capability pause --gid <gid>`
-6. call `capability resume --gid <gid>`
-7. call `capability remove --gid <gid>`
-8. call `capability purge_download_result`
+1. ensure runtime dependency exists: `command -v aria2c || sudo dnf install -y aria2`
+2. call `capability ensure_daemon_started`
+3. call `capability add_uri --uri <url>`
+4. capture `result` as gid
+5. call `capability tell_status --gid <gid>`
+6. call `capability pause --gid <gid>`
+7. call `capability resume --gid <gid>`
+8. call `capability remove --gid <gid>`
+9. call `capability purge_download_result`
 
 Verify:
 
