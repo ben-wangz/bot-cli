@@ -6,3 +6,6 @@ binaries:
   - name: aria2-cli
     path: applications/aria2-cli
     versionFile: VERSION
+  - name: image-gen-cli
+    path: applications/image-gen-cli
+    versionFile: VERSION

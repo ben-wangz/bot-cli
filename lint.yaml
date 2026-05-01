@@ -17,6 +17,12 @@ commands:
       - "-c"
       - "cd applications/aria2-cli/src && go test ./..."
 
+  - name: "Go tests (image-gen-cli)"
+    cmd: "sh"
+    args:
+      - "-c"
+      - "cd applications/image-gen-cli/src && go test ./..."
+
 include:
   - "*.go"
 
