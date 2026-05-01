@@ -55,9 +55,13 @@ func capabilityArgs(name string) []map[string]any {
 	}
 	return []map[string]any{
 		{"name": "prompt", "required": true, "description": "Text prompt for image generation."},
+		{"name": "model", "required": false, "description": "Responses model, default gpt-5.5."},
+		{"name": "image_model", "required": false, "description": "Image model, default gpt-image-2."},
 		{"name": "stream", "required": false, "description": "Use streaming mode (true/false)."},
 		{"name": "store", "required": false, "description": "Request response storage for chaining."},
 		{"name": "previous_response_id", "required": false, "description": "Previous response id for chaining."},
+		{"name": "output_dir", "required": false, "description": "Directory to save generated image."},
+		{"name": "output_name", "required": false, "description": "Output file name override."},
 		{"name": "size", "required": false, "description": "Image size (1024x1024, 1024x1536, 1536x1024, auto)."},
 		{"name": "quality", "required": false, "description": "Image quality (auto, high, medium, low)."},
 		{"name": "output_format", "required": false, "description": "Output format (png, jpeg, webp)."},

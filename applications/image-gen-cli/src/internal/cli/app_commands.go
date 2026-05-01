@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"io"
+	"strings"
 
 	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/apperr"
 	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/capability"
@@ -65,6 +66,16 @@ func runCapabilityCommand(rt commandRuntime, args []string) (map[string]any, err
 	parsedArgs, err := capability.ParseArgs(args[1:])
 	if err != nil {
 		return nil, err
+	}
+	if strings.TrimSpace(rt.Opts.OutputDir) != "" {
+		if strings.TrimSpace(parsedArgs["output_dir"]) == "" {
+			parsedArgs["output_dir"] = strings.TrimSpace(rt.Opts.OutputDir)
+		}
+	}
+	if strings.TrimSpace(rt.Opts.OutputName) != "" {
+		if strings.TrimSpace(parsedArgs["output_name"]) == "" {
+			parsedArgs["output_name"] = strings.TrimSpace(rt.Opts.OutputName)
+		}
 	}
 	return capability.Dispatch(context.Background(), rt.Client, capability.Request{Name: args[0], Args: parsedArgs})
 }

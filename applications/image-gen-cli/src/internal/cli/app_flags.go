@@ -32,6 +32,10 @@ func parseGlobalOptions(args []string) (GlobalOptions, []string, error) {
 			opts.APIBaseURL = strings.TrimSpace(value)
 		case "api-key":
 			opts.APIKey = strings.TrimSpace(value)
+		case "output-dir":
+			opts.OutputDir = strings.TrimSpace(value)
+		case "output-name":
+			opts.OutputName = strings.TrimSpace(value)
 		case "timeout":
 			seconds, err := strconv.Atoi(value)
 			if err != nil || seconds <= 0 {

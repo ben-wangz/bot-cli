@@ -41,9 +41,20 @@ func runGenerateImage(ctx context.Context, client *imageapi.Client, req Request)
 	}
 	result, err := client.Generate(ctx, params)
 	if err != nil {
+		if strings.TrimSpace(params.PreviousResponseID) != "" && isChainingUnsupported(err) {
+			return nil, apperr.New(apperr.CodeRPC, "upstream does not support previous_response_id/store chaining; retry without chaining")
+		}
 		return nil, err
 	}
-	filePath, err := saveImage(result.FinalImageBase64, result.OutputFormat)
+	outputDir := strings.TrimSpace(req.Args["output_dir"])
+	outputName := strings.TrimSpace(req.Args["output_name"])
+	if outputDir == "" {
+		outputDir = strings.TrimSpace(req.Args["global_output_dir"])
+	}
+	if outputName == "" {
+		outputName = strings.TrimSpace(req.Args["global_output_name"])
+	}
+	filePath, err := saveImage(result.FinalImageBase64, result.OutputFormat, outputDir, outputName)
 	if err != nil {
 		return nil, err
 	}
@@ -61,6 +72,7 @@ func runGenerateImage(ctx context.Context, client *imageapi.Client, req Request)
 		},
 		"diagnostics": map[string]any{
 			"preview_count": result.PreviewCount,
+			"stream":        stream,
 		},
 	}, nil
 }
@@ -104,13 +116,30 @@ func defaultString(v, fallback string) string {
 	return v
 }
 
-func saveImage(imageBase64 string, outputFormat string) (string, error) {
+func isChainingUnsupported(err error) bool {
+	msg := strings.ToLower(strings.TrimSpace(err.Error()))
+	return strings.Contains(msg, "previous_response_id") || strings.Contains(msg, "store") || strings.Contains(msg, "not support") || strings.Contains(msg, "unsupported")
+}
+
+func saveImage(imageBase64 string, outputFormat string, outputDir string, outputName string) (string, error) {
 	bytes, err := base64.StdEncoding.DecodeString(imageBase64)
 	if err != nil {
 		return "", apperr.Wrap(apperr.CodeRPC, "failed to decode image base64", err)
 	}
-	fileName := "image-gen-" + time.Now().UTC().Format("20060102-150405") + "." + outputFormat
-	path := filepath.Join(".", fileName)
+	if outputDir == "" {
+		outputDir = "."
+	}
+	fileName := strings.TrimSpace(outputName)
+	if fileName == "" {
+		fileName = "image-gen-" + time.Now().UTC().Format("20060102-150405") + "." + outputFormat
+	}
+	if !strings.Contains(fileName, ".") {
+		fileName = fileName + "." + outputFormat
+	}
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+		return "", apperr.Wrap(apperr.CodeInternal, "failed to prepare output directory", err)
+	}
+	path := filepath.Join(outputDir, fileName)
 	if err := os.WriteFile(path, bytes, 0o644); err != nil {
 		return "", apperr.Wrap(apperr.CodeInternal, "failed to write output file", err)
 	}
