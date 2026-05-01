@@ -15,7 +15,6 @@ Usage:
 
 Commands:
   capability   Run a single atomic capability
-  workflow     Run a multi-step workflow
   help         Show help
 
 Global options:
@@ -29,15 +28,6 @@ Global options:
 func capabilityHelp() string {
 	list := capability.Names()
 	return fmt.Sprintf("capability usage:\n  image-gen-cli capability <name> [--key value]\n  image-gen-cli capability describe [<name>]\n\nimplemented capabilities:\n  %s\n", strings.Join(list, "\n  "))
-}
-
-func workflowHelp() string {
-	return `workflow usage:
-  image-gen-cli workflow <name> [--key value]
-
-implemented workflows:
-  minimal_chain
-`
 }
 
 func hasHelp(args []string) bool {

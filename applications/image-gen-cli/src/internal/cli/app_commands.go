@@ -8,7 +8,6 @@ import (
 	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/capability"
 	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/imageapi"
 	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/output"
-	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/workflow"
 )
 
 type commandRuntime struct {
@@ -28,8 +27,6 @@ func dispatchCommand(rt commandRuntime, args []string) error {
 	switch command {
 	case "capability":
 		payload, err = runCapabilityCommand(rt, commandArgs)
-	case "workflow":
-		payload, err = runWorkflowCommand(rt, commandArgs)
 	case "help", "--help", "-h":
 		_, _ = io.WriteString(rt.Stdout, rootHelp())
 		return nil
@@ -70,16 +67,4 @@ func runCapabilityCommand(rt commandRuntime, args []string) (map[string]any, err
 		return nil, err
 	}
 	return capability.Dispatch(context.Background(), rt.Client, capability.Request{Name: args[0], Args: parsedArgs})
-}
-
-func runWorkflowCommand(rt commandRuntime, args []string) (map[string]any, error) {
-	if len(args) == 0 || hasHelp(args[:1]) {
-		_, _ = io.WriteString(rt.Stdout, workflowHelp())
-		return nil, nil
-	}
-	parsedArgs, err := capability.ParseArgs(args[1:])
-	if err != nil {
-		return nil, err
-	}
-	return workflow.Execute(context.Background(), rt.Client, args[0], parsedArgs)
 }
