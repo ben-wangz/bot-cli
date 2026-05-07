@@ -94,11 +94,11 @@ func (c *Client) generateNonStreaming(ctx context.Context, payload []byte) (Gene
 	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return GenerateResult{}, apperr.Wrap(apperr.CodeNetwork, "request failed", err)
+		return GenerateResult{}, apperr.Wrap(apperr.CodeNetwork, "request failed (non-streaming)", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
-		return GenerateResult{}, parseHTTPError(resp.Body, resp.StatusCode)
+		return GenerateResult{}, parseHTTPError(resp.Body, resp.StatusCode, false)
 	}
 	decoded := map[string]any{}
 	if err := json.NewDecoder(resp.Body).Decode(&decoded); err != nil {
@@ -114,11 +114,11 @@ func (c *Client) generateStreaming(ctx context.Context, payload []byte) (Generat
 	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return GenerateResult{}, apperr.Wrap(apperr.CodeNetwork, "request failed", err)
+		return GenerateResult{}, apperr.Wrap(apperr.CodeNetwork, "request failed (streaming)", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
-		return GenerateResult{}, parseHTTPError(resp.Body, resp.StatusCode)
+		return GenerateResult{}, parseHTTPError(resp.Body, resp.StatusCode, true)
 	}
 	return parseSSEStream(resp.Body)
 }
@@ -164,10 +164,14 @@ func normalizedFormat(raw string) string {
 	return raw
 }
 
-func parseHTTPError(body io.Reader, status int) error {
+func parseHTTPError(body io.Reader, status int, stream bool) error {
 	decoded := map[string]any{}
 	if err := json.NewDecoder(body).Decode(&decoded); err != nil {
-		return apperr.New(apperr.CodeNetwork, fmt.Sprintf("http request failed with status %d", status))
+		mode := "non-streaming"
+		if stream {
+			mode = "streaming"
+		}
+		return apperr.New(apperr.CodeNetwork, fmt.Sprintf("http request failed with status %d (%s)", status, mode))
 	}
 	errObj, _ := decoded["error"].(map[string]any)
 	message := asString(errObj["message"])

@@ -22,7 +22,7 @@ func defaultGlobalOptions() GlobalOptions {
 	return GlobalOptions{
 		APIBaseURL: strings.TrimSpace(os.Getenv("IMAGE_API_BASE_URL")),
 		APIKey:     strings.TrimSpace(os.Getenv("IMAGE_API_KEY")),
-		Timeout:    60 * time.Second,
+		Timeout:    300 * time.Second,
 		Output:     output.FormatJSON,
 		OutputDir:  strings.TrimSpace(os.Getenv("IMAGE_OUTPUT_DIR")),
 		OutputName: strings.TrimSpace(os.Getenv("IMAGE_OUTPUT_NAME")),

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/apperr"
@@ -14,6 +15,7 @@ func parseSSEStream(r io.Reader) (GenerateResult, error) {
 	reader := bufio.NewReader(r)
 	dataLines := []string{}
 	finalItem := map[string]any{}
+	seenTypes := map[string]bool{}
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil && err != io.EOF {
@@ -24,10 +26,13 @@ func parseSSEStream(r io.Reader) (GenerateResult, error) {
 			dataLines = append(dataLines, strings.TrimSpace(strings.TrimPrefix(trimmed, "data:")))
 		}
 		if strings.TrimSpace(trimmed) == "" {
-			parsed, done, parseErr := handleSSEDataBlock(dataLines, &result, finalItem)
+			parsed, done, parsedType, parseErr := handleSSEDataBlock(dataLines, &result, finalItem)
 			dataLines = dataLines[:0]
 			if parseErr != nil {
 				return GenerateResult{}, parseErr
+			}
+			if parsedType != "" {
+				seenTypes[parsedType] = true
 			}
 			if done {
 				return parsed, nil
@@ -38,35 +43,38 @@ func parseSSEStream(r io.Reader) (GenerateResult, error) {
 		}
 	}
 	if len(dataLines) > 0 {
-		parsed, done, parseErr := handleSSEDataBlock(dataLines, &result, finalItem)
+		parsed, done, parsedType, parseErr := handleSSEDataBlock(dataLines, &result, finalItem)
 		if parseErr != nil {
 			return GenerateResult{}, parseErr
+		}
+		if parsedType != "" {
+			seenTypes[parsedType] = true
 		}
 		if done {
 			return parsed, nil
 		}
 	}
-	return GenerateResult{}, apperr.New(apperr.CodeRPC, "streaming completed without final image result")
+	return GenerateResult{}, apperr.New(apperr.CodeRPC, "streaming completed without final image result; seen events: "+strings.Join(sortedKeys(seenTypes), ","))
 }
 
-func handleSSEDataBlock(dataLines []string, agg *GenerateResult, finalItem map[string]any) (GenerateResult, bool, error) {
+func handleSSEDataBlock(dataLines []string, agg *GenerateResult, finalItem map[string]any) (GenerateResult, bool, string, error) {
 	if len(dataLines) == 0 {
-		return GenerateResult{}, false, nil
+		return GenerateResult{}, false, "", nil
 	}
 	data := strings.TrimSpace(strings.Join(dataLines, "\n"))
 	if data == "" || data == "[DONE]" {
-		return GenerateResult{}, false, nil
+		return GenerateResult{}, false, "", nil
 	}
 	obj := map[string]any{}
 	if err := json.Unmarshal([]byte(data), &obj); err != nil {
-		return GenerateResult{}, false, nil
+		return GenerateResult{}, false, "invalid_json_data", nil
 	}
 	typeName := asString(obj["type"])
 	if typeName == "response.image_generation_call.partial_image" {
 		if asString(obj["partial_image_b64"]) != "" {
 			agg.PreviewCount++
 		}
-		return GenerateResult{}, false, nil
+		return GenerateResult{}, false, typeName, nil
 	}
 	if typeName == "response.output_item.done" {
 		item, _ := obj["item"].(map[string]any)
@@ -75,7 +83,7 @@ func handleSSEDataBlock(dataLines []string, agg *GenerateResult, finalItem map[s
 				finalItem[k] = v
 			}
 		}
-		return GenerateResult{}, false, nil
+		return GenerateResult{}, false, typeName, nil
 	}
 	if typeName == "response.completed" {
 		responseObj, _ := obj["response"].(map[string]any)
@@ -85,13 +93,28 @@ func handleSSEDataBlock(dataLines []string, agg *GenerateResult, finalItem map[s
 			parsed, err = extractFinalResult(fallback)
 		}
 		if err != nil {
-			return GenerateResult{}, false, nil
+			return GenerateResult{}, false, typeName, nil
 		}
 		parsed.PreviewCount = agg.PreviewCount
-		return parsed, true, nil
+		return parsed, true, typeName, nil
 	}
 	if typeName == "response.failed" {
-		return GenerateResult{}, false, apperr.New(apperr.CodeRPC, "upstream reported response.failed")
+		return GenerateResult{}, false, typeName, apperr.New(apperr.CodeRPC, "upstream reported response.failed")
 	}
-	return GenerateResult{}, false, nil
+	if typeName == "" {
+		return GenerateResult{}, false, "missing_type", nil
+	}
+	return GenerateResult{}, false, typeName, nil
+}
+
+func sortedKeys(set map[string]bool) []string {
+	if len(set) == 0 {
+		return []string{"none"}
+	}
+	keys := make([]string, 0, len(set))
+	for k := range set {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }

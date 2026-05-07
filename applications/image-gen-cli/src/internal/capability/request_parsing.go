@@ -14,6 +14,7 @@ func ParseArgs(args []string) (map[string]string, error) {
 		if err != nil {
 			return nil, err
 		}
+		name = normalizeArgName(name)
 		if hasInline {
 			result[name] = strings.TrimSpace(inline)
 			continue
@@ -25,6 +26,14 @@ func ParseArgs(args []string) (map[string]string, error) {
 		i++
 	}
 	return result, nil
+}
+
+func normalizeArgName(name string) string {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return ""
+	}
+	return strings.ReplaceAll(name, "-", "_")
 }
 
 func splitArg(token string) (string, string, bool, error) {

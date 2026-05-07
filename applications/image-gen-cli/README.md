@@ -40,7 +40,7 @@ export IMAGE_API_KEY="<your-key>"
 
 - `--api-base-url <url>` (or env `IMAGE_API_BASE_URL`)
 - `--api-key <token>` (or env `IMAGE_API_KEY`)
-- `--timeout <seconds>`
+- `--timeout <seconds>` (default: 300)
 - `--output json`
 
 ## Output Contract
