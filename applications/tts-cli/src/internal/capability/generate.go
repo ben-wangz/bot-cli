@@ -13,6 +13,7 @@ import (
 )
 
 func runGenerateSpeech(ctx context.Context, client *ttsapi.Client, req Request) (map[string]any, error) {
+	startedAt := time.Now()
 	assistantText, err := RequiredString(req.Args, "assistant_text")
 	if err != nil {
 		return nil, err
@@ -54,8 +55,9 @@ func runGenerateSpeech(ctx context.Context, client *ttsapi.Client, req Request) 
 	if err != nil {
 		return nil, err
 	}
-	warnings := buildWarnings(model, builtinVoice, cloneVoiceDataURI)
+	warnings := buildWarnings(model, builtinVoice, cloneVoiceDataURI, stream, audioFormat)
 	warnings = append(warnings, result.Warnings...)
+	elapsedMS := time.Since(startedAt).Milliseconds()
 	return map[string]any{
 		"ok": true,
 		"request": map[string]any{"capability": "generate_speech", "args": req.Args},
@@ -68,7 +70,10 @@ func runGenerateSpeech(ctx context.Context, client *ttsapi.Client, req Request) 
 			"chunk_count":   result.ChunkCount,
 		},
 		"diagnostics": map[string]any{
-			"warnings": warnings,
+			"warnings":      warnings,
+			"elapsed_ms":    elapsedMS,
+			"audio_bytes":   result.AudioByteSize,
+			"stream_chunks": result.ChunkCount,
 		},
 	}, nil
 }
@@ -77,8 +82,14 @@ func validateGenerateParams(model string, userText string, builtinVoice string, 
 	if !isSupportedModel(model) {
 		return apperr.New(apperr.CodeInvalidArgs, "model must be one of: mimo-v2.5-tts, mimo-v2.5-tts-voicedesign, mimo-v2.5-tts-voiceclone")
 	}
+	if model != "mimo-v2.5-tts" && strings.TrimSpace(builtinVoice) != "" {
+		return apperr.New(apperr.CodeInvalidArgs, "builtin_voice is only valid for mimo-v2.5-tts")
+	}
 	if model == "mimo-v2.5-tts-voicedesign" && strings.TrimSpace(userText) == "" {
 		return apperr.New(apperr.CodeInvalidArgs, "user_text is required for mimo-v2.5-tts-voicedesign")
+	}
+	if model != "mimo-v2.5-tts-voiceclone" && strings.TrimSpace(cloneVoiceDataURI) != "" {
+		return apperr.New(apperr.CodeInvalidArgs, "clone_voice_data_uri is only valid for mimo-v2.5-tts-voiceclone")
 	}
 	if model == "mimo-v2.5-tts-voiceclone" && strings.TrimSpace(cloneVoiceDataURI) == "" {
 		return apperr.New(apperr.CodeInvalidArgs, "clone_voice_data_uri is required for mimo-v2.5-tts-voiceclone")
@@ -127,8 +138,11 @@ func normalizeExt(format string) string {
 	return f
 }
 
-func buildWarnings(model string, builtinVoice string, cloneVoiceDataURI string) []string {
+func buildWarnings(model string, builtinVoice string, cloneVoiceDataURI string, stream bool, audioFormat string) []string {
 	warnings := make([]string, 0)
+	if stream && strings.ToLower(strings.TrimSpace(audioFormat)) != "pcm16" {
+		warnings = append(warnings, "streaming is usually used with audio_format=pcm16 for chunk stitching")
+	}
 	if model == "mimo-v2.5-tts" && strings.TrimSpace(builtinVoice) != "" && !isKnownBuiltInVoice(builtinVoice) {
 		warnings = append(warnings, "builtin_voice is not in known suggestions; request was forwarded upstream")
 	}

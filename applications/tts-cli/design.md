@@ -211,6 +211,35 @@ help/describe 文案要求（`generate_speech`）：
    - `data:audio/wav;base64,...`
    - 用于向用户给出明确格式说明与示例；未知 MIME 透传上游，由上游最终判定。
 
+5. `clone-voice-data-uri` 文件转 Data URI 方案（不依赖扩展名）：
+   - 背景：不能根据文件扩展名推断 MIME（扩展名可能缺失或与实际内容不一致）。
+   - 目标：从文件内容本身推断 MIME，并构造 `data:{mime};base64,{payload}`。
+   - 推荐实现（Go 标准库优先）：
+     - 读取文件字节（`os.ReadFile`）。
+     - 使用 `http.DetectContentType` 基于前 512 字节做首轮 MIME 推断。
+     - 若结果为泛型（如 `application/octet-stream`）或与音频场景不匹配，再执行容器特征二次判定：
+       - MP3：`ID3` 头，或帧同步位 `0xFFEx/0xFFFx`。
+       - WAV：`RIFF....WAVE`。
+       - OGG：`OggS`。
+       - FLAC：`fLaC`。
+       - M4A/MP4：`ftyp` 盒，品牌包含 `M4A ` / `isom` / `mp42` 等。
+     - 映射到规范 MIME：
+       - MP3 -> `audio/mpeg`
+       - WAV -> `audio/wav`
+       - OGG -> `audio/ogg`
+       - FLAC -> `audio/flac`
+       - M4A/MP4 -> `audio/mp4`
+     - Base64 编码（`encoding/base64`）后拼接 Data URI。
+   - 错误处理建议：
+     - 无法识别音频容器：返回 `invalid_args`，提示“unsupported or unknown audio format”。
+     - 文件读取失败：返回 `invalid_args`，附带底层 IO 错误上下文。
+     - 文件体积超限：返回 `invalid_args`，提示上游限制（当前文档约束 10 MB Base64 字符串）。
+   - Agent-facing 输出建议：
+     - `result.data_uri`（可选，默认不回显完整内容，避免终端超长输出）。
+     - `result.mime_type`（识别结果）。
+     - `result.base64_size_bytes`（编码后字节数）。
+     - `diagnostics.warnings`（识别置信度低或回退路径时给 warning）。
+
 4. 兼容策略（建议映射不强制）：
    - 内置 model/voice mapping 只用于 `suggest_voices` 展示与 warning 提示。
    - 对未知 `--builtin-voice` 值不做本地拦截，直接透传上游。
@@ -286,7 +315,9 @@ applications/tts-cli/
   src/internal/cli/app.go
   src/internal/cli/help.go
   src/internal/capability/registry.go
-  src/internal/capability/ops_generate.go
+  src/internal/capability/generate.go
+  src/internal/capability/suggest_voices.go
+  src/internal/capability/file_to_data_uri.go
   src/internal/ttsapi/client.go
   src/internal/ttsapi/sse.go
   src/internal/output/render.go
