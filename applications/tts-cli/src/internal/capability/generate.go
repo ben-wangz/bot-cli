@@ -40,8 +40,18 @@ func runGenerateSpeech(ctx context.Context, client *ttsapi.Client, req Request) 
 	if err != nil {
 		return nil, err
 	}
+	if strings.TrimSpace(result.AudioFormatRaw) == "" {
+		result.AudioFormatRaw = result.AudioFormat
+	}
 	if strings.TrimSpace(result.AudioFormat) == "" {
 		result.AudioFormat = audioFormat
+	}
+	canonicalFormat := canonicalAudioFormat(result.AudioFormat)
+	if strings.TrimSpace(canonicalFormat) == "" {
+		canonicalFormat = canonicalAudioFormat(audioFormat)
+	}
+	if strings.TrimSpace(canonicalFormat) == "" {
+		canonicalFormat = "wav"
 	}
 	outputDir := strings.TrimSpace(req.Args["output_dir"])
 	outputName := strings.TrimSpace(req.Args["output_name"])
@@ -51,7 +61,7 @@ func runGenerateSpeech(ctx context.Context, client *ttsapi.Client, req Request) 
 	if outputName == "" {
 		outputName = strings.TrimSpace(req.Args["global_output_name"])
 	}
-	filePath, err := saveAudio(result.AudioBytes, result.AudioFormat, outputDir, outputName)
+	filePath, err := saveAudio(result.AudioBytes, canonicalFormat, outputDir, outputName)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +74,8 @@ func runGenerateSpeech(ctx context.Context, client *ttsapi.Client, req Request) 
 		"result": map[string]any{
 			"output_file":   filePath,
 			"response_id":   result.ResponseID,
-			"audio_format":  result.AudioFormat,
+			"audio_format":  canonicalFormat,
+			"audio_format_raw": result.AudioFormatRaw,
 			"stream":        stream,
 			"bytes":         result.AudioByteSize,
 			"chunk_count":   result.ChunkCount,
@@ -131,11 +142,34 @@ func saveAudio(audioBytes []byte, audioFormat string, outputDir string, outputNa
 }
 
 func normalizeExt(format string) string {
-	f := strings.ToLower(strings.TrimSpace(format))
+	f := canonicalAudioFormat(format)
 	if f == "" {
 		return "wav"
 	}
 	return f
+}
+
+func canonicalAudioFormat(format string) string {
+	f := strings.ToLower(strings.TrimSpace(format))
+	switch f {
+	case "wav", "audio/wav", "audio/x-wav", "audio/wave":
+		return "wav"
+	case "mp3", "audio/mp3", "audio/mpeg":
+		return "mp3"
+	case "ogg", "audio/ogg":
+		return "ogg"
+	case "flac", "audio/flac":
+		return "flac"
+	case "m4a", "audio/mp4", "mp4":
+		return "mp4"
+	case "pcm16", "audio/pcm", "audio/l16":
+		return "pcm16"
+	default:
+		if idx := strings.LastIndex(f, "/"); idx >= 0 && idx < len(f)-1 {
+			return strings.TrimSpace(f[idx+1:])
+		}
+		return f
+	}
 }
 
 func buildWarnings(model string, builtinVoice string, cloneVoiceDataURI string, stream bool, audioFormat string) []string {

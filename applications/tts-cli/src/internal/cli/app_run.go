@@ -51,11 +51,15 @@ func printError(err error, stderr io.Writer) int {
 		"diagnostics": map[string]any{},
 	}
 	if typed, ok := err.(*apperr.Error); ok {
-		payload["error"] = map[string]any{
+		errorPayload := map[string]any{
 			"code":      string(typed.Code),
-			"message":   typed.Error(),
+			"message":   typed.Message,
 			"retryable": typed.Code == apperr.CodeNetwork,
 		}
+		for k, v := range typed.Meta {
+			errorPayload[k] = v
+		}
+		payload["error"] = errorPayload
 	}
 	encoded, encodeErr := json.MarshalIndent(payload, "", "  ")
 	if encodeErr != nil {
@@ -77,7 +81,7 @@ func commandNeedsClient(tail []string) bool {
 		return false
 	}
 	sub := strings.TrimSpace(tail[1])
-	if sub == "" || sub == "--help" || sub == "-h" || sub == "list" || sub == "describe" || sub == "suggest_voices" {
+	if sub == "" || sub == "--help" || sub == "-h" || sub == "list" || sub == "describe" || sub == "suggest_voices" || sub == "file_to_data_uri" {
 		return false
 	}
 	for _, token := range tail[2:] {

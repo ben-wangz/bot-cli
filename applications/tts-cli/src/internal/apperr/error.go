@@ -17,6 +17,7 @@ type Error struct {
 	Code    Code
 	Message string
 	Cause   error
+	Meta    map[string]any
 }
 
 func (e *Error) Error() string {
@@ -28,6 +29,10 @@ func (e *Error) Error() string {
 
 func New(code Code, message string) error {
 	return &Error{Code: code, Message: message}
+}
+
+func NewWithMeta(code Code, message string, meta map[string]any) error {
+	return &Error{Code: code, Message: message, Meta: meta}
 }
 
 func Wrap(code Code, message string, cause error) error {

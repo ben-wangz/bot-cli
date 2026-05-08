@@ -33,6 +33,7 @@ type GenerateResult struct {
 	ResponseID    string
 	AudioBytes    []byte
 	AudioFormat   string
+	AudioFormatRaw string
 	Stream        bool
 	ChunkCount    int
 	AudioByteSize int
@@ -120,10 +121,12 @@ func decodeNonStreaming(resp *http.Response) (GenerateResult, error) {
 	if err != nil {
 		return GenerateResult{}, apperr.Wrap(apperr.CodeParse, "failed to decode audio base64", err)
 	}
+	rawFormat := extractAudioFormat(root)
 	return GenerateResult{
 		ResponseID:    asString(root["id"]),
 		AudioBytes:    decoded,
-		AudioFormat:   extractAudioFormat(root),
+		AudioFormat:   rawFormat,
+		AudioFormatRaw: rawFormat,
 		Stream:        false,
 		ChunkCount:    0,
 		AudioByteSize: len(decoded),
@@ -140,17 +143,83 @@ func parseUpstreamError(statusCode int, body []byte) error {
 				msg = strings.TrimSpace(asString(payload["code"]))
 			}
 			if msg != "" {
-				return apperr.New(apperr.CodeRPC, msg)
+				meta := map[string]any{
+					"upstream_message": msg,
+					"classification":   classifyUpstreamError(statusCode, msg),
+					"retryable":        isRetryableUpstream(statusCode, msg),
+				}
+				return apperr.NewWithMeta(apperr.CodeRPC, msg, meta)
 			}
 		}
 	}
 	if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
 		return apperr.New(apperr.CodeConfig, "authentication failed")
 	}
-	return apperr.New(apperr.CodeRPC, "upstream request failed")
+	msg := "upstream request failed"
+	meta := map[string]any{
+		"upstream_message": msg,
+		"classification":   classifyUpstreamError(statusCode, msg),
+		"retryable":        isRetryableUpstream(statusCode, msg),
+	}
+	return apperr.NewWithMeta(apperr.CodeRPC, msg, meta)
+}
+
+func classifyUpstreamError(statusCode int, message string) string {
+	m := strings.ToLower(strings.TrimSpace(message))
+	switch {
+	case statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden:
+		return "auth"
+	case statusCode == http.StatusTooManyRequests || strings.Contains(m, "rate limit"):
+		return "rate_limit"
+	case statusCode >= 500:
+		return "transient"
+	case statusCode == http.StatusBadRequest || strings.Contains(m, "param") || strings.Contains(m, "invalid"):
+		return "invalid_request"
+	default:
+		return "unknown"
+	}
+}
+
+func isRetryableUpstream(statusCode int, message string) bool {
+	m := strings.ToLower(strings.TrimSpace(message))
+	if statusCode == http.StatusTooManyRequests {
+		return true
+	}
+	if statusCode >= 500 {
+		return true
+	}
+	if strings.Contains(m, "timeout") || strings.Contains(m, "temporar") || strings.Contains(m, "try again") {
+		return true
+	}
+	return false
+}
+
+func asStringPath(root map[string]any, path ...string) string {
+	current := any(root)
+	for _, key := range path {
+		m, ok := current.(map[string]any)
+		if !ok {
+			return ""
+		}
+		current, ok = m[key]
+		if !ok {
+			return ""
+		}
+	}
+	return strings.TrimSpace(asString(current))
 }
 
 func extractAudioData(root map[string]any) string {
+	if v := asStringPath(root, "audio", "data"); v != "" {
+		return v
+	}
+	if output, ok := root["output"].([]any); ok && len(output) > 0 {
+		if first, ok := output[0].(map[string]any); ok {
+			if v := asStringPath(first, "audio", "data"); v != "" {
+				return v
+			}
+		}
+	}
 	choices, ok := root["choices"].([]any)
 	if !ok || len(choices) == 0 {
 		return ""
@@ -171,6 +240,16 @@ func extractAudioData(root map[string]any) string {
 }
 
 func extractAudioFormat(root map[string]any) string {
+	if v := asStringPath(root, "audio", "format"); v != "" {
+		return v
+	}
+	if output, ok := root["output"].([]any); ok && len(output) > 0 {
+		if first, ok := output[0].(map[string]any); ok {
+			if v := asStringPath(first, "audio", "format"); v != "" {
+				return v
+			}
+		}
+	}
 	choices, ok := root["choices"].([]any)
 	if !ok || len(choices) == 0 {
 		return ""

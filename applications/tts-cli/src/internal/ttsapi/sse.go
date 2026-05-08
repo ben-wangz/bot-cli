@@ -22,31 +22,58 @@ func decodeStreaming(resp *http.Response) (GenerateResult, error) {
 	var responseID string
 	var chunkCount int
 	var warnings []string
+	done := false
 	buf := bytes.NewBuffer(nil)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" || strings.HasPrefix(line, ":") {
-			continue
+	dataLines := make([]string, 0, 4)
+	flushEvent := func() {
+		if len(dataLines) == 0 {
+			return
 		}
-		if !strings.HasPrefix(line, "data:") {
-			continue
+		payload := strings.TrimSpace(strings.Join(dataLines, "\n"))
+		dataLines = dataLines[:0]
+		if payload == "" {
+			return
 		}
-		payload := strings.TrimSpace(strings.TrimPrefix(line, "data:"))
 		if payload == "[DONE]" {
-			break
+			done = true
+			return
 		}
 		var root map[string]any
 		if err := json.Unmarshal([]byte(payload), &root); err != nil {
 			warnings = append(warnings, "ignored one malformed SSE event")
-			continue
+			return
 		}
 		if responseID == "" {
 			responseID = asString(root["id"])
 		}
-		if err := appendChunkAudio(buf, root); err == nil {
-			chunkCount++
+		if err := appendChunkAudio(buf, root); err != nil {
+			warnings = append(warnings, "ignored one non-audio SSE event")
+			return
+		}
+		chunkCount++
+	}
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			flushEvent()
+			if done {
+				break
+			}
+			continue
+		}
+		if strings.HasPrefix(line, ":") {
+			continue
+		}
+		if !strings.HasPrefix(line, "data:") {
+			warnings = append(warnings, "ignored one non-data SSE line")
+			continue
+		}
+		payloadPart := strings.TrimSpace(strings.TrimPrefix(line, "data:"))
+		if payloadPart != "" {
+			dataLines = append(dataLines, payloadPart)
 		}
 	}
+	flushEvent()
 	if err := scanner.Err(); err != nil {
 		return GenerateResult{}, apperr.Wrap(apperr.CodeNetwork, "failed to read streaming response", err)
 	}
@@ -57,6 +84,9 @@ func decodeStreaming(resp *http.Response) (GenerateResult, error) {
 }
 
 func appendChunkAudio(dst *bytes.Buffer, root map[string]any) error {
+	if data := asStringPath(root, "delta", "audio", "data"); data != "" {
+		return decodeAndAppendAudio(dst, data)
+	}
 	choices, ok := root["choices"].([]any)
 	if !ok || len(choices) == 0 {
 		return apperr.New(apperr.CodeParse, "missing choices in stream chunk")
@@ -71,12 +101,20 @@ func appendChunkAudio(dst *bytes.Buffer, root map[string]any) error {
 	}
 	audio, ok := delta["audio"].(map[string]any)
 	if !ok {
+		msg, _ := delta["content"].(string)
+		if strings.TrimSpace(msg) != "" {
+			return apperr.New(apperr.CodeParse, "non-audio delta chunk")
+		}
 		return apperr.New(apperr.CodeParse, "missing delta audio payload")
 	}
 	data := strings.TrimSpace(asString(audio["data"]))
 	if data == "" {
 		return apperr.New(apperr.CodeParse, "empty audio chunk")
 	}
+	return decodeAndAppendAudio(dst, data)
+}
+
+func decodeAndAppendAudio(dst *bytes.Buffer, data string) error {
 	b, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
 		return apperr.Wrap(apperr.CodeParse, "invalid base64 audio chunk", err)

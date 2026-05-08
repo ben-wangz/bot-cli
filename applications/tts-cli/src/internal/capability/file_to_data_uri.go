@@ -81,8 +81,28 @@ func detectAudioMIMEFromContent(b []byte) string {
 		return "audio/flac"
 	}
 	if len(b) >= 12 && string(b[4:8]) == "ftyp" {
-		return "audio/mp4"
+		brand := string(b[8:12])
+		switch brand {
+		case "M4A ", "M4B ", "isom", "iso2", "mp41", "mp42":
+			return "audio/mp4"
+		default:
+			if looksLikePrintable(brand) {
+				return "audio/mp4"
+			}
+		}
 	}
 
 	return ""
+}
+
+func looksLikePrintable(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+	for _, r := range s {
+		if r < 32 || r > 126 {
+			return false
+		}
+	}
+	return true
 }
