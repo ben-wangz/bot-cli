@@ -69,16 +69,16 @@ func runGenerateSpeech(ctx context.Context, client *ttsapi.Client, req Request) 
 	warnings = append(warnings, result.Warnings...)
 	elapsedMS := time.Since(startedAt).Milliseconds()
 	return map[string]any{
-		"ok": true,
+		"ok":      true,
 		"request": map[string]any{"capability": "generate_speech", "args": req.Args},
 		"result": map[string]any{
-			"output_file":   filePath,
-			"response_id":   result.ResponseID,
-			"audio_format":  canonicalFormat,
+			"output_file":      filePath,
+			"response_id":      result.ResponseID,
+			"audio_format":     canonicalFormat,
 			"audio_format_raw": result.AudioFormatRaw,
-			"stream":        stream,
-			"bytes":         result.AudioByteSize,
-			"chunk_count":   result.ChunkCount,
+			"stream":           stream,
+			"bytes":            result.AudioByteSize,
+			"chunk_count":      result.ChunkCount,
 		},
 		"diagnostics": map[string]any{
 			"warnings":      warnings,

@@ -53,9 +53,9 @@ func runCapabilityCommand(rt commandRuntime, args []string) (map[string]any, err
 	}
 	if args[0] == "list" {
 		return map[string]any{
-			"ok": true,
-			"request": map[string]any{"capability": "list"},
-			"result": map[string]any{"capabilities": capability.Names()},
+			"ok":          true,
+			"request":     map[string]any{"capability": "list"},
+			"result":      map[string]any{"capabilities": capability.Names()},
 			"diagnostics": map[string]any{},
 		}, nil
 	}
@@ -88,9 +88,9 @@ func runDescribeCapability(args []string) (map[string]any, error) {
 			items = append(items, shapeDescribeResult(name, detail))
 		}
 		return map[string]any{
-			"ok": true,
-			"request": map[string]any{"capability": "describe"},
-			"result": items,
+			"ok":          true,
+			"request":     map[string]any{"capability": "describe"},
+			"result":      items,
 			"diagnostics": map[string]any{},
 		}, nil
 	}
@@ -99,9 +99,9 @@ func runDescribeCapability(args []string) (map[string]any, error) {
 		return nil, apperr.New(apperr.CodeInvalidArgs, "capability not implemented yet: "+args[0])
 	}
 	return map[string]any{
-		"ok": true,
-		"request": map[string]any{"capability": "describe", "name": args[0]},
-		"result": shapeDescribeResult(args[0], detail),
+		"ok":          true,
+		"request":     map[string]any{"capability": "describe", "name": args[0]},
+		"result":      shapeDescribeResult(args[0], detail),
 		"diagnostics": map[string]any{},
 	}, nil
 }
@@ -133,7 +133,7 @@ func shapeDescribeResult(name string, detail map[string]any) map[string]any {
 		},
 		"examples": detail["examples"],
 		"help": map[string]any{
-			"usage": "tts-cli capability " + name + " [--key value]",
+			"usage":       "tts-cli capability " + name + " [--key value]",
 			"detail_help": "tts-cli capability " + name + " --help",
 		},
 	}

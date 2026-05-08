@@ -30,14 +30,14 @@ type GenerateParams struct {
 }
 
 type GenerateResult struct {
-	ResponseID    string
-	AudioBytes    []byte
-	AudioFormat   string
+	ResponseID     string
+	AudioBytes     []byte
+	AudioFormat    string
 	AudioFormatRaw string
-	Stream        bool
-	ChunkCount    int
-	AudioByteSize int
-	Warnings      []string
+	Stream         bool
+	ChunkCount     int
+	AudioByteSize  int
+	Warnings       []string
 }
 
 func New(baseURL string, apiKey string, timeout time.Duration) (*Client, error) {
@@ -56,7 +56,7 @@ func New(baseURL string, apiKey string, timeout time.Duration) (*Client, error) 
 
 func (c *Client) Generate(ctx context.Context, p GenerateParams) (GenerateResult, error) {
 	payload := map[string]any{
-		"model": p.Model,
+		"model":    p.Model,
 		"messages": buildMessages(p.UserText, p.AssistantText),
 		"audio": map[string]any{
 			"format": p.AudioFormat,
@@ -123,14 +123,14 @@ func decodeNonStreaming(resp *http.Response) (GenerateResult, error) {
 	}
 	rawFormat := extractAudioFormat(root)
 	return GenerateResult{
-		ResponseID:    asString(root["id"]),
-		AudioBytes:    decoded,
-		AudioFormat:   rawFormat,
+		ResponseID:     asString(root["id"]),
+		AudioBytes:     decoded,
+		AudioFormat:    rawFormat,
 		AudioFormatRaw: rawFormat,
-		Stream:        false,
-		ChunkCount:    0,
-		AudioByteSize: len(decoded),
-		Warnings:      []string{},
+		Stream:         false,
+		ChunkCount:     0,
+		AudioByteSize:  len(decoded),
+		Warnings:       []string{},
 	}, nil
 }
 

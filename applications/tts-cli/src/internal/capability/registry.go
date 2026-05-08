@@ -18,8 +18,8 @@ type registryEntry struct {
 }
 
 var operationRegistry = map[string]registryEntry{
-	"generate_speech": {handler: runGenerateSpeech, readOnly: false},
-	"suggest_voices":  {offlineHandler: runSuggestVoices, readOnly: true},
+	"generate_speech":  {handler: runGenerateSpeech, readOnly: false},
+	"suggest_voices":   {offlineHandler: runSuggestVoices, readOnly: true},
 	"file_to_data_uri": {offlineHandler: runFileToDataURI, readOnly: true},
 }
 
@@ -75,28 +75,28 @@ func describeMeta(name string) map[string]any {
 			},
 			"model_rules": []map[string]any{
 				{
-					"model":                     "mimo-v2.5-tts",
-					"assistant_text":            "required",
-					"user_text":                 "optional",
-					"builtin_voice":             "optional",
-					"clone_voice_data_uri":      "not_allowed",
-					"notes":                     "Regular built-in voice synthesis model.",
+					"model":                "mimo-v2.5-tts",
+					"assistant_text":       "required",
+					"user_text":            "optional",
+					"builtin_voice":        "optional",
+					"clone_voice_data_uri": "not_allowed",
+					"notes":                "Regular built-in voice synthesis model.",
 				},
 				{
-					"model":                     "mimo-v2.5-tts-voicedesign",
-					"assistant_text":            "required",
-					"user_text":                 "required",
-					"builtin_voice":             "not_allowed",
-					"clone_voice_data_uri":      "not_allowed",
-					"notes":                     "user_text carries voice identity/style description.",
+					"model":                "mimo-v2.5-tts-voicedesign",
+					"assistant_text":       "required",
+					"user_text":            "required",
+					"builtin_voice":        "not_allowed",
+					"clone_voice_data_uri": "not_allowed",
+					"notes":                "user_text carries voice identity/style description.",
 				},
 				{
-					"model":                     "mimo-v2.5-tts-voiceclone",
-					"assistant_text":            "required",
-					"user_text":                 "optional",
-					"builtin_voice":             "not_allowed",
-					"clone_voice_data_uri":      "required",
-					"notes":                     "clone_voice_data_uri should be Data URI / Data URL (RFC 2397).",
+					"model":                "mimo-v2.5-tts-voiceclone",
+					"assistant_text":       "required",
+					"user_text":            "optional",
+					"builtin_voice":        "not_allowed",
+					"clone_voice_data_uri": "required",
+					"notes":                "clone_voice_data_uri should be Data URI / Data URL (RFC 2397).",
 				},
 			},
 			"examples": []string{
