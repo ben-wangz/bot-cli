@@ -123,9 +123,11 @@ func describeMeta(name string) map[string]any {
 			"summary": "Convert a local audio file to Base64 Data URI with MIME detection from file content.",
 			"args": []map[string]any{
 				{"name": "file_path", "required": true, "description": "Local audio file path."},
+				{"name": "include_data_uri", "required": false, "description": "If true, include full data_uri in result. Default false to avoid oversized output."},
 			},
 			"examples": []string{
 				"tts-cli capability file_to_data_uri --file-path ../tests/artofwar_01_sun_64kb_trimmed_32k.mp3",
+				"tts-cli capability file_to_data_uri --file-path ../tests/artofwar_01_sun_64kb_trimmed_32k.mp3 --include-data-uri true",
 			},
 		}
 	default:

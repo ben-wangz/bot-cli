@@ -14,6 +14,7 @@ func runFileToDataURI(req Request) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	includeDataURI := OptionalBool(req.Args, "include_data_uri", false)
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, apperr.Wrap(apperr.CodeInvalidArgs, "failed to read input file", err)
@@ -33,22 +34,37 @@ func runFileToDataURI(req Request) (map[string]any, error) {
 		warnings = append(warnings, "base64 payload exceeds 10MB; upstream may reject this voice clone sample")
 	}
 
+	result := map[string]any{
+		"file_path":         path,
+		"mime_type":         mimeType,
+		"base64_size_bytes": len(encoded),
+		"data_uri_omitted":  !includeDataURI,
+	}
+	if includeDataURI {
+		result["data_uri"] = dataURI
+	} else {
+		result["data_uri_preview"] = previewDataURI(dataURI)
+	}
+
 	return map[string]any{
 		"ok": true,
 		"request": map[string]any{
 			"capability": "file_to_data_uri",
 			"args":       req.Args,
 		},
-		"result": map[string]any{
-			"file_path":         path,
-			"mime_type":         mimeType,
-			"base64_size_bytes": len(encoded),
-			"data_uri":          dataURI,
-		},
+		"result": result,
 		"diagnostics": map[string]any{
 			"warnings": warnings,
 		},
 	}, nil
+}
+
+func previewDataURI(dataURI string) string {
+	v := strings.TrimSpace(dataURI)
+	if len(v) <= 120 {
+		return v
+	}
+	return v[:120] + "..."
 }
 
 func detectAudioMIMEFromContent(b []byte) string {

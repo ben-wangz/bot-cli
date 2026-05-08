@@ -42,9 +42,21 @@ Run:
 Run:
 `go run ./cmd/tts-cli capability file_to_data_uri --file-path ../tests/artofwar_01_sun_64kb_trimmed_32k.mp3`
 
+Notes:
+- By default, `file_to_data_uri` omits full `result.data_uri` and returns:
+  - `result.data_uri_omitted: true`
+  - `result.data_uri_preview` (short preview)
+- If you explicitly need full Data URI in output, rerun with:
+  - `--include-data-uri true`
+
 From JSON output, capture:
 - `result.mime_type`
 - `result.base64_size_bytes`
+
+Then retrieve full Data URI for voice clone input (explicit mode):
+`go run ./cmd/tts-cli capability file_to_data_uri --file-path ../tests/artofwar_01_sun_64kb_trimmed_32k.mp3 --include-data-uri true`
+
+From explicit-mode output, capture:
 - `result.data_uri`
 
 Store `result.data_uri` in a shell variable named `DATA_URI` for the next step.

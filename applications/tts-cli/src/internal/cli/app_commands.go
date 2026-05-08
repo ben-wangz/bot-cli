@@ -85,7 +85,7 @@ func runDescribeCapability(args []string) (map[string]any, error) {
 		items := make([]map[string]any, 0)
 		for _, name := range capability.Names() {
 			detail, _ := capability.Describe(name)
-			items = append(items, detail)
+			items = append(items, shapeDescribeResult(name, detail))
 		}
 		return map[string]any{
 			"ok": true,
@@ -101,7 +101,47 @@ func runDescribeCapability(args []string) (map[string]any, error) {
 	return map[string]any{
 		"ok": true,
 		"request": map[string]any{"capability": "describe", "name": args[0]},
-		"result": detail,
+		"result": shapeDescribeResult(args[0], detail),
 		"diagnostics": map[string]any{},
 	}, nil
+}
+
+func shapeDescribeResult(name string, detail map[string]any) map[string]any {
+	required := make([]map[string]any, 0)
+	optional := make([]map[string]any, 0)
+	if args, ok := detail["args"].([]map[string]any); ok {
+		for _, arg := range args {
+			item := map[string]any{
+				"name":        asString(arg["name"]),
+				"description": asString(arg["description"]),
+			}
+			if req, _ := arg["required"].(bool); req {
+				required = append(required, item)
+			} else {
+				optional = append(optional, item)
+			}
+		}
+	}
+	result := map[string]any{
+		"command":    "capability",
+		"action":     "describe",
+		"capability": name,
+		"summary":    asString(detail["summary"]),
+		"args": map[string]any{
+			"required": required,
+			"optional": optional,
+		},
+		"examples": detail["examples"],
+		"help": map[string]any{
+			"usage": "tts-cli capability " + name + " [--key value]",
+			"detail_help": "tts-cli capability " + name + " --help",
+		},
+	}
+	if readOnly, ok := detail["read_only"].(bool); ok {
+		result["read_only"] = readOnly
+	}
+	if modelRules, ok := detail["model_rules"]; ok {
+		result["model_rules"] = modelRules
+	}
+	return result
 }
