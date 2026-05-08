@@ -23,6 +23,12 @@ commands:
       - "-c"
       - "cd applications/image-gen-cli/src && go test ./..."
 
+  - name: "Go tests (tts-cli)"
+    cmd: "sh"
+    args:
+      - "-c"
+      - "cd applications/tts-cli/src && go test ./..."
+
 include:
   - "*.go"
 

@@ -9,3 +9,6 @@ binaries:
   - name: image-gen-cli
     path: applications/image-gen-cli
     versionFile: VERSION
+  - name: tts-cli
+    path: applications/tts-cli
+    versionFile: VERSION
