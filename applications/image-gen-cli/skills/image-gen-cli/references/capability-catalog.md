@@ -29,6 +29,7 @@ Compatibility notes:
 
 - `--previous-response-id`, `--store`, and `--model` require `--method tools`.
 - `diagnostics.preview_count` is deprecated and kept for backward compatibility.
+- For image generation latency, prefer `--timeout 600` or higher instead of the bare default `300`.
 
 For the complete argument contract (including low-frequency options), run:
 

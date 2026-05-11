@@ -1,8 +1,8 @@
 ---
 name: image-gen-cli
 description: |
-  Generate images with image-gen-cli using IMAGE2 / Responses API with reliable
-  final-image extraction, deterministic JSON output, and optional response chaining.
+  Generate images with image-gen-cli using direct image generation or Responses
+  tools mode with deterministic JSON output and optional chaining in tools mode.
 license: MIT
 compatibility: opencode
 metadata:
@@ -23,16 +23,18 @@ Use this skill when an agent needs reliable, script-friendly text-to-image gener
 
 Key behaviors:
 
+- Supports `--method direct` (default) and `--method tools`.
 - Supports streaming and non-streaming execution.
-- Extracts final image from `output[].result` semantics.
+- Extracts final image from direct Images API responses or Responses tool output.
 - Emits deterministic JSON envelopes for machine parsing.
-- Supports `store` + `previous_response_id` chaining when backend supports it.
+- Supports `store` + `previous_response_id` chaining only in `--method tools`.
 
 ## Operating Principles for Agents
 
 1. Always use `--output json` for deterministic parsing.
-2. Set an explicit timeout budget with `--timeout` (default 300s).
+2. Set an explicit timeout budget with `--timeout`; for image generation prefer `> 300s` and use `600` when backend latency is unknown.
 3. Treat missing final image as failure and save artifacts to a deterministic path.
+4. For direct smoke checks, start with `--stream false` before trying streaming.
 
 ## Base Command Template
 
@@ -50,11 +52,12 @@ fi
 "${IMAGE_GEN_CLI_BIN}" \
   --api-base-url "$IMAGE_API_BASE_URL" \
   --api-key "$IMAGE_API_KEY" \
-  --timeout 300 \
+  --method direct \
+  --timeout 600 \
   --output json \
   capability generate_image \
   --prompt "A cinematic mountain village at sunrise" \
-  --stream true \
+  --stream false \
   --output-dir "./build/regression-image-gen" \
   --output-name "example"
 ```
@@ -71,7 +74,7 @@ go run ./cmd/image-gen-cli ...
 - Need binary bootstrap + release download pattern? -> [Binary bootstrap and release download](references/binary-bootstrap-and-release-download.md)
 - Need minimal first-run command chain? -> [Quickstart](references/quickstart.md)
 - Need capability and argument catalog? -> [Capability catalog](references/capability-catalog.md)
-- Need failure handling for timeout/SSE/chaining? -> [Troubleshooting](references/troubleshooting.md)
+- Need failure handling for timeout/direct-vs-tools/SSE/chaining? -> [Troubleshooting](references/troubleshooting.md)
 
 ## Safety Checklist
 
