@@ -7,14 +7,16 @@ import (
 
 	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/apperr"
 	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/capability"
-	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/imageapi"
+	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/directapi"
 	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/output"
+	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/toolsapi"
 )
 
 type commandRuntime struct {
-	Opts   GlobalOptions
-	Client *imageapi.Client
-	Stdout io.Writer
+	Opts         GlobalOptions
+	DirectClient *directapi.Client
+	ToolsClient  *toolsapi.Client
+	Stdout       io.Writer
 }
 
 func dispatchCommand(rt commandRuntime, args []string) error {
@@ -77,5 +79,6 @@ func runCapabilityCommand(rt commandRuntime, args []string) (map[string]any, err
 			parsedArgs["output_name"] = strings.TrimSpace(rt.Opts.OutputName)
 		}
 	}
-	return capability.Dispatch(context.Background(), rt.Client, capability.Request{Name: args[0], Args: parsedArgs})
+	parsedArgs["method"] = rt.Opts.Method
+	return capability.Dispatch(context.Background(), rt.ToolsClient, rt.DirectClient, capability.Request{Name: args[0], Args: parsedArgs})
 }

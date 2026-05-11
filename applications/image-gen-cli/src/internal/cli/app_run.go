@@ -6,8 +6,9 @@ import (
 	"io"
 
 	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/apperr"
-	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/imageapi"
+	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/directapi"
 	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/output"
+	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/toolsapi"
 )
 
 func Run(args []string, stdout, stderr io.Writer) int {
@@ -22,11 +23,18 @@ func Run(args []string, stdout, stderr io.Writer) int {
 	if err := output.ValidateFormat(opts.Output); err != nil {
 		return printError(err, stderr)
 	}
-	client, err := imageapi.New(opts.APIBaseURL, opts.APIKey, opts.Timeout)
+	if !isValidMethod(opts.Method) {
+		return printError(apperr.New(apperr.CodeInvalidArgs, "method must be one of: direct, tools"), stderr)
+	}
+	directClient, err := directapi.New(opts.APIBaseURL, opts.APIKey, opts.Timeout)
 	if err != nil {
 		return printError(err, stderr)
 	}
-	runtime := commandRuntime{Opts: opts, Client: client, Stdout: stdout}
+	toolsClient, err := toolsapi.New(opts.APIBaseURL, opts.APIKey, opts.Timeout)
+	if err != nil {
+		return printError(err, stderr)
+	}
+	runtime := commandRuntime{Opts: opts, DirectClient: directClient, ToolsClient: toolsClient, Stdout: stdout}
 	if err := dispatchCommand(runtime, tail); err != nil {
 		return printError(err, stderr)
 	}

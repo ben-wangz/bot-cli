@@ -32,6 +32,8 @@ func parseGlobalOptions(args []string) (GlobalOptions, []string, error) {
 			opts.APIBaseURL = strings.TrimSpace(value)
 		case "api-key":
 			opts.APIKey = strings.TrimSpace(value)
+		case "method":
+			opts.Method = strings.ToLower(strings.TrimSpace(value))
 		case "output-dir":
 			opts.OutputDir = strings.TrimSpace(value)
 		case "output-name":

@@ -42,7 +42,7 @@ export IMAGE_API_KEY="<your-key>"
 3. Run a capability call (streaming by default):
 
 ```bash
-./image-gen-cli capability generate_image --prompt "A cinematic mountain village at sunrise"
+./image-gen-cli --method direct capability generate_image --prompt "A cinematic mountain village at sunrise"
 ```
 
 ## Core Commands
@@ -54,8 +54,14 @@ export IMAGE_API_KEY="<your-key>"
 
 - `--api-base-url <url>` (or env `IMAGE_API_BASE_URL`)
 - `--api-key <token>` (or env `IMAGE_API_KEY`)
+- `--method <direct|tools>` (or env `IMAGE_METHOD`, default: `direct`)
 - `--timeout <seconds>` (default: 300)
 - `--output json`
+
+Notes:
+
+- `--previous-response-id`, `--store`, and `--model` require `--method tools`.
+- `diagnostics.preview_count` is deprecated and kept for backward compatibility.
 
 ## Output Contract
 
@@ -72,7 +78,7 @@ Default output is JSON envelope:
 
 ## Prompt Regressions
 
-- `applications/image-gen-cli/tests/prompts/minimal-two-call-chain.md`
+- `applications/image-gen-cli/tests/prompts/direct-two-call-smoke.md`
 This prompt covers the agreed minimal validation path:
 
 1. first call uses streaming mode and saves final image

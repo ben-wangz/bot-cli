@@ -5,7 +5,8 @@ import (
 	"sort"
 
 	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/apperr"
-	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/imageapi"
+	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/directapi"
+	"github.com/ben-wangz/bot-cli/applications/image-gen-cli/src/internal/toolsapi"
 )
 
 type Request struct {
@@ -13,7 +14,7 @@ type Request struct {
 	Args map[string]string
 }
 
-type Handler func(ctx context.Context, client *imageapi.Client, req Request) (map[string]any, error)
+type Handler func(ctx context.Context, toolsClient *toolsapi.Client, directClient *directapi.Client, req Request) (map[string]any, error)
 
 type registryEntry struct {
 	handler  Handler
@@ -24,12 +25,12 @@ var operationRegistry = map[string]registryEntry{
 	"generate_image": {handler: runGenerateImage},
 }
 
-func Dispatch(ctx context.Context, client *imageapi.Client, req Request) (map[string]any, error) {
+func Dispatch(ctx context.Context, toolsClient *toolsapi.Client, directClient *directapi.Client, req Request) (map[string]any, error) {
 	entry, ok := operationRegistry[req.Name]
 	if !ok {
 		return nil, apperr.New(apperr.CodeInvalidArgs, "operation not implemented yet: "+req.Name)
 	}
-	return entry.handler(ctx, client, req)
+	return entry.handler(ctx, toolsClient, directClient, req)
 }
 
 func Names() []string {
@@ -55,6 +56,7 @@ func capabilityArgs(name string) []map[string]any {
 	}
 	return []map[string]any{
 		{"name": "prompt", "required": true, "description": "Text prompt for image generation."},
+		{"name": "method", "required": false, "description": "Backend method (direct|tools), default direct."},
 		{"name": "model", "required": false, "description": "Responses model, default gpt-5.5."},
 		{"name": "image_model", "required": false, "description": "Image model, default gpt-image-2."},
 		{"name": "stream", "required": false, "description": "Use streaming mode (true/false)."},
@@ -67,5 +69,6 @@ func capabilityArgs(name string) []map[string]any {
 		{"name": "output_format", "required": false, "description": "Output format (png, jpeg, webp)."},
 		{"name": "output_compression", "required": false, "description": "Output compression for jpeg/webp (0-100)."},
 		{"name": "background", "required": false, "description": "Background mode (auto, opaque, transparent)."},
+		{"name": "preview_count", "required": false, "description": "Deprecated diagnostics field kept for backward compatibility."},
 	}
 }

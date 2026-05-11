@@ -20,6 +20,7 @@ Commands:
 Global options:
   --api-base-url <url>  API base url (or env IMAGE_API_BASE_URL)
   --api-key <token>     API key (or env IMAGE_API_KEY)
+  --method <name>       Backend method: direct (default) or tools
   --timeout <seconds>   Request timeout in seconds (default: 300)
   --output-dir <path>   Output directory (or env IMAGE_OUTPUT_DIR)
   --output-name <name>  Output file name (or env IMAGE_OUTPUT_NAME)
