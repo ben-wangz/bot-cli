@@ -109,8 +109,8 @@ func runGenerateImage(ctx context.Context, toolsClient *toolsapi.Client, directC
 			"stream":        stream,
 		},
 		"diagnostics": map[string]any{
-			"preview_count": result.PreviewCount,
-			"stream":        stream,
+			"preview_count":     result.PreviewCount,
+			"stream":            stream,
 			"deprecated_fields": []string{"preview_count"},
 		},
 	}, nil
