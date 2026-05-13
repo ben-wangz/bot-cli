@@ -1,55 +1,80 @@
 ---
 name: aria2-cli
-description: Use aria2-cli capabilities and workflows to operate aria2c via JSON-RPC.
+description: |
+  Operate aria2c via aria2-cli using JSON-RPC capabilities and workflows with
+  deterministic JSON output for agent-driven download tasks.
+license: MIT
+compatibility: opencode
+metadata:
+  audience: coding-agents
+  tool: aria2-cli
 ---
 
-# aria2-cli skill
+# aria2-cli Skill
 
-## Purpose
+Use this skill when an agent needs reliable, script-friendly download control against an `aria2c` daemon.
 
-Use `applications/aria2-cli/src/cmd/aria2-cli` to run deterministic, JSON-first download operations.
+## What aria2-cli Provides
 
-## Principles
+`aria2-cli` supports both capability and workflow entry points:
 
-- Prefer `capability` for atomic operations.
-- Use `workflow` for multi-step execution.
-- Keep outputs in JSON and pass structured args.
-- Always call `ensure_daemon_started` before download operations when daemon state is unknown.
+1. `capability ...`: run one atomic JSON-RPC operation.
+2. `workflow ...`: run a small multi-step chain for common download tasks.
+3. `capability describe [<name>]`: inspect capability contract and args.
 
-## Common commands
+Key behaviors:
 
-- `capability ensure_daemon_started`
-- `capability get_global_stat`
-- `capability list_active`
-- `capability add_uri --uri <url>`
-- `capability pause --gid <gid>`
-- `capability resume --gid <gid>`
-- `capability remove --gid <gid>`
-- `workflow queue_add_and_wait --uri <url>`
+- Emits deterministic JSON envelopes for machine parsing.
+- Can start a local daemon idempotently with `ensure_daemon_started`.
+- Supports wait/polling for mutating capabilities via global `--wait` flags.
+- Supports common queue, pause/resume, query, and cleanup operations.
 
-## Recommended startup sequence
+## Operating Principles for Agents
 
-1. `capability ensure_daemon_started`
-2. `capability get_global_stat`
-3. run task capabilities/workflows
+1. Always use `--output json` for deterministic parsing.
+2. When daemon state is unknown, call `capability ensure_daemon_started` first.
+3. For mutating capabilities that return `gid`, use `--wait` when you need stable follow-up state.
+4. Prefer workflows only when they match the desired chain exactly; otherwise compose capabilities directly.
 
-## Example chain (aria2-cli self binary)
+## Base Command Template
 
-- Test URL: `https://github.com/ben-wangz/bot-cli/releases/download/v0.1.0/aria2-cli-linux-amd64`
-- Run sequence:
-  1. `capability ensure_daemon_started`
-  2. `capability add_uri --uri <url>`
-  3. `capability tell_status --gid <gid>`
-  4. `capability pause --gid <gid>`
-  5. `capability resume --gid <gid>`
-  6. `capability remove --gid <gid>`
-  7. `capability purge_download_result`
+Prefer resolved binary path for repeatable runs:
 
-## Required globals
+```bash
+ARIA2_CLI_BIN="${ARIA2_CLI_BIN:-$(command -v aria2-cli 2>/dev/null || true)}"
 
-- `--rpc-endpoint`
-- `--rpc-secret` (when daemon requires token), or env `ARIA2_RPC_SECRET`
+if [ -z "${ARIA2_CLI_BIN}" ]; then
+  echo "aria2-cli not found. Resolve/download binary first." >&2
+  echo "See: references/binary-bootstrap-and-release-download.md" >&2
+  exit 1
+fi
 
-## Secret priority
+"${ARIA2_CLI_BIN}" \
+  --rpc-endpoint "http://127.0.0.1:6800/jsonrpc" \
+  --rpc-secret "$ARIA2_RPC_SECRET" \
+  --output json \
+  capability get_global_stat
+```
 
-- command flag `--rpc-secret` has higher priority than env `ARIA2_RPC_SECRET`
+Fallback for source-only environments:
+
+```bash
+cd "<aria2-cli-source-root>/src"
+go run ./cmd/aria2-cli ...
+```
+
+## Quick Task Routing
+
+- Need binary bootstrap + release download pattern? -> [Binary bootstrap and release download](references/binary-bootstrap-and-release-download.md)
+- Need minimal first-run daemon + download flow? -> [Quickstart](references/quickstart.md)
+- Need capability/workflow overview? -> [Capability catalog](references/capability-catalog.md)
+- Need failure handling for daemon start, RPC auth, wait behavior, or localhost constraints? -> [Troubleshooting](references/troubleshooting.md)
+
+## Safety Checklist
+
+Before executing:
+
+1. `--rpc-endpoint` points at the intended daemon.
+2. `ARIA2_RPC_SECRET` or `--rpc-secret` is set when daemon auth is enabled.
+3. Output paths and download directories are deterministic.
+4. Every step checks `ok == true` in JSON.
