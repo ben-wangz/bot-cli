@@ -81,8 +81,8 @@ Default output is JSON envelope:
 - `applications/image-gen-cli/tests/prompts/direct-two-call-smoke.md`
 This prompt covers the agreed minimal validation path:
 
-1. first call uses streaming mode and saves final image
-2. second call uses non-streaming mode with `previous_response_id` and saves final image
+1. first call uses non-streaming mode and saves final image
+2. second call uses streaming mode and saves final image
 
 ## OpenCode Skill Install
 
