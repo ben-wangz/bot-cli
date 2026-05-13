@@ -32,3 +32,10 @@ Optional integrity check:
 
 1. Download `checksums.txt` from the same release.
 2. Verify `sha256sum` for the selected asset before execution.
+
+Example:
+
+```bash
+curl -fsSL -o ./build/bin/checksums.txt "https://github.com/${GH_REPO}/releases/download/${TAG}/checksums.txt"
+(cd ./build/bin && sha256sum --check --ignore-missing checksums.txt)
+```
