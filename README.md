@@ -13,7 +13,7 @@ Repository for agent-first command line tools.
 - `applications/<app>/`: each CLI implementation, tests, release notes, and skill docs
 - `setup/`: bootstrap utilities used by repository workflows
 - `.github/workflows/`: CI and release pipelines
-- `version-control.yaml`: binary-to-version-file mapping
+- `version-control.yaml`: forgekit app version mapping
 - `lint.yaml`: repository lint commands executed by forgekit
 
 ## Working Model
@@ -32,7 +32,7 @@ FORGEKIT_BIN=$(bash "${PROJECT_ROOT}/setup/forgekit.sh")
 
 "${FORGEKIT_BIN}" --project-root "${PROJECT_ROOT}" lint
 "${FORGEKIT_BIN}" --project-root "${PROJECT_ROOT}" version get <app-name>
-"${FORGEKIT_BIN}" --project-root "${PROJECT_ROOT}" version bump <app-name> patch
+"${FORGEKIT_BIN}" --project-root "${PROJECT_ROOT}" version bump binary <app-name> patch
 ```
 
 ## Release Convention

@@ -1,14 +1,17 @@
-charts: []
-binaries:
+apps:
   - name: proxmox-cli
+    type: binary
     path: applications/proxmox-cli
     versionFile: VERSION
   - name: aria2-cli
+    type: binary
     path: applications/aria2-cli
     versionFile: VERSION
   - name: image-gen-cli
+    type: binary
     path: applications/image-gen-cli
     versionFile: VERSION
   - name: tts-cli
+    type: binary
     path: applications/tts-cli
     versionFile: VERSION

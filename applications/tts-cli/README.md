@@ -4,7 +4,7 @@ Agent-first CLI for speech synthesis via MiMo-compatible `/v1/chat/completions` 
 
 ## Versioning
 
-Version is managed via `forgekit` binary mapping.
+Version is managed via the root `version-control.yaml` `forgekit` app mapping.
 
 - Binary name: `tts-cli`
 - Version file: `applications/tts-cli/VERSION`
@@ -14,7 +14,7 @@ Common commands:
 
 - `FORGEKIT_BIN=$(bash "$PROJECT_ROOT/setup/forgekit.sh")`
 - `${FORGEKIT_BIN} --project-root "$PROJECT_ROOT" version get tts-cli`
-- `${FORGEKIT_BIN} --project-root "$PROJECT_ROOT" version bump tts-cli patch`
+- `${FORGEKIT_BIN} --project-root "$PROJECT_ROOT" version bump binary tts-cli patch`
 
 ## Scope
 

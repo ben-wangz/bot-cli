@@ -17,7 +17,7 @@
 ## Key Changes
 
 1. Version management and release conventions
-   - `forgekit` binary mapping is used as the version source of truth for `proxmox-cli`.
+   - Root `version-control.yaml` `forgekit` app mapping is used as the version source of truth for `proxmox-cli`.
    - GitHub release tag rule is standardized as `proxmox-cli-v<semver>`.
 
 2. Test asset convergence

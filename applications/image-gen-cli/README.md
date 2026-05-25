@@ -4,7 +4,7 @@ Agent-first CLI for text-to-image generation via IMAGE2 / `gpt-image-2` compatib
 
 ## Versioning
 
-Version is managed via `forgekit` binary mapping.
+Version is managed via the root `version-control.yaml` `forgekit` app mapping.
 
 - Binary name: `image-gen-cli`
 - Version file: `applications/image-gen-cli/VERSION`
@@ -14,7 +14,7 @@ Common commands:
 
 - `FORGEKIT_BIN=$(bash "$PROJECT_ROOT/setup/forgekit.sh")`
 - `${FORGEKIT_BIN} --project-root "$PROJECT_ROOT" version get image-gen-cli`
-- `${FORGEKIT_BIN} --project-root "$PROJECT_ROOT" version bump image-gen-cli patch`
+- `${FORGEKIT_BIN} --project-root "$PROJECT_ROOT" version bump binary image-gen-cli patch`
 
 ## Scope (v0)
 

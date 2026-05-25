@@ -68,9 +68,40 @@ jobs:
               print("Missing version-control.yaml", file=sys.stderr)
               sys.exit(1)
           vc_text = vc.read_text(encoding="utf-8")
-          if f"- name: {app_name}" not in vc_text:
+          block_pattern = re.compile(
+              r"-\s+name:\s+" + re.escape(app_name) +
+              r"\s+type:\s+(?P<type>\S+)\s+path:\s+(?P<path>\S+)\s+versionFile:\s+(?P<version_file>\S+)",
+              re.MULTILINE,
+          )
+          block_match = block_pattern.search(vc_text)
+          if not block_match:
               print(
-                  f"Application {app_name} is not declared in version-control.yaml binaries",
+                  f"Application {app_name} is not declared in version-control.yaml apps",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          app_type = block_match.group("type")
+          config_path = block_match.group("path")
+          config_version_file = block_match.group("version_file")
+
+          if app_type != "binary":
+              print(
+                  f"Application {app_name} must be declared as type=binary, got {app_type}",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          if config_path != app_dir.as_posix():
+              print(
+                  f"version-control.yaml path mismatch for {app_name}: {config_path} != {app_dir.as_posix()}",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          if config_version_file != "VERSION":
+              print(
+                  f"version-control.yaml versionFile mismatch for {app_name}: {config_version_file}",
                   file=sys.stderr,
               )
               sys.exit(1)

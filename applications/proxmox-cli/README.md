@@ -4,7 +4,7 @@ Agent-facing CLI for Proxmox-related operations.
 
 ## Versioning
 
-Version is managed via `forgekit` binary mapping.
+Version is managed via the root `version-control.yaml` `forgekit` app mapping.
 
 - Binary name: `proxmox-cli`
 - Version file: `applications/proxmox-cli/VERSION`
@@ -14,7 +14,7 @@ Common commands:
 
 - `FORGEKIT_BIN=$(bash "$PROJECT_ROOT/setup/forgekit.sh")`
 - `${FORGEKIT_BIN} --project-root "$PROJECT_ROOT" version get proxmox-cli`
-- `${FORGEKIT_BIN} --project-root "$PROJECT_ROOT" version bump proxmox-cli patch`
+- `${FORGEKIT_BIN} --project-root "$PROJECT_ROOT" version bump binary proxmox-cli patch`
 
 ## OpenCode Skill Install
 
