@@ -64,16 +64,15 @@ sudo dnf install -y \
   texlive-amsmath \
   texlive-graphics \
   texlive-booktabs \
-  texlive-tabularx \
-  texlive-longtable \
+  texlive-tools \
   texlive-geometry \
   texlive-hyperref \
   texlive-enumitem \
-  texlive-biber \
+  biber \
   texlive-fandol
 ```
 
-If `texlive-tabularx` or `texlive-longtable` is not available as a separate package in the configured Fedora repositories, install the broader collection that provides it:
+If a project uses additional LaTeX packages that are not covered by the package list above, install the broader extra collection:
 
 ```bash
 sudo dnf install -y texlive-collection-latexextra
@@ -87,12 +86,11 @@ Package purpose:
 - `texlive-amsmath`: mathematical typesetting.
 - `texlive-graphics`: `graphicx` and graphics support.
 - `texlive-booktabs`: professional table rules.
-- `texlive-tabularx`: fixed-width adaptive tables.
-- `texlive-longtable`: multi-page tables.
+- `texlive-tools`: standard LaTeX tools, including `tabularx` and `longtable`.
 - `texlive-geometry`: page margin control.
 - `texlive-hyperref`: hyperlinks and PDF metadata.
 - `texlive-enumitem`: list spacing and list formatting control.
-- `texlive-biber`: bibliography backend for `biblatex`.
+- `biber`: bibliography backend for `biblatex`.
 - `texlive-fandol`: default Chinese fonts commonly used by `ctex`.
 
 Verify the installation:
@@ -137,5 +135,5 @@ dnf install -y latexmk texlive-xetex texlive-ctex texlive-graphics texlive-fando
 - `xelatex: command not found`: install `texlive-xetex`.
 - `latexmk: command not found`: install `latexmk`.
 - `File ctexart.cls not found`: install `texlive-lang-chinese` on Ubuntu or `texlive-ctex` on Fedora.
-- `biber: command not found`: install `biber` on Ubuntu or `texlive-biber` on Fedora.
+- `biber: command not found`: install `biber`.
 - Chinese glyphs are missing: install CJK fonts, such as `fonts-noto-cjk` on Ubuntu or `texlive-fandol` on Fedora, or configure an installed CJK font explicitly.
